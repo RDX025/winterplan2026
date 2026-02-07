@@ -5,7 +5,7 @@
 CREATE TABLE students (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
-  title TEXT DEFAULT '琴剑少侠',
+  title TEXT DEFAULT '彦平少侠',
   avatar TEXT DEFAULT '🥷',
   start_date DATE DEFAULT CURRENT_DATE,
   current_day INTEGER DEFAULT 1,

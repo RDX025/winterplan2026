@@ -4,8 +4,22 @@
 import { createClient } from '@supabase/supabase-js';
 
 // 初始化 Supabase 客户端（前端使用公开的 URL 和 anon key）
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const rawSupabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+const isValidUrl = (value) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (e) {
+    return false;
+  }
+};
+
+const supabaseUrl = isValidUrl(rawSupabaseUrl) ? rawSupabaseUrl : 'http://localhost';
+const supabaseKey = rawSupabaseKey && rawSupabaseKey !== 'YOUR_SUPABASE_ANON_KEY'
+  ? rawSupabaseKey
+  : 'public-anon-key';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 

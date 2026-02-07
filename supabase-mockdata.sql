@@ -4,7 +4,7 @@
 -- 1. 创建测试学生
 INSERT INTO students (id, name, title, avatar, start_date, current_day)
 VALUES 
-  ('11111111-1111-1111-1111-111111111111', '琴剑少侠', '初入江湖', '🥷', '2026-02-01', 7);
+  ('11111111-1111-1111-1111-111111111111', '彦平少侠', '初入江湖', '🥷', '2026-02-01', 7);
 
 -- 2. 插入过去7天的每日进度
 INSERT INTO daily_progress (student_id, date, math_progress, english_progress, habits_progress)
