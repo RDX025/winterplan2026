@@ -38,59 +38,48 @@ const REWARDS = [
     name: '青龙偃月刀',
     icon: '⚔️',
     condition: '新手礼包',
+    stl: 'assets/stl/qinglong_yanyuedao.stl',
     check: async () => true
   },
   {
     name: '方天画戟',
     icon: '🔒',
     condition: '完成3天数学',
+    stl: 'assets/stl/fangtian_huaji.stl',
     check: async () => (await countMathCompletedDays()) >= 3
   },
   {
     name: '丈八蛇矛',
     icon: '🔒',
     condition: '完成5天打卡',
+    stl: 'assets/stl/zhangba_shemao.stl',
     check: async () => (await countHabitsCompletedDays()) >= 5
   },
   {
     name: '诸葛连弩',
     icon: '🔒',
     condition: '数学进阶挑战',
+    stl: 'assets/stl/zhugeliannu.stl',
     check: async () => (await countMathCompletedDays()) >= 7
   }
 ];
 
 const ACHIEVEMENTS = [
-  {
-    name: '初入江湖',
-    desc: '完成第1天',
-    icon: '🎖️',
-    check: async () => true
-  },
-  {
-    name: '勤学苦练',
-    desc: '连续3天完成所有任务',
-    icon: '🏆',
-    check: async () => (await countHabitsCompletedDays()) >= 3
-  },
-  {
-    name: '琴剑双修',
-    desc: '完成5次钢琴+运动',
-    icon: '🎹',
-    check: async () => (await countHabitChecks('piano')) >= 5 && (await countHabitChecks('exercise')) >= 5
-  },
-  {
-    name: '博览群书',
-    desc: '阅读打卡7天',
-    icon: '📚',
-    check: async () => (await countHabitChecks('read')) >= 7
-  },
-  {
-    name: '数学大师',
-    desc: '数学进度100%',
-    icon: '🔥',
-    check: async () => (await countMathCompletedDays()) >= 1
-  }
+  { name: '初入江湖', desc: '完成第1天', icon: '🎖️', check: async () => true },
+  { name: '勤学苦练', desc: '连续3天完成所有任务', icon: '🏆', check: async () => (await countHabitsCompletedDays()) >= 3 },
+  { name: '持之以恒', desc: '完成7天打卡', icon: '🧭', check: async () => (await countHabitsCompletedDays()) >= 7 },
+  { name: '半程侠影', desc: '完成第7天', icon: '🥋', check: async () => (await countHabitsCompletedDays()) >= 7 },
+  { name: '登峰造极', desc: '完成14天打卡', icon: '🗡️', check: async () => (await countHabitsCompletedDays()) >= 14 },
+  { name: '琴剑双修', desc: '完成5次钢琴+运动', icon: '🎹', check: async () => (await countHabitChecks('piano')) >= 5 && (await countHabitChecks('exercise')) >= 5 },
+  { name: '晨光侠客', desc: '早起打卡5天', icon: '🌅', check: async () => (await countHabitChecks('wake')) >= 5 },
+  { name: '夜行不辍', desc: '早睡打卡5天', icon: '🌙', check: async () => (await countHabitChecks('sleep')) >= 5 },
+  { name: '博览群书', desc: '阅读打卡7天', icon: '📚', check: async () => (await countHabitChecks('read')) >= 7 },
+  { name: '运动达人', desc: '运动打卡7天', icon: '🏃', check: async () => (await countHabitChecks('exercise')) >= 7 },
+  { name: '琴艺精进', desc: '练琴打卡7天', icon: '🎼', check: async () => (await countHabitChecks('piano')) >= 7 },
+  { name: '数学大师', desc: '数学进度100%（累计1天）', icon: '🔥', check: async () => (await countMathCompletedDays()) >= 1 },
+  { name: '数学宗师', desc: '数学进度100%累计3天', icon: '🧮', check: async () => (await countMathCompletedDays()) >= 3 },
+  { name: '学习达人', desc: '习惯完成度100%累计3天', icon: '📈', check: async () => (await countHabitsCompletedDays()) >= 3 },
+  { name: '坚持不懈', desc: '习惯完成度100%累计7天', icon: '🛡️', check: async () => (await countHabitsCompletedDays()) >= 7 }
 ];
 
 // ====== 离线缓存 ======
@@ -484,12 +473,15 @@ async function renderRewards() {
 
   container.innerHTML = REWARDS.map(reward => {
     const isUnlocked = unlockedNames.has(reward.name);
+    const downloadLink = reward.stl ? `
+        <a class="reward-download" href="${reward.stl}" download>下载STL</a>
+      ` : '';
     return `
       <div class="reward-card ${isUnlocked ? 'unlocked' : 'locked'}">
         <div class="reward-model">${isUnlocked ? '⚔️' : '🔒'}</div>
         <span class="reward-name">${reward.name}</span>
         <span class="reward-status">${isUnlocked ? '已解锁' : reward.condition}</span>
-        ${isUnlocked ? '<button class="reward-download">下载STL</button>' : ''}
+        ${isUnlocked ? downloadLink : ''}
       </div>
     `;
   }).join('');
