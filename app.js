@@ -32,6 +32,7 @@ const QUEUE_KEY = 'jkx_action_queue';
 
 let cachedInterests = null;
 let cachedProgress = null;
+let cachedCurrentDay = null;
 
 const REWARDS = [
   {
@@ -65,11 +66,11 @@ const REWARDS = [
 ];
 
 const ACHIEVEMENTS = [
-  { name: '初入江湖', desc: '完成第1天', icon: '🎖️', check: async () => true },
+  { name: '初入江湖', desc: '完成第1天', icon: '🎖️', check: async () => (await getCurrentDay()) >= 1 },
   { name: '勤学苦练', desc: '连续3天完成所有任务', icon: '🏆', check: async () => (await countHabitsCompletedDays()) >= 3 },
   { name: '持之以恒', desc: '完成7天打卡', icon: '🧭', check: async () => (await countHabitsCompletedDays()) >= 7 },
-  { name: '半程侠影', desc: '完成第7天', icon: '🥋', check: async () => (await countHabitsCompletedDays()) >= 7 },
-  { name: '登峰造极', desc: '完成14天打卡', icon: '🗡️', check: async () => (await countHabitsCompletedDays()) >= 14 },
+  { name: '半程侠影', desc: '完成第7天', icon: '🥋', check: async () => (await getCurrentDay()) >= 7 },
+  { name: '登峰造极', desc: '完成14天打卡', icon: '🗡️', check: async () => (await getCurrentDay()) >= 14 },
   { name: '琴剑双修', desc: '完成5次钢琴+运动', icon: '🎹', check: async () => (await countHabitChecks('piano')) >= 5 && (await countHabitChecks('exercise')) >= 5 },
   { name: '晨光侠客', desc: '早起打卡5天', icon: '🌅', check: async () => (await countHabitChecks('wake')) >= 5 },
   { name: '夜行不辍', desc: '早睡打卡5天', icon: '🌙', check: async () => (await countHabitChecks('sleep')) >= 5 },
@@ -189,13 +190,19 @@ async function initApp() {
 }
 
 async function initDayNumber() {
+  cachedCurrentDay = await getCurrentDay();
+  document.getElementById('dayNum').textContent = cachedCurrentDay;
+}
+
+async function getCurrentDay() {
+  if (cachedCurrentDay) return cachedCurrentDay;
   const student = await safeRead('student', () => getStudent());
   const start = new Date(student.start_date);
   const today = new Date();
   const diffTime = Math.abs(today - start);
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  const currentDay = Math.min(diffDays, 14);
-  document.getElementById('dayNum').textContent = currentDay;
+  cachedCurrentDay = Math.min(diffDays, 14);
+  return cachedCurrentDay;
 }
 
 // ====== 仪表盘 ======
