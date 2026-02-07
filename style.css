@@ -85,6 +85,17 @@ h1, h2, h3 {
     gap: var(--spacing-sm);
 }
 
+.offline-badge {
+    display: none;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(231, 76, 60, 0.2);
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+}
+.offline-badge.show { display: inline-flex; }
+
 .logo-icon {
     font-size: 1.8rem;
     animation: float 3s ease-in-out infinite;
@@ -501,6 +512,8 @@ h1, h2, h3 {
     color: var(--ink-black);
     font-size: 0.75rem;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
 }
 
 /* ====== 成就墙 ====== */
@@ -639,6 +652,51 @@ h1, h2, h3 {
 .event-action:hover {
     background: var(--gold);
     color: var(--ink-black);
+}
+
+/* ====== 弹窗 ====== */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    width: 80%;
+    max-width: 320px;
+    background: var(--ink-deep);
+    border: 1px solid var(--mist);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    text-align: center;
+    box-shadow: var(--shadow-soft);
+}
+
+.modal-title {
+    font-size: 1.2rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.modal-body {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: var(--spacing-md);
+}
+
+.modal-close {
+    padding: 8px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--gradient-gold);
+    color: var(--ink-black);
+    cursor: pointer;
 }
 
 /* ====== 底部导航 ====== */

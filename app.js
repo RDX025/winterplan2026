@@ -100,7 +100,7 @@ function cacheGet(key, ttlMs = 24 * 60 * 60 * 1000) {
 function enqueueAction(action) {
   const raw = localStorage.getItem(QUEUE_KEY);
   const queue = raw ? JSON.parse(raw) : [];
-  queue.push({ ...action, id: Date.now() });
+  queue.push({ ...action, id: Date.now(), attempts: action.attempts || 0 });
   localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 }
 
@@ -114,7 +114,10 @@ async function syncQueue() {
     try {
       await executeQueuedAction(item);
     } catch (error) {
-      remaining.push(item);
+      const attempts = (item.attempts || 0) + 1;
+      if (attempts <= 3) {
+        remaining.push({ ...item, attempts });
+      }
     }
   }
 
@@ -166,7 +169,13 @@ async function safeWrite(type, payload, action) {
 }
 
 window.addEventListener('online', () => {
+  setOfflineBadge(false);
   syncQueue().then(() => showToast('已恢复在线，正在同步数据'));
+});
+
+window.addEventListener('offline', () => {
+  setOfflineBadge(true);
+  showToast('已进入离线模式');
 });
 
 // ====== 初始化 ======
@@ -180,6 +189,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function initApp() {
+  setOfflineBadge(!navigator.onLine);
+  bindModal();
   await initDayNumber();
   await initDashboard();
   await initTimeline();
@@ -468,7 +479,7 @@ async function evaluateRewards() {
     const ok = await reward.check();
     if (ok) {
       await unlockReward(reward.name, reward.icon, reward.condition);
-      showToast(`🎉 解锁奖励：${reward.name}`);
+      showModal('🎉 解锁奖励', reward.name);
     }
   }
 }
@@ -508,7 +519,7 @@ async function evaluateAchievements() {
     const ok = await achievement.check();
     if (ok) {
       await addAchievement(achievement.name, achievement.desc, achievement.icon);
-      showToast(`🏆 获得成就：${achievement.name}`);
+      showModal('🏆 获得成就', achievement.name);
     }
   }
 }
@@ -617,4 +628,31 @@ function showToast(message) {
     toast.style.animation = 'fadeOut 0.3s ease';
     setTimeout(() => toast.remove(), 300);
   }, 2000);
+}
+
+function bindModal() {
+  const modal = document.getElementById('notifyModal');
+  const closeBtn = document.getElementById('modalClose');
+  if (!modal || !closeBtn) return;
+  closeBtn.addEventListener('click', () => {
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  });
+}
+
+function showModal(title, body) {
+  const modal = document.getElementById('notifyModal');
+  const titleEl = document.getElementById('modalTitle');
+  const bodyEl = document.getElementById('modalBody');
+  if (!modal || !titleEl || !bodyEl) return;
+  titleEl.textContent = title;
+  bodyEl.textContent = body;
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function setOfflineBadge(isOffline) {
+  const badge = document.getElementById('offlineBadge');
+  if (!badge) return;
+  badge.classList.toggle('show', isOffline);
 }
