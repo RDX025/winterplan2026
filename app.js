@@ -9,7 +9,14 @@ import {
   recordChoice,
   getTodayTimeline,
   createTodayTimeline,
-  updateTimelineStatus
+  updateTimelineStatus,
+  getUnlockedRewards,
+  unlockReward,
+  getAchievements,
+  addAchievement,
+  countMathCompletedDays,
+  countHabitsCompletedDays,
+  countHabitChecks
 } from './supabase-client.js';
 
 const HABIT_KEYS = ['wake', 'piano', 'exercise', 'read', 'sleep', 'math'];
@@ -20,7 +27,157 @@ const CHOICE_TITLE_MAP = {
   logic: '数学解谜挑战'
 };
 
+const CACHE_PREFIX = 'jkx_cache_';
+const QUEUE_KEY = 'jkx_action_queue';
+
 let cachedInterests = null;
+let cachedProgress = null;
+
+const REWARDS = [
+  {
+    name: '青龙偃月刀',
+    icon: '⚔️',
+    condition: '新手礼包',
+    check: async () => true
+  },
+  {
+    name: '方天画戟',
+    icon: '🔒',
+    condition: '完成3天数学',
+    check: async () => (await countMathCompletedDays()) >= 3
+  },
+  {
+    name: '丈八蛇矛',
+    icon: '🔒',
+    condition: '完成5天打卡',
+    check: async () => (await countHabitsCompletedDays()) >= 5
+  },
+  {
+    name: '诸葛连弩',
+    icon: '🔒',
+    condition: '数学进阶挑战',
+    check: async () => (await countMathCompletedDays()) >= 7
+  }
+];
+
+const ACHIEVEMENTS = [
+  {
+    name: '初入江湖',
+    desc: '完成第1天',
+    icon: '🎖️',
+    check: async () => true
+  },
+  {
+    name: '勤学苦练',
+    desc: '连续3天完成所有任务',
+    icon: '🏆',
+    check: async () => (await countHabitsCompletedDays()) >= 3
+  },
+  {
+    name: '琴剑双修',
+    desc: '完成5次钢琴+运动',
+    icon: '🎹',
+    check: async () => (await countHabitChecks('piano')) >= 5 && (await countHabitChecks('exercise')) >= 5
+  },
+  {
+    name: '博览群书',
+    desc: '阅读打卡7天',
+    icon: '📚',
+    check: async () => (await countHabitChecks('read')) >= 7
+  },
+  {
+    name: '数学大师',
+    desc: '数学进度100%',
+    icon: '🔥',
+    check: async () => (await countMathCompletedDays()) >= 1
+  }
+];
+
+// ====== 离线缓存 ======
+function cacheSet(key, data) {
+  localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ data, ts: Date.now() }));
+}
+
+function cacheGet(key, ttlMs = 24 * 60 * 60 * 1000) {
+  const raw = localStorage.getItem(CACHE_PREFIX + key);
+  if (!raw) return null;
+  const parsed = JSON.parse(raw);
+  if (!parsed?.data) return null;
+  if (Date.now() - parsed.ts > ttlMs) return parsed.data; // 过期仍可用作降级
+  return parsed.data;
+}
+
+function enqueueAction(action) {
+  const raw = localStorage.getItem(QUEUE_KEY);
+  const queue = raw ? JSON.parse(raw) : [];
+  queue.push({ ...action, id: Date.now() });
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+}
+
+async function syncQueue() {
+  const raw = localStorage.getItem(QUEUE_KEY);
+  const queue = raw ? JSON.parse(raw) : [];
+  if (!queue.length) return;
+
+  const remaining = [];
+  for (const item of queue) {
+    try {
+      await executeQueuedAction(item);
+    } catch (error) {
+      remaining.push(item);
+    }
+  }
+
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
+}
+
+async function executeQueuedAction(item) {
+  switch (item.type) {
+    case 'toggleHabit':
+      await toggleHabitDB(item.payload.habitType);
+      break;
+    case 'updateProgress':
+      await updateProgress(item.payload.type, item.payload.value);
+      break;
+    case 'recordChoice':
+      await recordChoice(item.payload.choiceType, item.payload.choiceTitle);
+      break;
+    case 'updateInterest':
+      await updateInterest(item.payload.interestType, item.payload.increment);
+      break;
+    case 'updateTimelineStatus':
+      await updateTimelineStatus(item.payload.timelineId, item.payload.status);
+      break;
+    default:
+      break;
+  }
+}
+
+async function safeRead(cacheKey, fetcher) {
+  try {
+    const data = await fetcher();
+    cacheSet(cacheKey, data);
+    return data;
+  } catch (error) {
+    const cached = cacheGet(cacheKey);
+    if (cached) return cached;
+    throw error;
+  }
+}
+
+async function safeWrite(type, payload, action) {
+  try {
+    return await action();
+  } catch (error) {
+    enqueueAction({ type, payload });
+    showToast('离线模式：已缓存操作');
+    return null;
+  }
+}
+
+window.addEventListener('online', () => {
+  syncQueue().then(() => showToast('已恢复在线，正在同步数据'));
+});
 
 // ====== 初始化 ======
 document.addEventListener('DOMContentLoaded', async () => {
@@ -38,10 +195,12 @@ async function initApp() {
   await initTimeline();
   await initHabits();
   await initRadarChart();
+  await initRewards();
+  await initAchievements();
 }
 
 async function initDayNumber() {
-  const student = await getStudent();
+  const student = await safeRead('student', () => getStudent());
   const start = new Date(student.start_date);
   const today = new Date();
   const diffTime = Math.abs(today - start);
@@ -52,8 +211,8 @@ async function initDayNumber() {
 
 // ====== 仪表盘 ======
 async function initDashboard() {
-  const progress = await getTodayProgress();
-  renderProgressBars(progress);
+  cachedProgress = await safeRead('today_progress', () => getTodayProgress());
+  renderProgressBars(cachedProgress);
 }
 
 function renderProgressBars(progress) {
@@ -69,7 +228,7 @@ function renderProgressBars(progress) {
 
 // ====== 课程时间线 ======
 async function initTimeline() {
-  let timeline = await getTodayTimeline();
+  let timeline = await safeRead('today_timeline', () => getTodayTimeline());
   if (!timeline || timeline.length === 0) {
     timeline = await createTodayTimeline();
   }
@@ -117,14 +276,14 @@ function getStatusIcon(status) {
 
 async function handleTimelineClick(timelineId) {
   if (!confirm('确认完成此任务吗？')) return;
-  await updateTimelineStatus(timelineId, 'completed');
+  await safeWrite('updateTimelineStatus', { timelineId, status: 'completed' }, () => updateTimelineStatus(timelineId, 'completed'));
   await initTimeline();
   showToast('✅ 打卡成功');
 }
 
 // ====== 习惯打卡 ======
 async function initHabits() {
-  const habits = await getTodayHabits();
+  const habits = await safeRead('today_habits', () => getTodayHabits());
   renderHabits(habits);
 }
 
@@ -140,7 +299,9 @@ function renderHabits(habits) {
 }
 
 window.toggleHabit = async function toggleHabit(habitType) {
-  const updated = await toggleHabitDB(habitType);
+  const updated = await safeWrite('toggleHabit', { habitType }, () => toggleHabitDB(habitType));
+  if (!updated) return;
+
   const card = document.getElementById(`habit-${habitType}`);
   card.classList.toggle('checked', updated.is_completed);
 
@@ -152,8 +313,11 @@ async function recalculateHabitsProgress() {
   const completed = habits.filter(h => h.is_completed).length;
   const progress = Math.round((completed / HABIT_KEYS.length) * 100);
 
-  await updateProgress('habits', progress);
-  renderProgressBars(await getTodayProgress());
+  await safeWrite('updateProgress', { type: 'habits', value: progress }, () => updateProgress('habits', progress));
+  cachedProgress = await getTodayProgress();
+  renderProgressBars(cachedProgress);
+
+  await refreshRewardsAndAchievements();
 }
 
 // ====== 每日选择 ======
@@ -168,8 +332,8 @@ window.selectChoice = async function selectChoice(element) {
 
   if (!interest || !choiceTitle) return;
 
-  await recordChoice(interest, choiceTitle);
-  await updateInterest(interest, 5);
+  await safeWrite('recordChoice', { choiceType: interest, choiceTitle }, () => recordChoice(interest, choiceTitle));
+  await safeWrite('updateInterest', { interestType: interest, increment: 5 }, () => updateInterest(interest, 5));
 
   cachedInterests = await getOrCreateInterests();
   drawRadarChart(cachedInterests);
@@ -184,7 +348,7 @@ window.selectChoice = async function selectChoice(element) {
 
 // ====== 兴趣雷达 ======
 async function initRadarChart() {
-  cachedInterests = await getOrCreateInterests();
+  cachedInterests = await safeRead('interests', () => getOrCreateInterests());
   drawRadarChart(cachedInterests);
 }
 
@@ -276,6 +440,99 @@ function drawRadarChart(interests) {
     const y = centerY + r * Math.sin(angle);
     ctx.fillText(labels[i], x, y + 4);
   }
+}
+
+// ====== 奖励系统 ======
+async function initRewards() {
+  await ensureBaseReward();
+  await refreshRewardsAndAchievements();
+}
+
+async function ensureBaseReward() {
+  const rewards = await safeRead('rewards', () => getUnlockedRewards());
+  const hasBase = rewards.some(r => r.reward_name === '青龙偃月刀');
+  if (!hasBase) {
+    await unlockReward('青龙偃月刀', '⚔️', '新手礼包');
+  }
+}
+
+async function refreshRewardsAndAchievements() {
+  await evaluateRewards();
+  await evaluateAchievements();
+  await renderRewards();
+  await renderAchievements();
+}
+
+async function evaluateRewards() {
+  const unlocked = await getUnlockedRewards();
+  const unlockedNames = new Set(unlocked.map(r => r.reward_name));
+
+  for (const reward of REWARDS) {
+    if (unlockedNames.has(reward.name)) continue;
+    const ok = await reward.check();
+    if (ok) {
+      await unlockReward(reward.name, reward.icon, reward.condition);
+      showToast(`🎉 解锁奖励：${reward.name}`);
+    }
+  }
+}
+
+async function renderRewards() {
+  const unlocked = await getUnlockedRewards();
+  const unlockedNames = new Set(unlocked.map(r => r.reward_name));
+  const container = document.querySelector('.rewards-grid');
+
+  container.innerHTML = REWARDS.map(reward => {
+    const isUnlocked = unlockedNames.has(reward.name);
+    return `
+      <div class="reward-card ${isUnlocked ? 'unlocked' : 'locked'}">
+        <div class="reward-model">${isUnlocked ? '⚔️' : '🔒'}</div>
+        <span class="reward-name">${reward.name}</span>
+        <span class="reward-status">${isUnlocked ? '已解锁' : reward.condition}</span>
+        ${isUnlocked ? '<button class="reward-download">下载STL</button>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ====== 成就系统 ======
+async function initAchievements() {
+  await refreshRewardsAndAchievements();
+}
+
+async function evaluateAchievements() {
+  const achieved = await getAchievements();
+  const achievedNames = new Set(achieved.map(a => a.achievement_name));
+
+  for (const achievement of ACHIEVEMENTS) {
+    if (achievedNames.has(achievement.name)) continue;
+    const ok = await achievement.check();
+    if (ok) {
+      await addAchievement(achievement.name, achievement.desc, achievement.icon);
+      showToast(`🏆 获得成就：${achievement.name}`);
+    }
+  }
+}
+
+async function renderAchievements() {
+  const achieved = await getAchievements();
+  const achievedNames = new Set(achieved.map(a => a.achievement_name));
+  const container = document.querySelector('.achievements-grid');
+
+  if (!container) return;
+
+  container.innerHTML = ACHIEVEMENTS.map(achievement => {
+    const isUnlocked = achievedNames.has(achievement.name);
+    return `
+      <div class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'}">
+        <div class="achievement-icon">${achievement.icon}</div>
+        <div class="achievement-info">
+          <span class="achievement-name">${achievement.name}</span>
+          <span class="achievement-desc">${achievement.desc}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ====== 城市切换 ======

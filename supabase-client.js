@@ -339,3 +339,53 @@ export async function getAchievements(studentId = DEFAULT_STUDENT_ID) {
   if (error) throw error;
   return data || [];
 }
+
+export async function addAchievement(achievementName, achievementDesc, achievementIcon, studentId = DEFAULT_STUDENT_ID) {
+  const { data, error } = await supabase
+    .from('achievements')
+    .insert([{
+      student_id: studentId,
+      achievement_name: achievementName,
+      achievement_desc: achievementDesc,
+      achievement_icon: achievementIcon
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function countMathCompletedDays(studentId = DEFAULT_STUDENT_ID) {
+  const { count, error } = await supabase
+    .from('daily_progress')
+    .select('id', { count: 'exact', head: true })
+    .eq('student_id', studentId)
+    .gte('math_progress', 100);
+
+  if (error) throw error;
+  return count || 0;
+}
+
+export async function countHabitsCompletedDays(studentId = DEFAULT_STUDENT_ID) {
+  const { count, error } = await supabase
+    .from('daily_progress')
+    .select('id', { count: 'exact', head: true })
+    .eq('student_id', studentId)
+    .gte('habits_progress', 100);
+
+  if (error) throw error;
+  return count || 0;
+}
+
+export async function countHabitChecks(habitType, studentId = DEFAULT_STUDENT_ID) {
+  const { count, error } = await supabase
+    .from('habit_checks')
+    .select('id', { count: 'exact', head: true })
+    .eq('student_id', studentId)
+    .eq('habit_type', habitType)
+    .eq('is_completed', true);
+
+  if (error) throw error;
+  return count || 0;
+}
