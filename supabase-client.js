@@ -161,6 +161,34 @@ export async function getInterests(studentId = DEFAULT_STUDENT_ID) {
   return interests;
 }
 
+export async function ensureInterestScores(studentId = DEFAULT_STUDENT_ID) {
+  const interestTypes = ['history', 'engineering', 'music', 'martial', 'logic', 'art'];
+  const payload = interestTypes.map(type => ({
+    student_id: studentId,
+    interest_type: type,
+    score: 0,
+    updated_at: new Date().toISOString()
+  }));
+
+  const { data, error } = await supabase
+    .from('interest_scores')
+    .upsert(payload, { onConflict: 'student_id,interest_type' })
+    .select();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getOrCreateInterests(studentId = DEFAULT_STUDENT_ID) {
+  const interests = await getInterests(studentId);
+  const hasAny = Object.keys(interests).length > 0;
+  if (!hasAny) {
+    await ensureInterestScores(studentId);
+    return await getInterests(studentId);
+  }
+  return interests;
+}
+
 export async function updateInterest(interestType, increment, studentId = DEFAULT_STUDENT_ID) {
   const { data: current } = await supabase
     .from('interest_scores')
@@ -190,6 +218,13 @@ export async function updateInterest(interestType, increment, studentId = DEFAUL
 
 export async function recordChoice(choiceType, choiceTitle, studentId = DEFAULT_STUDENT_ID) {
   const today = new Date().toISOString().split('T')[0];
+
+  // 保证每日仅一条记录（先删除当日旧记录）
+  await supabase
+    .from('daily_choices')
+    .delete()
+    .eq('student_id', studentId)
+    .eq('date', today);
   
   const { data, error } = await supabase
     .from('daily_choices')
@@ -218,6 +253,32 @@ export async function getTodayTimeline(studentId = DEFAULT_STUDENT_ID) {
     .eq('date', today)
     .order('time', { ascending: true });
   
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createTodayTimeline(studentId = DEFAULT_STUDENT_ID) {
+  const today = new Date().toISOString().split('T')[0];
+  const base = [
+    { time: '08:00', event_title: '英语课', event_subtitle: '2小时', event_icon: '📖', duration_hours: 2 },
+    { time: '10:00', event_title: '自由探索时间', event_subtitle: '选择你的冒险', event_icon: '🎯', duration_hours: 1 },
+    { time: '14:00', event_title: '数学课', event_subtitle: '2小时', event_icon: '🧮', duration_hours: 2 },
+    { time: '16:00', event_title: '兴趣发现时间', event_subtitle: '解锁新技能', event_icon: '⚔️', duration_hours: 1.5 },
+    { time: '19:00', event_title: '琴剑修炼', event_subtitle: '钢琴 + 运动', event_icon: '🎹', duration_hours: 1.5 }
+  ];
+
+  const payload = base.map(item => ({
+    student_id: studentId,
+    date: today,
+    status: 'pending',
+    ...item
+  }));
+
+  const { data, error } = await supabase
+    .from('course_timeline')
+    .insert(payload)
+    .select();
+
   if (error) throw error;
   return data || [];
 }
