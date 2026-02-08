@@ -1226,6 +1226,11 @@ function renderCalendarTimeline() {
     `;
   }).join('');
   
+  // 空状态提示
+  const emptyHtml = todaySchedule.length === 0 
+    ? '<div class="empty-schedule">📭 暂无日程<br><small>点击右上角"添加日程"开始规划</small></div>'
+    : '';
+  
   container.innerHTML = `
     <div class="calendar-timeline-header">
       <span>📅 今日日程</span>
@@ -1238,6 +1243,7 @@ function renderCalendarTimeline() {
       <div class="events-column" id="eventsColumn">
         ${nowLineHtml}
         ${eventsHtml}
+        ${emptyHtml}
       </div>
     </div>
   `;
@@ -1342,6 +1348,7 @@ window.eventTouchEnd = function(event, id) {
       eventEl.style.transform = 'translateX(0)';
       const editBg = wrapper?.querySelector('.event-edit-bg');
       if (editBg) editBg.style.opacity = '0';
+      isDragging = false; // 重置拖拽状态再打开弹窗
       openEditEventModal(id);
     } else {
       // 恢复位置
