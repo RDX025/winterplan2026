@@ -47,79 +47,8 @@ const TIMELINE_START_HOUR = 7;
 const TIMELINE_END_HOUR = 22;
 const HOUR_HEIGHT = 60; // 每小时高度px
 
-// 今日日程（带开始和结束时间，便于时间轴显示）
-let todaySchedule = [
-  { 
-    id: 1, 
-    startHour: 8, 
-    startMin: 0,
-    endHour: 10,
-    endMin: 0,
-    event_title: '自由探索时间', 
-    event_subtitle: '选择你的冒险', 
-    event_icon: '🎯', 
-    color: '#3498db',
-    status: 'completed', 
-    type: 'fixed',
-    subtasks: []
-  },
-  { 
-    id: 2, 
-    startHour: 10, 
-    startMin: 0,
-    endHour: 12,
-    endMin: 0,
-    event_title: '英语课', 
-    event_subtitle: '2小时', 
-    event_icon: '📖', 
-    color: '#9b59b6',
-    status: 'current', 
-    type: 'fixed',
-    subtasks: []
-  },
-  { 
-    id: 3, 
-    startHour: 14, 
-    startMin: 0,
-    endHour: 16,
-    endMin: 0,
-    event_title: '数学课', 
-    event_subtitle: '2小时', 
-    event_icon: '🧮', 
-    color: '#e74c3c',
-    status: 'pending', 
-    type: 'fixed',
-    subtasks: []
-  },
-  { 
-    id: 4, 
-    startHour: 16, 
-    startMin: 30,
-    endHour: 18,
-    endMin: 0,
-    event_title: '兴趣发现 & 琴剑修炼', 
-    event_subtitle: '钢琴 + 运动 + 创意探索', 
-    event_icon: '🎹', 
-    color: '#2ecc71',
-    status: 'pending', 
-    type: 'fixed',
-    subtasks: []
-  },
-  { 
-    id: 5, 
-    startHour: 19, 
-    startMin: 0,
-    endHour: 20,
-    endMin: 30,
-    event_title: '晚间复习', 
-    event_subtitle: '复习 + 阅读', 
-    event_icon: '📚', 
-    color: '#f39c12',
-    status: 'pending', 
-    type: 'fixed',
-    subtasks: []
-  }
-];
+// 今日日程（初始为空，用户自行添加或从Supabase加载）
+let todaySchedule = [];
 
 // 拖拽状态
 let draggedEvent = null;
