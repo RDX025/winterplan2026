@@ -2416,10 +2416,6 @@ function renderEvents(city) {
   eventsList.innerHTML = events.map((e, idx) => {
     const categoryColor = CATEGORY_COLORS[e.category] || '#888';
     const categoryTag = e.category ? `<span class="event-category" style="background:${categoryColor}20;color:${categoryColor}">${e.category}</span>` : '';
-    const eventId = `${city}_${idx}`;
-    const titleLink = e.url 
-      ? `<a href="${e.url}" target="_blank" class="event-title-link">${e.title} ↗</a>`
-      : `<span class="event-title-text">${e.title}</span>`;
     
     return `
     <div class="event-card activity-card" data-city="${city}" data-idx="${idx}" ontouchstart="activityTouchStart(event, '${city}', ${idx})" ontouchmove="activityTouchMove(event)" ontouchend="activityTouchEnd(event)">
@@ -2431,7 +2427,7 @@ function renderEvents(city) {
         </div>
         <div class="event-details">
           ${categoryTag}
-          ${titleLink}
+          <span class="event-title-text">${e.title}</span>
           <p class="event-desc">${e.desc}</p>
           <div class="event-meta">
             <span class="event-location">📍 ${e.location}</span>
