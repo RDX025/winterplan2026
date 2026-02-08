@@ -2169,17 +2169,20 @@ window.saveHabitEdit = function() {
   const name = document.getElementById('editHabitName').value.trim();
   const subtitle = document.getElementById('editHabitSubtitle').value.trim();
   
-  if (name) {
-    habitsData[currentEditHabitId].name = name;
-    habitsData[currentEditHabitId].subtitle = subtitle;
-    if (selectedHabitIcon) {
-      habitsData[currentEditHabitId].icon = selectedHabitIcon;
-    }
-    
-    saveHabitsData();
-    renderHabits();
-    showToast('✅ 习惯已更新');
+  if (!name) {
+    showToast('请输入名称');
+    return;
   }
+  
+  habitsData[currentEditHabitId].name = name;
+  habitsData[currentEditHabitId].subtitle = subtitle;
+  if (selectedHabitIcon) {
+    habitsData[currentEditHabitId].icon = selectedHabitIcon;
+  }
+  
+  saveHabitsData();
+  renderHabits();
+  showToast('✅ 习惯已更新');
   
   closeEditHabitModal();
 };
