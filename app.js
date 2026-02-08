@@ -14,9 +14,23 @@ const MOCKUP_STUDENT = {
   name: '彦平少侠',
   title: '初入江湖',
   avatar: '🥷',
-  start_date: '2026-02-01',
+  start_date: '2026-02-02',  // 寒假开始
+  end_date: '2026-02-28',    // 寒假结束
+  school_date: '2026-03-02', // 正式开学
   current_day: 7
 };
+
+// 搞笑倒计时语录
+const COUNTDOWN_QUOTES = [
+  { days: 20, emoji: '😎', text: '时间还早，继续浪~' },
+  { days: 15, emoji: '🤨', text: '假期过半，作业呢？' },
+  { days: 10, emoji: '😰', text: '十天了！快醒醒！' },
+  { days: 7, emoji: '😱', text: '一周倒计时！慌不慌？' },
+  { days: 5, emoji: '🏃', text: '冲刺阶段！加油鸭！' },
+  { days: 3, emoji: '😭', text: '三天！作业写完没？！' },
+  { days: 1, emoji: '💀', text: '明天开学...祝好运' },
+  { days: 0, emoji: '📚', text: '开学快乐！（并不）' }
+];
 
 const MOCKUP_PROGRESS = {
   math_progress: 45,
@@ -24,21 +38,96 @@ const MOCKUP_PROGRESS = {
   habits_progress: 60
 };
 
-// 今日日程（可动态添加活动）
+// 时间轴配置（7AM - 10PM）
+const TIMELINE_START_HOUR = 7;
+const TIMELINE_END_HOUR = 22;
+const HOUR_HEIGHT = 60; // 每小时高度px
+
+// 今日日程（带开始和结束时间，便于时间轴显示）
 let todaySchedule = [
-  { id: 1, time: '08:00', event_title: '英语课', event_subtitle: '2小时', event_icon: '📖', status: 'completed', type: 'fixed' },
-  { id: 2, time: '10:00', event_title: '自由探索时间', event_subtitle: '选择你的冒险', event_icon: '🎯', status: 'current', type: 'fixed' },
-  { id: 3, time: '14:00', event_title: '数学课', event_subtitle: '2小时', event_icon: '🧮', status: 'pending', type: 'fixed' },
-  { id: 4, time: '16:00', event_title: '兴趣发现时间', event_subtitle: '解锁新技能', event_icon: '⚔️', status: 'pending', type: 'fixed' },
-  { id: 5, time: '19:00', event_title: '琴剑修炼', event_subtitle: '钢琴 + 运动', event_icon: '🎹', status: 'pending', type: 'fixed' }
+  { 
+    id: 1, 
+    startHour: 8, 
+    startMin: 0,
+    endHour: 10,
+    endMin: 0,
+    event_title: '自由探索时间', 
+    event_subtitle: '选择你的冒险', 
+    event_icon: '🎯', 
+    color: '#3498db',
+    status: 'completed', 
+    type: 'fixed',
+    subtasks: []
+  },
+  { 
+    id: 2, 
+    startHour: 10, 
+    startMin: 0,
+    endHour: 12,
+    endMin: 0,
+    event_title: '英语课', 
+    event_subtitle: '2小时', 
+    event_icon: '📖', 
+    color: '#9b59b6',
+    status: 'current', 
+    type: 'fixed',
+    subtasks: []
+  },
+  { 
+    id: 3, 
+    startHour: 14, 
+    startMin: 0,
+    endHour: 16,
+    endMin: 0,
+    event_title: '数学课', 
+    event_subtitle: '2小时', 
+    event_icon: '🧮', 
+    color: '#e74c3c',
+    status: 'pending', 
+    type: 'fixed',
+    subtasks: []
+  },
+  { 
+    id: 4, 
+    startHour: 16, 
+    startMin: 30,
+    endHour: 18,
+    endMin: 0,
+    event_title: '兴趣发现 & 琴剑修炼', 
+    event_subtitle: '钢琴 + 运动 + 创意探索', 
+    event_icon: '🎹', 
+    color: '#2ecc71',
+    status: 'pending', 
+    type: 'fixed',
+    subtasks: []
+  },
+  { 
+    id: 5, 
+    startHour: 19, 
+    startMin: 0,
+    endHour: 20,
+    endMin: 30,
+    event_title: '晚间复习', 
+    event_subtitle: '复习 + 阅读', 
+    event_icon: '📚', 
+    color: '#f39c12',
+    status: 'pending', 
+    type: 'fixed',
+    subtasks: []
+  }
 ];
+
+// 拖拽状态
+let draggedEvent = null;
+let dragStartY = 0;
+let dragStartHour = 0;
 
 // ====== 本周精彩表现（已完成成就）======
 const WEEKLY_ACHIEVEMENTS = [
   { 
     date: '2月3日', 
     title: 'Impromptu Speech 即兴演讲',
-    category: '音乐表达',
+    category: '语言训练',
     icon: '🎤',
     score: null,
     comment: '表现自信大方，语言流畅！',
@@ -64,8 +153,21 @@ const WEEKLY_ACHIEVEMENTS = [
   }
 ];
 
+// 三国人物头像选项
+const AVATAR_OPTIONS = [
+  { id: 'ninja', emoji: '🥷', name: '忍者', desc: '神出鬼没' },
+  { id: 'guanyu', emoji: '⚔️', name: '关羽', desc: '义薄云天' },
+  { id: 'zhangfei', emoji: '🗡️', name: '张飞', desc: '勇冠三军' },
+  { id: 'zhugeliang', emoji: '🪭', name: '诸葛亮', desc: '智绝天下' },
+  { id: 'zhaozilong', emoji: '🐴', name: '赵子龙', desc: '七进七出' },
+  { id: 'lvbu', emoji: '🔱', name: '吕布', desc: '天下无双' },
+  { id: 'caocao', emoji: '👑', name: '曹操', desc: '奸雄枭雄' },
+  { id: 'sunwukong', emoji: '🐵', name: '孙悟空', desc: '斗战胜佛' }
+];
+
 // 用户上传的照片
 let userPhotos = [];
+let selectedAvatar = 'ninja';
 
 const MOCKUP_HABITS = {
   wake: false,
@@ -720,6 +822,73 @@ function initDayNumber() {
 // ====== 仪表盘 ======
 function initDashboard() {
   renderProgressBars(localProgress);
+  renderDateAndCountdown();
+}
+
+function renderDateAndCountdown() {
+  const todayContainer = document.getElementById('todayDate');
+  const countdownContainer = document.getElementById('countdownCard');
+  
+  if (!todayContainer || !countdownContainer) return;
+  
+  const today = new Date();
+  const schoolDate = new Date(MOCKUP_STUDENT.school_date);
+  const startDate = new Date(MOCKUP_STUDENT.start_date);
+  
+  // 计算今天是寒假第几天
+  const daysPassed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+  const totalDays = Math.floor((schoolDate - startDate) / (1000 * 60 * 60 * 24));
+  
+  // 计算距离开学还有几天
+  const daysUntilSchool = Math.ceil((schoolDate - today) / (1000 * 60 * 60 * 24));
+  
+  // 格式化今日日期
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  const dateStr = `${today.getMonth() + 1}月${today.getDate()}日 ${weekDays[today.getDay()]}`;
+  
+  // 渲染今日日期
+  todayContainer.innerHTML = `
+    <div class="date-big">${today.getDate()}</div>
+    <div class="date-info">
+      <span class="date-month">${today.getMonth() + 1}月</span>
+      <span class="date-weekday">${weekDays[today.getDay()]}</span>
+    </div>
+  `;
+  
+  // 获取搞笑语录
+  let quote = COUNTDOWN_QUOTES[COUNTDOWN_QUOTES.length - 1];
+  for (const q of COUNTDOWN_QUOTES) {
+    if (daysUntilSchool >= q.days) {
+      quote = q;
+      break;
+    }
+  }
+  
+  // 渲染倒计时
+  if (daysUntilSchool > 0) {
+    countdownContainer.innerHTML = `
+      <div class="countdown-emoji">${quote.emoji}</div>
+      <div class="countdown-content">
+        <div class="countdown-label">距离开学</div>
+        <div class="countdown-days"><span class="countdown-num">${daysUntilSchool}</span> 天</div>
+        <div class="countdown-quote">${quote.text}</div>
+      </div>
+    `;
+  } else {
+    countdownContainer.innerHTML = `
+      <div class="countdown-emoji">📚</div>
+      <div class="countdown-content">
+        <div class="countdown-label">已开学</div>
+        <div class="countdown-quote">新学期加油！</div>
+      </div>
+    `;
+  }
+  
+  // 更新状态卡片中的天数
+  const dayNumEl = document.getElementById('dayNum');
+  if (dayNumEl) {
+    dayNumEl.textContent = Math.max(1, Math.min(daysPassed, totalDays));
+  }
 }
 
 function renderProgressBars(progress) {
@@ -761,33 +930,84 @@ function renderWeeklyHighlights() {
   }).join('');
 }
 
-// ====== 课程时间线 ======
+// ====== 日历时间轴视图 ======
 function initTimeline() {
-  renderTimeline(todaySchedule);
+  renderCalendarTimeline();
+  initTimelineTouchDrag();
 }
 
-function renderTimeline(timeline) {
+function renderCalendarTimeline() {
   const container = document.getElementById('timelineContainer');
   if (!container) return;
   
-  container.innerHTML = timeline.map(item => {
-    const isActivity = item.type === 'activity';
-    const deleteBtn = isActivity ? `<button class="timeline-delete" onclick="removeFromSchedule(event, ${item.id})">✕</button>` : '';
+  // 生成时间轴刻度 - 点击可添加事件
+  let hoursHtml = '';
+  for (let h = TIMELINE_START_HOUR; h <= TIMELINE_END_HOUR; h++) {
+    const isNow = new Date().getHours() === h;
+    hoursHtml += `
+      <div class="hour-row ${isNow ? 'current-hour' : ''}" data-hour="${h}" style="height: ${HOUR_HEIGHT}px;" onclick="addEventAtHour(${h})">
+        <div class="hour-label">${h < 10 ? '0' + h : h}:00</div>
+        <div class="hour-line"></div>
+      </div>
+    `;
+  }
+  
+  // 当前时间指示线
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMin = now.getMinutes();
+  const nowPosition = (currentHour - TIMELINE_START_HOUR + currentMin / 60) * HOUR_HEIGHT;
+  const nowLineHtml = (currentHour >= TIMELINE_START_HOUR && currentHour <= TIMELINE_END_HOUR) ? `
+    <div class="now-indicator" style="top: ${nowPosition}px;">
+      <span class="now-time">${currentHour}:${currentMin < 10 ? '0' + currentMin : currentMin}</span>
+      <div class="now-line"></div>
+    </div>
+  ` : '';
+  
+  // 生成事件块 - 支持右滑删除和上下拖拽
+  let eventsHtml = todaySchedule.map(item => {
+    const startPos = (item.startHour - TIMELINE_START_HOUR + item.startMin / 60) * HOUR_HEIGHT;
+    const duration = (item.endHour - item.startHour + (item.endMin - item.startMin) / 60) * HOUR_HEIGHT;
+    const height = Math.max(duration, 40);
+    const timeStr = `${item.startHour}:${item.startMin < 10 ? '0' + item.startMin : item.startMin} - ${item.endHour}:${item.endMin < 10 ? '0' + item.endMin : item.endMin}`;
+    
     return `
-    <div class="timeline-item ${item.status} ${isActivity ? 'activity' : ''}" data-id="${item.id}" onclick="handleTimelineClick(${item.id})">
-      <div class="time">${item.time}</div>
-      <div class="event">
-        <span class="event-icon">${item.event_icon || '📘'}</span>
-        <div class="event-info">
-          <span class="event-title">${item.event_title}</span>
-          <span class="event-subtitle">${item.event_subtitle || ''}</span>
+      <div class="calendar-event-wrapper" data-id="${item.id}" style="top: ${startPos}px; height: ${height}px;">
+        <div class="event-delete-bg">🗑️ 删除</div>
+        <div class="calendar-event ${item.status}" 
+             data-id="${item.id}"
+             style="height: 100%; background: ${item.color}20; border-left: 4px solid ${item.color};"
+             ontouchstart="eventTouchStart(event, ${item.id})"
+             ontouchmove="eventTouchMove(event, ${item.id})"
+             ontouchend="eventTouchEnd(event, ${item.id})">
+          <div class="event-content" onclick="toggleEventStatus(${item.id})">
+            <span class="event-icon">${item.event_icon}</span>
+            <div class="event-text">
+              <span class="event-title">${item.event_title}</span>
+              <span class="event-time">${timeStr}</span>
+            </div>
+            <span class="event-status-icon">${getStatusIcon(item.status)}</span>
+          </div>
         </div>
-        <span class="event-status">${getStatusIcon(item.status)}</span>
-        ${deleteBtn}
+      </div>
+    `;
+  }).join('');
+  
+  container.innerHTML = `
+    <div class="calendar-timeline-header">
+      <span>📅 今日日程</span>
+      <button class="add-event-btn" onclick="showAddEventModal()">+ 添加日程</button>
+    </div>
+    <div class="calendar-timeline" id="calendarTimeline">
+      <div class="hours-column">
+        ${hoursHtml}
+      </div>
+      <div class="events-column" id="eventsColumn">
+        ${nowLineHtml}
+        ${eventsHtml}
       </div>
     </div>
   `;
-  }).join('');
 }
 
 function getStatusIcon(status) {
@@ -796,17 +1016,378 @@ function getStatusIcon(status) {
   return '⬜';
 }
 
+// ====== 触摸事件处理 - 右滑删除 + 上下拖拽 ======
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTop = 0;
+let touchCurrentEvent = null;
+let touchMode = null; // 'drag' | 'swipe' | null
+
+window.eventTouchStart = function(event, id) {
+  const touch = event.touches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  touchCurrentEvent = todaySchedule.find(e => e.id === id);
+  touchMode = null;
+  
+  const wrapper = event.target.closest('.calendar-event-wrapper');
+  if (wrapper) {
+    touchStartTop = parseFloat(wrapper.style.top) || 0;
+  }
+};
+
+window.eventTouchMove = function(event, id) {
+  if (!touchCurrentEvent) return;
+  
+  const touch = event.touches[0];
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+  
+  const eventEl = event.target.closest('.calendar-event');
+  const wrapper = event.target.closest('.calendar-event-wrapper');
+  if (!eventEl || !wrapper) return;
+  
+  // 判断滑动方向
+  if (!touchMode) {
+    if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      touchMode = 'swipe';
+    } else if (Math.abs(deltaY) > 15 && Math.abs(deltaY) > Math.abs(deltaX)) {
+      touchMode = 'drag';
+      wrapper.classList.add('dragging');
+    }
+  }
+  
+  if (touchMode === 'swipe') {
+    // 右滑删除 - 限制只能右滑
+    const swipeX = Math.max(0, Math.min(deltaX, 120));
+    eventEl.style.transform = `translateX(${swipeX}px)`;
+    
+    // 显示删除背景
+    const deleteBg = wrapper.querySelector('.event-delete-bg');
+    if (deleteBg) {
+      deleteBg.style.opacity = Math.min(swipeX / 80, 1);
+    }
+  } else if (touchMode === 'drag') {
+    // 上下拖拽 - 移动整个wrapper
+    event.preventDefault();
+    const newTop = touchStartTop + deltaY;
+    wrapper.style.top = newTop + 'px';
+  }
+};
+
+window.eventTouchEnd = function(event, id) {
+  const eventEl = document.querySelector(`.calendar-event[data-id="${id}"]`);
+  const wrapper = document.querySelector(`.calendar-event-wrapper[data-id="${id}"]`);
+  
+  if (touchMode === 'swipe' && eventEl) {
+    const transform = eventEl.style.transform || '';
+    const match = transform.match(/translateX\((-?\d+)px\)/);
+    const swipeDistance = match ? parseInt(match[1]) : 0;
+    
+    console.log('Swipe distance:', swipeDistance);
+    
+    if (swipeDistance > 60) {
+      // 删除事件 - 滑出动画
+      eventEl.style.transform = 'translateX(150%)';
+      eventEl.style.opacity = '0';
+      wrapper.style.transition = 'opacity 0.3s';
+      wrapper.style.opacity = '0';
+      setTimeout(() => {
+        deleteEvent(null, id);
+      }, 300);
+    } else {
+      // 恢复位置
+      eventEl.style.transform = 'translateX(0)';
+      if (wrapper) {
+        const deleteBg = wrapper.querySelector('.event-delete-bg');
+        if (deleteBg) deleteBg.style.opacity = '0';
+      }
+    }
+  } else if (touchMode === 'drag' && wrapper && touchCurrentEvent) {
+    wrapper.classList.remove('dragging');
+    
+    const newTop = parseFloat(wrapper.style.top) || 0;
+    let newStartHour = TIMELINE_START_HOUR + newTop / HOUR_HEIGHT;
+    newStartHour = Math.round(newStartHour * 2) / 2;
+    newStartHour = Math.max(TIMELINE_START_HOUR, Math.min(TIMELINE_END_HOUR - 1, newStartHour));
+    
+    const duration = (touchCurrentEvent.endHour - touchCurrentEvent.startHour) + (touchCurrentEvent.endMin - touchCurrentEvent.startMin) / 60;
+    
+    touchCurrentEvent.startHour = Math.floor(newStartHour);
+    touchCurrentEvent.startMin = (newStartHour % 1) * 60;
+    touchCurrentEvent.endHour = Math.floor(newStartHour + duration);
+    touchCurrentEvent.endMin = ((newStartHour + duration) % 1) * 60;
+    
+    showToast(`📍 ${touchCurrentEvent.startHour}:${touchCurrentEvent.startMin < 10 ? '0' + touchCurrentEvent.startMin : touchCurrentEvent.startMin}`);
+    renderCalendarTimeline();
+  }
+  
+  touchCurrentEvent = null;
+  touchMode = null;
+};
+
+// 保留旧函数兼容
+function initTimelineTouchDrag() {}
+window.touchDragStart = function() {};
+window.touchDragMove = function() {};
+window.touchDragEnd = function() {};
+
+// 鼠标拖拽
+window.mouseDragStart = function(event, id) {
+  event.preventDefault();
+  
+  draggedEvent = todaySchedule.find(e => e.id === id);
+  if (!draggedEvent) return;
+  
+  dragStartY = event.clientY;
+  const eventEl = event.target.closest('.calendar-event');
+  if (eventEl) {
+    touchStartTop = parseFloat(eventEl.style.top) || 0;
+    eventEl.classList.add('dragging');
+    
+    document.addEventListener('mousemove', mouseDragMove);
+    document.addEventListener('mouseup', mouseDragEnd);
+  }
+};
+
+function mouseDragMove(event) {
+  if (!draggedEvent) return;
+  
+  const deltaY = event.clientY - dragStartY;
+  const newTop = touchStartTop + deltaY;
+  
+  const eventEl = document.querySelector(`.calendar-event[data-id="${draggedEvent.id}"]`);
+  if (eventEl) {
+    eventEl.style.top = newTop + 'px';
+  }
+}
+
+function mouseDragEnd(event) {
+  if (!draggedEvent) return;
+  
+  const eventEl = document.querySelector(`.calendar-event[data-id="${draggedEvent.id}"]`);
+  if (eventEl) {
+    eventEl.classList.remove('dragging');
+    
+    const newTop = parseFloat(eventEl.style.top) || 0;
+    let newStartHour = TIMELINE_START_HOUR + newTop / HOUR_HEIGHT;
+    newStartHour = Math.round(newStartHour * 2) / 2;
+    newStartHour = Math.max(TIMELINE_START_HOUR, Math.min(TIMELINE_END_HOUR - 1, newStartHour));
+    
+    const duration = (draggedEvent.endHour - draggedEvent.startHour) + (draggedEvent.endMin - draggedEvent.startMin) / 60;
+    
+    draggedEvent.startHour = Math.floor(newStartHour);
+    draggedEvent.startMin = (newStartHour % 1) * 60;
+    draggedEvent.endHour = Math.floor(newStartHour + duration);
+    draggedEvent.endMin = ((newStartHour + duration) % 1) * 60;
+    
+    showSuccessAnimation('🎯 已调整时间');
+  }
+  
+  document.removeEventListener('mousemove', mouseDragMove);
+  document.removeEventListener('mouseup', mouseDragEnd);
+  draggedEvent = null;
+  renderCalendarTimeline();
+}
+
+// ====== 添加日程 ======
+window.addEventAtHour = function(hour) {
+  showAddEventModalWithTime(hour, 0);
+};
+
+window.showAddEventModal = function() {
+  const now = new Date();
+  let nextHour = now.getHours() + 1;
+  if (nextHour < TIMELINE_START_HOUR) nextHour = TIMELINE_START_HOUR;
+  if (nextHour > TIMELINE_END_HOUR - 1) nextHour = TIMELINE_END_HOUR - 1;
+  
+  showAddEventModalWithTime(nextHour, 0);
+};
+
+function showAddEventModalWithTime(hour, min) {
+  const modal = document.getElementById('notifyModal');
+  const titleEl = document.getElementById('modalTitle');
+  const bodyEl = document.getElementById('modalBody');
+  const closeBtn = document.getElementById('modalClose');
+  
+  if (!modal || !titleEl || !bodyEl) return;
+  
+  titleEl.textContent = '📅 添加新日程';
+  bodyEl.innerHTML = `
+    <div class="add-event-form">
+      <input type="text" id="newEventTitle" placeholder="日程标题" class="form-input">
+      <div class="time-row">
+        <select id="newEventStartHour" class="form-select">
+          ${Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => {
+            const h = TIMELINE_START_HOUR + i;
+            return `<option value="${h}" ${h === hour ? 'selected' : ''}>${h < 10 ? '0' + h : h}:00</option>`;
+          }).join('')}
+        </select>
+        <span>→</span>
+        <select id="newEventEndHour" class="form-select">
+          ${Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => {
+            const h = TIMELINE_START_HOUR + i;
+            return `<option value="${h}" ${h === hour + 1 ? 'selected' : ''}>${h < 10 ? '0' + h : h}:00</option>`;
+          }).join('')}
+        </select>
+      </div>
+      <div class="icon-picker">
+        ${['📚', '🎯', '🎹', '🏃', '✍️', '🎮', '🍽️', '😴'].map(icon => 
+          `<span class="icon-option" onclick="selectEventIcon('${icon}')">${icon}</span>`
+        ).join('')}
+      </div>
+      <input type="hidden" id="newEventIcon" value="📚">
+      <div class="color-picker">
+        ${['#3498db', '#e74c3c', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c'].map(color => 
+          `<span class="color-option" style="background:${color}" onclick="selectEventColor('${color}')"></span>`
+        ).join('')}
+      </div>
+      <input type="hidden" id="newEventColor" value="#3498db">
+      <button class="submit-btn" onclick="submitNewEvent()">✨ 添加日程</button>
+    </div>
+  `;
+  
+  closeBtn.textContent = '取消';
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+window.selectEventIcon = function(icon) {
+  document.getElementById('newEventIcon').value = icon;
+  document.querySelectorAll('.icon-option').forEach(el => el.classList.remove('selected'));
+  event.target.classList.add('selected');
+};
+
+window.selectEventColor = function(color) {
+  document.getElementById('newEventColor').value = color;
+  document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+  event.target.classList.add('selected');
+};
+
+window.submitNewEvent = function() {
+  const title = document.getElementById('newEventTitle').value.trim();
+  const startHour = parseInt(document.getElementById('newEventStartHour').value);
+  const endHour = parseInt(document.getElementById('newEventEndHour').value);
+  const icon = document.getElementById('newEventIcon').value;
+  const color = document.getElementById('newEventColor').value;
+  
+  if (!title) {
+    showToast('请输入日程标题');
+    return;
+  }
+  
+  if (endHour <= startHour) {
+    showToast('结束时间需大于开始时间');
+    return;
+  }
+  
+  const newEvent = {
+    id: Date.now(),
+    startHour: startHour,
+    startMin: 0,
+    endHour: endHour,
+    endMin: 0,
+    event_title: title,
+    event_subtitle: '',
+    event_icon: icon,
+    color: color,
+    status: 'pending',
+    type: 'custom',
+    subtasks: []
+  };
+  
+  todaySchedule.push(newEvent);
+  
+  // 关闭弹窗
+  const modal = document.getElementById('notifyModal');
+  modal.classList.remove('show');
+  
+  // 显示成功动画
+  showSuccessAnimation('🎉 日程已添加！');
+  
+  renderCalendarTimeline();
+};
+
+// 删除事件
+window.deleteEvent = function(event, id) {
+  if (event) event.stopPropagation();
+  
+  const idx = todaySchedule.findIndex(e => e.id === id);
+  if (idx !== -1) {
+    todaySchedule.splice(idx, 1);
+    showToast('🗑️ 已删除');
+    renderCalendarTimeline();
+  }
+};
+
+// 切换完成状态
+window.toggleEventStatus = function(id) {
+  const item = todaySchedule.find(e => e.id === id);
+  if (!item) return;
+  
+  if (item.status === 'completed') {
+    item.status = 'pending';
+    showToast('已取消完成');
+  } else {
+    item.status = 'completed';
+    showSuccessAnimation('✅ 任务完成！');
+  }
+  renderCalendarTimeline();
+};
+
+// ====== 成功动画 ======
+function showSuccessAnimation(message) {
+  // 创建全屏动画层
+  const overlay = document.createElement('div');
+  overlay.className = 'success-animation-overlay';
+  overlay.innerHTML = `
+    <div class="success-content">
+      <div class="success-icon">🎊</div>
+      <div class="success-message">${message}</div>
+      <div class="confetti-container" id="confettiContainer"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  
+  // 添加彩带/confetti效果
+  const confettiContainer = overlay.querySelector('#confettiContainer');
+  const colors = ['#f4d03f', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6', '#ff6b81'];
+  
+  for (let i = 0; i < 50; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + '%';
+    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+    confetti.style.animationDuration = (1 + Math.random()) + 's';
+    confettiContainer.appendChild(confetti);
+  }
+  
+  // 自动关闭
+  setTimeout(() => {
+    overlay.classList.add('fade-out');
+    setTimeout(() => overlay.remove(), 300);
+  }, 1500);
+}
+
+// 保留旧的拖拽函数兼容
+window.handleDragStart = function(event, id) {};
+window.handleDragEnd = function(event) {};
+window.handleDragOver = function(event) { event.preventDefault(); };
+window.handleDrop = function(event) { event.preventDefault(); };
+window.showEventModal = function(id) { toggleEventStatus(id); };
+
 window.handleTimelineClick = function handleTimelineClick(id) {
   const item = todaySchedule.find(t => t.id === id);
   if (!item) return;
   
   if (item.status === 'completed') {
-    showToast('已完成该任务');
-  } else if (item.status === 'current' || item.status === 'pending') {
+    item.status = 'pending';
+  } else {
     item.status = 'completed';
-    renderTimeline(todaySchedule);
-    showToast('✅ 打卡成功');
   }
+  renderCalendarTimeline();
+  showToast(item.status === 'completed' ? '✅ 已完成' : '已取消完成');
 };
 
 window.removeFromSchedule = function removeFromSchedule(event, id) {
@@ -814,8 +1395,58 @@ window.removeFromSchedule = function removeFromSchedule(event, id) {
   const idx = todaySchedule.findIndex(t => t.id === id);
   if (idx !== -1 && todaySchedule[idx].type === 'activity') {
     todaySchedule.splice(idx, 1);
-    renderTimeline(todaySchedule);
+    renderCalendarTimeline();
     showToast('已从日程移除');
+  }
+};
+
+// ====== 子任务管理 ======
+window.showAddSubtask = function showAddSubtask(event, scheduleId) {
+  event.stopPropagation();
+  const text = prompt('输入待办事项：');
+  if (text && text.trim()) {
+    addSubtask(scheduleId, text.trim());
+  }
+};
+
+function addSubtask(scheduleId, text) {
+  const item = todaySchedule.find(t => t.id === scheduleId);
+  if (!item) return;
+  
+  if (!item.subtasks) item.subtasks = [];
+  item.subtasks.push({
+    id: Date.now(),
+    text: text,
+    done: false
+  });
+  
+  renderTimeline(todaySchedule);
+  showToast('✅ 待办已添加');
+}
+
+window.toggleSubtask = function toggleSubtask(event, scheduleId, subtaskId) {
+  event.stopPropagation();
+  const item = todaySchedule.find(t => t.id === scheduleId);
+  if (!item || !item.subtasks) return;
+  
+  const subtask = item.subtasks.find(s => s.id === subtaskId);
+  if (subtask) {
+    subtask.done = !subtask.done;
+    renderTimeline(todaySchedule);
+    showToast(subtask.done ? '✅ 完成' : '已取消完成');
+  }
+};
+
+window.deleteSubtask = function deleteSubtask(event, scheduleId, subtaskId) {
+  event.stopPropagation();
+  const item = todaySchedule.find(t => t.id === scheduleId);
+  if (!item || !item.subtasks) return;
+  
+  const idx = item.subtasks.findIndex(s => s.id === subtaskId);
+  if (idx !== -1) {
+    item.subtasks.splice(idx, 1);
+    renderTimeline(todaySchedule);
+    showToast('已删除待办');
   }
 };
 
@@ -1171,6 +1802,49 @@ window.viewPhoto = function viewPhoto(id) {
   }
 };
 
+// ====== 头像选择 ======
+window.showAvatarPicker = function showAvatarPicker() {
+  const picker = document.getElementById('avatarPicker');
+  const grid = document.getElementById('avatarGrid');
+  
+  if (!picker || !grid) return;
+  
+  // 切换显示
+  picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+  
+  // 渲染头像选项
+  grid.innerHTML = AVATAR_OPTIONS.map(avatar => `
+    <div class="avatar-option ${selectedAvatar === avatar.id ? 'selected' : ''}" 
+         onclick="selectAvatar('${avatar.id}')">
+      <span class="avatar-emoji">${avatar.emoji}</span>
+      <span class="avatar-name">${avatar.name}</span>
+      <span class="avatar-desc">${avatar.desc}</span>
+    </div>
+  `).join('');
+};
+
+window.selectAvatar = function selectAvatar(avatarId) {
+  selectedAvatar = avatarId;
+  const avatar = AVATAR_OPTIONS.find(a => a.id === avatarId);
+  
+  if (avatar) {
+    // 更新头像显示
+    const profileAvatar = document.getElementById('profileAvatar');
+    const headerAvatar = document.querySelector('.user-avatar');
+    const profileTitle = document.getElementById('profileTitle');
+    
+    if (profileAvatar) profileAvatar.textContent = avatar.emoji;
+    if (headerAvatar) headerAvatar.textContent = avatar.emoji;
+    if (profileTitle) profileTitle.textContent = avatar.desc;
+    
+    // 重新渲染选择器
+    showAvatarPicker();
+    showAvatarPicker();
+    
+    showToast(`已切换为「${avatar.name}」`);
+  }
+};
+
 // ====== 个人信息 ======
 function initProfile() {
   const daysEl = document.getElementById('profileDays');
@@ -1182,6 +1856,21 @@ function initProfile() {
   if (rewardsEl) rewardsEl.textContent = REWARDS.filter(r => r.unlocked).length;
   
   renderPhotoGrid();
+  renderAvatarGrid();
+}
+
+function renderAvatarGrid() {
+  const grid = document.getElementById('avatarGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = AVATAR_OPTIONS.map(avatar => `
+    <div class="avatar-option ${selectedAvatar === avatar.id ? 'selected' : ''}" 
+         onclick="selectAvatar('${avatar.id}')">
+      <span class="avatar-emoji">${avatar.emoji}</span>
+      <span class="avatar-name">${avatar.name}</span>
+      <span class="avatar-desc">${avatar.desc}</span>
+    </div>
+  `).join('');
 }
 
 // ====== Tab 切换 ======

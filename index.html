@@ -29,11 +29,21 @@
         <main class="dashboard">
             <!-- ========== 主页 Tab ========== -->
             <div class="tab-content" data-tab="home">
+                <!-- 今日日期和倒计时 -->
+                <section class="date-header">
+                    <div class="today-date" id="todayDate">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                    <div class="countdown-card" id="countdownCard">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                </section>
+
                 <!-- 今日状态卡片 -->
                 <section class="status-card">
                     <div class="date-display">
                         <span class="day-num" id="dayNum">1</span>
-                        <span class="day-label">/ 14 天</span>
+                        <span class="day-label">/ 27 天</span>
                     </div>
                     <div class="status-bars">
                         <div class="stat">
@@ -192,12 +202,21 @@
             <div class="tab-content" data-tab="profile" style="display: none;">
                 <section class="profile-section">
                     <div class="profile-header">
-                        <div class="profile-avatar">🥷</div>
+                        <div class="profile-avatar" id="profileAvatar" onclick="showAvatarPicker()">🥷</div>
                         <div class="profile-info">
                             <h2 class="profile-name">彦平少侠</h2>
-                            <p class="profile-title">初入江湖</p>
+                            <p class="profile-title" id="profileTitle">初入江湖</p>
                         </div>
                     </div>
+                    
+                    <!-- 头像选择器 -->
+                    <div class="avatar-picker" id="avatarPicker" style="display: none;">
+                        <h3 class="subsection-title">🎭 选择你的江湖形象</h3>
+                        <div class="avatar-grid" id="avatarGrid">
+                            <!-- 由 JS 渲染 -->
+                        </div>
+                    </div>
+                    
                     <div class="profile-stats">
                         <div class="profile-stat">
                             <span class="stat-num" id="profileDays">7</span>
