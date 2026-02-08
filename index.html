@@ -219,17 +219,6 @@
                         <button class="city-btn" onclick="selectCity(event, 'zhuhai')">珠海</button>
                         <button class="city-btn" onclick="selectCity(event, 'guangdong')">更多</button>
                     </div>
-                    <div class="filter-row">
-                        <input type="text" id="eventSearch" class="search-input" placeholder="🔍 搜索活动..." oninput="filterEvents()">
-                    </div>
-                    <div class="category-filters" id="categoryFilters">
-                        <button class="cat-btn active" data-cat="all" onclick="filterByCategory('all')">全部</button>
-                        <button class="cat-btn" data-cat="春节" onclick="filterByCategory('春节')">🎆</button>
-                        <button class="cat-btn" data-cat="亲子" onclick="filterByCategory('亲子')">👨‍👩‍👧</button>
-                        <button class="cat-btn" data-cat="科普" onclick="filterByCategory('科普')">🔬</button>
-                        <button class="cat-btn" data-cat="户外" onclick="filterByCategory('户外')">🏔️</button>
-                        <button class="cat-btn" data-cat="研学" onclick="filterByCategory('研学')">📚</button>
-                    </div>
                     <div class="events-list" id="eventsList">
                         <!-- 由 JS 渲染 -->
                     </div>
