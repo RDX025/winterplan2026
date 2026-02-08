@@ -638,22 +638,6 @@ const CITY_EVENTS = {
       price: '¥200/天',
       desc: '机器人编程+科学实验+3D打印，适合10-15岁',
       category: '创客STEM'
-    },
-    {
-      month: '3月', day: '15-18',
-      title: '第55届东莞国际名家具展览会',
-      location: '广东现代国际展览中心',
-      price: '专业观众免费',
-      desc: '家具设计与智能家居展示，了解CNC数控技术',
-      category: '展会'
-    },
-    {
-      month: '2月', day: '每天',
-      title: '活字印刷体验馆',
-      location: '东莞桥头镇',
-      price: '¥30/人',
-      desc: '了解四大发明之活字印刷，亲手体验古法印刷',
-      category: '研学'
     }
   ],
   // ===== 珠海 =====
@@ -663,72 +647,54 @@ const CITY_EVENTS = {
       title: '珠海长隆海洋王国',
       location: '珠海横琴长隆国际海洋度假区',
       price: '¥395（儿童¥280）',
-      desc: '全球最大海洋主题乐园，鲸鲨馆、企鹅馆、烟花表演',
-      category: '亲子'
+      desc: '全球最大海洋主题乐园，鲸鲨馆、企鹅馆、烟花表演，适合全家出游',
+      category: '亲子',
+      url: 'https://zh.chimelong.com/'
     },
     {
       month: '2月', day: '17-23',
       title: '珠海渔女灯光秀',
       location: '珠海渔女雕像/情侣路',
       price: '免费',
-      desc: '春节期间灯光秀表演，每晚19:00/20:00/21:00',
-      category: '春节'
-    },
-    {
-      month: '2月', day: '17',
-      title: '珠海烟花秀',
-      location: '珠海渔女广场',
-      price: '免费',
-      desc: '除夕夜跨年烟花汇演，持续约20分钟',
-      category: '春节'
+      desc: '春节期间灯光秀表演，每晚19:00/20:00/21:00，海滨浪漫夜景',
+      category: '春节',
+      url: 'https://m.zh.bendibao.com/'
     },
     {
       month: '2月', day: '每周末',
       title: '航空科普基地开放日',
       location: '珠海航空科普基地',
       price: '¥50/人',
-      desc: '航空模拟器体验、无人机操控、航空知识讲座',
-      category: '科普'
+      desc: '航空模拟器体验、无人机操控、航空知识讲座，探索蓝天奥秘',
+      category: '科普',
+      url: 'https://k.sina.cn/article_7879922979_1d5ae152301901m8x6.html'
     },
     {
       month: '2月', day: '每天',
       title: '外伶仃岛出海一日游',
-      location: '珠海香洲港码头出发',
+      location: '珠海香洲港码头',
       price: '¥180/人（含船票）',
-      desc: '海岛探险、海鲜大餐、观赏海豚、日落美景',
-      category: '户外'
+      desc: '海岛探险、海鲜大餐、观赏海豚、日落美景，网红打卡圣地',
+      category: '户外',
+      url: 'https://baike.baidu.com/item/外伶仃岛'
     },
     {
       month: '2月', day: '每天',
       title: '圆明新园',
       location: '珠海九洲大道',
       price: '¥100（学生¥60）',
-      desc: '圆明园精华景观复原，晚间大型演出《大清盛典》',
-      category: '亲子'
+      desc: '圆明园精华景观复原，晚间大型演出《大清盛典》，沉浸式历史体验',
+      category: '亲子',
+      url: 'https://zh.bendibao.com/tour/ly530/'
     },
     {
       month: '2月', day: '每天',
       title: '珠海海泉湾温泉',
       location: '珠海平沙海泉湾度假区',
       price: '¥168起',
-      desc: '海洋温泉养生，多种主题温泉池，亲子水乐园',
-      category: '休闲'
-    },
-    {
-      month: '2月', day: '17-3月3',
-      title: '珠海灯会（元宵节）',
-      location: '珠海情侣路沿线',
-      price: '免费',
-      desc: '大型灯展、猜灯谜、传统表演，元宵节高潮',
-      category: '春节'
-    },
-    {
-      month: '2月', day: '每天',
-      title: '珠海海鲜市场探索',
-      location: '湾仔海鲜街/斗门海鲜市场',
-      price: '按消费',
-      desc: '新鲜海鲜采购，了解渔民文化，品尝地道美食',
-      category: '美食'
+      desc: '海洋温泉养生，多种主题温泉池，亲子水乐园，放松身心好去处',
+      category: '休闲',
+      url: 'https://www.hqqwy.com/'
     }
   ],
   guangdong: [
@@ -2449,23 +2415,29 @@ function renderEvents(city) {
 
   eventsList.innerHTML = events.map((e, idx) => {
     const categoryColor = CATEGORY_COLORS[e.category] || '#888';
-    const categoryTag = e.category ? `<span class="event-category" style="background:${categoryColor}">${e.category}</span>` : '';
+    const categoryTag = e.category ? `<span class="event-category" style="background:${categoryColor}20;color:${categoryColor}">${e.category}</span>` : '';
     const eventId = `${city}_${idx}`;
+    const titleLink = e.url 
+      ? `<a href="${e.url}" target="_blank" class="event-title-link">${e.title} ↗</a>`
+      : `<span class="event-title-text">${e.title}</span>`;
+    
     return `
-    <div class="event-card">
+    <div class="event-card" onclick="if(!event.target.closest('button')){if('${e.url}')window.open('${e.url}','_blank')}">
       <div class="event-date">
         <span class="month">${e.month}</span>
         <span class="day">${e.day}</span>
       </div>
       <div class="event-details">
         ${categoryTag}
-        <h3>${e.title}</h3>
-        <p>📍 ${e.location}</p>
-        <p>🎫 ${e.price}</p>
+        ${titleLink}
         <p class="event-desc">${e.desc}</p>
+        <div class="event-meta">
+          <span class="event-location">📍 ${e.location}</span>
+          <span class="event-price">🎫 ${e.price}</span>
+        </div>
       </div>
-      <div class="event-actions">
-        <button class="event-action add-schedule" onclick="addEventToSchedule('${city}', ${idx})">📅 加入日程</button>
+      <div class="event-action">
+        <button class="event-add-btn" onclick="addEventToSchedule('${city}', ${idx})" title="加入日程">+</button>
       </div>
     </div>
   `;
