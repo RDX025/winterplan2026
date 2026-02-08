@@ -1325,8 +1325,8 @@ window.eventTouchEnd = function(event, id) {
   
   if (touchMode === 'swipe' && eventEl) {
     const transform = eventEl.style.transform || '';
-    const match = transform.match(/translateX\((-?\d+)px\)/);
-    const swipeDistance = match ? parseInt(match[1]) : 0;
+    const match = transform.match(/translateX\(([-\d.]+)px\)/);
+    const swipeDistance = match ? parseFloat(match[1]) : 0;
     
     if (swipeDistance > 60) {
       // 右滑删除 - 滑出动画
@@ -1759,7 +1759,7 @@ function addSubtask(scheduleId, text) {
     done: false
   });
   
-  renderTimeline(todaySchedule);
+  renderCalendarTimeline();
   showToast('✅ 待办已添加');
 }
 
@@ -1771,7 +1771,7 @@ window.toggleSubtask = function toggleSubtask(event, scheduleId, subtaskId) {
   const subtask = item.subtasks.find(s => s.id === subtaskId);
   if (subtask) {
     subtask.done = !subtask.done;
-    renderTimeline(todaySchedule);
+    renderCalendarTimeline();
     showToast(subtask.done ? '✅ 完成' : '已取消完成');
   }
 };
@@ -1784,7 +1784,7 @@ window.deleteSubtask = function deleteSubtask(event, scheduleId, subtaskId) {
   const idx = item.subtasks.findIndex(s => s.id === subtaskId);
   if (idx !== -1) {
     item.subtasks.splice(idx, 1);
-    renderTimeline(todaySchedule);
+    renderCalendarTimeline();
     showToast('已删除待办');
   }
 };
@@ -1814,7 +1814,12 @@ let habitsData = {
 function loadHabitsData() {
   const saved = localStorage.getItem('habitsData');
   if (saved) {
-    habitsData = JSON.parse(saved);
+    try {
+      habitsData = JSON.parse(saved);
+    } catch (e) {
+      console.warn('habitsData解析失败，使用默认值');
+      localStorage.removeItem('habitsData');
+    }
   }
 }
 
@@ -2200,7 +2205,7 @@ window.addEventToSchedule = function addEventToSchedule(city, idx) {
     type: 'activity'
   });
 
-  renderTimeline(todaySchedule);
+  renderCalendarTimeline();
   showToast('✅ 已添加到今日日程');
 };
 
