@@ -828,122 +828,183 @@ function initLandingPage() {
 
   const ctx = canvas.getContext('2d');
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  
+  let width = window.innerWidth;
+  let height = window.innerHeight;
 
   const resize = () => {
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   };
-
   resize();
-  window.addEventListener('resize', () => {
-    ctx.setTransform(1,0,0,1,0,0);
-    resize();
-  });
 
   const chars = ['馬', '到', '成', '功'];
-  const fontSize = Math.min(160, window.innerWidth * 0.22);
-  const centerX = window.innerWidth / 2;
-  const startY = window.innerHeight * 0.18;
-  const lineGap = fontSize * 1.25;
+  const fontSize = Math.min(140, width * 0.2);
+  const centerX = width / 2;
+  const startY = height * 0.15;
+  const lineGap = fontSize * 1.3;
+  
+  let particles = [];
+  let animationStarted = false;
 
-  const particles = [];
-  const off = document.createElement('canvas');
-  const offCtx = off.getContext('2d');
-  off.width = Math.max(400, fontSize * 2.2);
-  off.height = Math.max(400, fontSize * 2.2);
-
-  offCtx.font = `${fontSize}px "Ma Shan Zheng", "Noto Sans SC", serif`;
-  offCtx.textAlign = 'center';
-  offCtx.textBaseline = 'middle';
-
-  chars.forEach((ch, i) => {
-    const y = startY + i * lineGap;
-
-    offCtx.clearRect(0,0,off.width,off.height);
-    offCtx.fillStyle = '#fff';
-    offCtx.fillText(ch, off.width / 2, off.height / 2);
-
-    const imageData = offCtx.getImageData(0, 0, off.width, off.height);
-    for (let x = 0; x < imageData.width; x += 3) {
-      for (let y2 = 0; y2 < imageData.height; y2 += 3) {
-        const idx = (y2 * imageData.width + x) * 4 + 3;
-        if (imageData.data[idx] > 40) {
-          const tx = centerX - off.width / 2 + x;
-          const ty = y - off.height / 2 + y2;
-          particles.push({
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-            tx,
-            ty,
-            alpha: 0,
-            delay: i * 1200,
-            charIndex: i
-          });
+  // 等待字体加载完成后采样
+  function sampleCharacters() {
+    particles = [];
+    
+    chars.forEach((ch, charIdx) => {
+      const targetY = startY + charIdx * lineGap;
+      
+      // 单独的离屏canvas
+      const off = document.createElement('canvas');
+      const offCtx = off.getContext('2d');
+      const size = Math.ceil(fontSize * 1.5);
+      off.width = size;
+      off.height = size;
+      
+      offCtx.fillStyle = '#000';
+      offCtx.fillRect(0, 0, size, size);
+      offCtx.font = `bold ${fontSize}px "Ma Shan Zheng", "Noto Sans SC", serif`;
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.fillStyle = '#fff';
+      offCtx.fillText(ch, size / 2, size / 2);
+      
+      const imageData = offCtx.getImageData(0, 0, size, size);
+      const step = 3; // 采样密度
+      
+      for (let x = 0; x < size; x += step) {
+        for (let y = 0; y < size; y += step) {
+          const idx = (y * size + x) * 4;
+          const r = imageData.data[idx];
+          
+          if (r > 128) { // 白色像素 = 文字区域
+            const tx = centerX - size / 2 + x;
+            const ty = targetY - size / 2 + y;
+            
+            particles.push({
+              x: Math.random() * width,
+              y: Math.random() * height,
+              tx: tx,
+              ty: ty,
+              size: 1.5 + Math.random() * 1,
+              alpha: 0,
+              delay: charIdx * 1500,
+              charIdx: charIdx,
+              speed: 0.03 + Math.random() * 0.04
+            });
+          }
         }
       }
-    }
-  });
+    });
+    
+    console.log(`采样完成: ${particles.length} 个粒子`);
+  }
 
-  let startTime = performance.now();
+  // 主绘制循环
+  let startTime = 0;
   const duration = 8000;
 
   function draw(now) {
-    const t = now - startTime;
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
-    // 背景微光
-    ctx.fillStyle = 'rgba(5,5,12,0.25)';
-    ctx.fillRect(0,0,window.innerWidth, window.innerHeight);
-
-    // 粒子聚合
+    if (!animationStarted) {
+      startTime = now;
+      animationStarted = true;
+    }
+    
+    const elapsed = now - startTime;
+    
+    // 清屏
+    ctx.fillStyle = '#050510';
+    ctx.fillRect(0, 0, width, height);
+    
+    // 背景光晕
+    const gradient = ctx.createRadialGradient(centerX, height * 0.4, 0, centerX, height * 0.4, height * 0.6);
+    gradient.addColorStop(0, 'rgba(244, 208, 63, 0.08)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+    
+    // 绘制粒子
     particles.forEach(p => {
-      if (t < p.delay) return;
-      const progress = Math.min((t - p.delay) / 2000, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      p.x += (p.tx - p.x) * 0.08;
-      p.y += (p.ty - p.y) * 0.08;
-      p.alpha = Math.min(1, p.alpha + 0.02);
-
-      const jitter = (1 - ease) * 0.6;
-      const px = p.x + Math.sin(now / 180 + p.tx) * jitter;
-      const py = p.y + Math.cos(now / 180 + p.ty) * jitter;
-
-      ctx.fillStyle = `rgba(244, 208, 63, ${p.alpha})`;
-      ctx.fillRect(px, py, 2, 2);
+      if (elapsed < p.delay) return;
+      
+      const t = (elapsed - p.delay) / 2500;
+      const ease = Math.min(1, t);
+      const easeOut = 1 - Math.pow(1 - ease, 3);
+      
+      // 向目标移动
+      p.x += (p.tx - p.x) * p.speed;
+      p.y += (p.ty - p.y) * p.speed;
+      
+      // 透明度渐变
+      p.alpha = Math.min(1, p.alpha + 0.025);
+      
+      // 微抖动
+      const jitter = (1 - easeOut) * 2;
+      const px = p.x + Math.sin(now * 0.005 + p.tx) * jitter;
+      const py = p.y + Math.cos(now * 0.005 + p.ty) * jitter;
+      
+      // 金色粒子
+      ctx.beginPath();
+      ctx.arc(px, py, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(244, 208, 63, ${p.alpha * 0.9})`;
+      ctx.fill();
     });
-
-    // 文字兜底显示（避免字体未加载）
+    
+    // 文字高光层（粒子聚合后显示）
     ctx.save();
-    ctx.font = `${fontSize}px "Ma Shan Zheng", "Noto Sans SC", serif`;
+    ctx.font = `bold ${fontSize}px "Ma Shan Zheng", "Noto Sans SC", serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    
     chars.forEach((ch, i) => {
       const y = startY + i * lineGap;
-      const showProgress = Math.min(Math.max((t - i * 1200) / 2000, 0), 1);
-      const alpha = showProgress * 0.9;
-      ctx.fillStyle = `rgba(255, 240, 200, ${alpha})`;
-      ctx.fillText(ch, centerX, y);
+      const charElapsed = elapsed - i * 1500;
+      
+      if (charElapsed > 2000) {
+        const glowAlpha = Math.min(0.3, (charElapsed - 2000) / 2000 * 0.3);
+        ctx.shadowColor = 'rgba(244, 208, 63, 0.8)';
+        ctx.shadowBlur = 30;
+        ctx.fillStyle = `rgba(255, 250, 230, ${glowAlpha})`;
+        ctx.fillText(ch, centerX, y);
+        ctx.shadowBlur = 0;
+      }
     });
     ctx.restore();
-
-    if (t < duration) {
+    
+    // 继续动画或结束
+    if (elapsed < duration) {
       requestAnimationFrame(draw);
     } else {
+      // 淡出
       overlay.classList.add('fade-out');
       setTimeout(() => overlay.remove(), 800);
     }
   }
-
-  requestAnimationFrame(draw);
 
   // 点击跳过
   overlay.addEventListener('click', () => {
     overlay.classList.add('fade-out');
     setTimeout(() => overlay.remove(), 500);
   });
+
+  // 确保字体加载后再开始
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      sampleCharacters();
+      requestAnimationFrame(draw);
+    });
+  } else {
+    // fallback: 延迟500ms
+    setTimeout(() => {
+      sampleCharacters();
+      requestAnimationFrame(draw);
+    }, 500);
+  }
 }
 
 // ====== 仪表盘 ======
