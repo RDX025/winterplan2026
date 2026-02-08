@@ -862,10 +862,10 @@ function initLandingPage() {
 
   // 文字粒子采样
   const chars = ['馬', '到', '成', '功'];
-  const fontSize = Math.min(140, width * 0.18);
+  const fontSize = Math.min(180, width * 0.25);
   const centerX = width / 2;
-  const startY = height * 0.18;
-  const lineGap = fontSize * 1.25;
+  const startY = height * 0.12;
+  const lineGap = fontSize * 1.15;
 
   function sampleCharacters() {
     particles.length = 0;
@@ -902,9 +902,9 @@ function initLandingPage() {
               y: height + Math.random() * 200,
               tx: tx,
               ty: ty,
-              size: 1.2 + Math.random() * 1.2,
+              size: 1.5 + Math.random() * 1.5,
               alpha: 0,
-              delay: charIdx * 1.2,
+              delay: charIdx * 1.5,
               charIdx: charIdx,
               progress: 0
             });
@@ -942,10 +942,10 @@ function initLandingPage() {
       ease: 'power2.out'
     }, 0);
 
-    // 粒子动画进度
+    // 粒子动画进度 (8秒总时长)
     tl.to(animProgress, {
       value: 1,
-      duration: 6,
+      duration: 7,
       ease: 'power2.out'
     }, 0.5);
 
@@ -956,7 +956,7 @@ function initLandingPage() {
     tl.to('.landing-skip', {
       opacity: 1,
       duration: 0.5
-    }, 2);
+    }, 3);
   }
 
   // Canvas 渲染循环
