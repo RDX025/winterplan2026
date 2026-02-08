@@ -1213,13 +1213,13 @@ function renderCalendarTimeline() {
              ontouchmove="eventTouchMove(event, ${item.id})"
              ontouchend="eventTouchEnd(event, ${item.id})"
              onmousedown="mouseEventDragStart(event, ${item.id})">
-          <div class="event-content" onclick="openEditEventModal(${item.id})">
+          <div class="event-content">
             <span class="event-icon">${item.event_icon}</span>
-            <div class="event-text">
+            <div class="event-text" onclick="openEditEventModal(${item.id})">
               <span class="event-title">${item.event_title}</span>
               <span class="event-time">${timeStr}</span>
             </div>
-            <span class="event-status-icon">${getStatusIcon(item.status)}</span>
+            <span class="event-status-icon" onclick="toggleEventStatus(event, ${item.id})">${getStatusIcon(item.status)}</span>
           </div>
         </div>
       </div>
@@ -1524,7 +1524,7 @@ window.selectEventColor = function(color) {
   event.target.classList.add('selected');
 };
 
-window.submitNewEvent = function() {
+window.submitNewEvent = async function() {
   const title = document.getElementById('newEventTitle').value.trim();
   const startHour = parseInt(document.getElementById('newEventStartHour').value);
   const endHour = parseInt(document.getElementById('newEventEndHour').value);
@@ -1566,6 +1566,19 @@ window.submitNewEvent = function() {
   showSuccessAnimation('🎉 日程已添加！');
   
   renderCalendarTimeline();
+  
+  // 同步到 Supabase
+  if (USE_SUPABASE) {
+    try {
+      const saved = await SupabaseClient.saveScheduleItem(newEvent);
+      // 更新本地ID为Supabase返回的UUID
+      if (saved && saved.id) {
+        newEvent.id = saved.id;
+      }
+    } catch (err) {
+      console.error('日程同步失败:', err);
+    }
+  }
 };
 
 // ====== 编辑日程 ======
@@ -1620,7 +1633,7 @@ window.openEditEventModal = function(id) {
   modal.setAttribute('aria-hidden', 'false');
 };
 
-window.submitEditEvent = function(id) {
+window.submitEditEvent = async function(id) {
   const item = todaySchedule.find(e => e.id === id);
   if (!item) return;
 
@@ -1652,23 +1665,43 @@ window.submitEditEvent = function(id) {
 
   showSuccessAnimation('✨ 日程已更新');
   renderCalendarTimeline();
+  
+  // 同步到 Supabase
+  if (USE_SUPABASE) {
+    try {
+      await SupabaseClient.saveScheduleItem(item);
+    } catch (err) {
+      console.error('日程更新同步失败:', err);
+    }
+  }
 };
 
 // 删除事件
-window.deleteEvent = function(event, id) {
+window.deleteEvent = async function(event, id) {
   if (event) event.stopPropagation();
   
   const idx = todaySchedule.findIndex(e => e.id === id);
   if (idx !== -1) {
+    const item = todaySchedule[idx];
     todaySchedule.splice(idx, 1);
     showToast('🗑️ 已删除');
     renderCalendarTimeline();
+    
+    // 同步到 Supabase
+    if (USE_SUPABASE && item.id) {
+      try {
+        await SupabaseClient.deleteScheduleItem(item.id);
+      } catch (err) {
+        console.error('日程删除同步失败:', err);
+      }
+    }
   }
 };
 
 // 切换完成状态
-window.toggleEventStatus = function(id) {
-  const item = todaySchedule.find(e => e.id === id);
+window.toggleEventStatus = async function(e, id) {
+  e.stopPropagation(); // 阻止冒泡
+  const item = todaySchedule.find(ev => ev.id === id);
   if (!item) return;
   
   if (item.status === 'completed') {
@@ -1679,6 +1712,15 @@ window.toggleEventStatus = function(id) {
     showSuccessAnimation('✅ 任务完成！');
   }
   renderCalendarTimeline();
+  
+  // 同步到 Supabase
+  if (USE_SUPABASE) {
+    try {
+      await SupabaseClient.saveScheduleItem(item);
+    } catch (err) {
+      console.error('日程状态同步失败:', err);
+    }
+  }
 };
 
 // ====== 成功动画 ======
@@ -1966,7 +2008,7 @@ async function recalculateHabitsProgress() {
 }
 
 // ====== 每日选择 ======
-window.selectChoice = function selectChoice(element) {
+window.selectChoice = async function selectChoice(element) {
   document.querySelectorAll('.choice-card').forEach(card => {
     card.classList.remove('selected');
   });
@@ -1977,6 +2019,15 @@ window.selectChoice = function selectChoice(element) {
   if (interest && localInterests[interest] !== undefined) {
     localInterests[interest] = Math.min(100, localInterests[interest] + 10);
     drawRadarChart(localInterests);
+    
+    // 同步到 Supabase
+    if (USE_SUPABASE) {
+      try {
+        await SupabaseClient.updateInterest(interest, 10);
+      } catch (err) {
+        console.error('兴趣同步失败:', err);
+      }
+    }
   }
 
   element.style.transform = 'scale(1.05)';

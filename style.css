@@ -617,8 +617,26 @@ h1, h2, h3 {
 }
 
 .calendar-event .event-status-icon {
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-event .event-status-icon:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.calendar-event .event-status-icon:active {
+    transform: scale(0.95);
 }
 
 /* 旧时间线样式保留兼容 */
