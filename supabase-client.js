@@ -403,3 +403,120 @@ export async function countHabitChecks(habitType, studentId = DEFAULT_STUDENT_ID
   if (error) throw error;
   return count || 0;
 }
+
+// ========== 今日日程 (schedule_items表) ==========
+
+export async function getTodaySchedule(studentId = DEFAULT_STUDENT_ID) {
+  const today = new Date().toISOString().split('T')[0];
+  
+  const { data, error } = await supabase
+    .from('schedule_items')
+    .select('*')
+    .eq('student_id', studentId)
+    .eq('date', today)
+    .order('start_hour', { ascending: true })
+    .order('start_minute', { ascending: true });
+  
+  if (error) {
+    // 表不存在时降级
+    console.warn('schedule_items表可能不存在:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function saveScheduleItem(item, studentId = DEFAULT_STUDENT_ID) {
+  const today = new Date().toISOString().split('T')[0];
+  
+  const payload = {
+    student_id: studentId,
+    date: today,
+    event_title: item.event_title,
+    event_icon: item.event_icon || '📌',
+    start_hour: item.startHour,
+    start_minute: item.startMin,
+    end_hour: item.endHour,
+    end_minute: item.endMin,
+    color: item.color || '#F4D03F',
+    status: item.status || 'pending'
+  };
+  
+  if (item.id && typeof item.id === 'string' && item.id.includes('-')) {
+    // UUID格式，更新
+    const { data, error } = await supabase
+      .from('schedule_items')
+      .update(payload)
+      .eq('id', item.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    // 新增
+    const { data, error } = await supabase
+      .from('schedule_items')
+      .insert([payload])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+export async function deleteScheduleItem(itemId) {
+  const { error } = await supabase
+    .from('schedule_items')
+    .delete()
+    .eq('id', itemId);
+  
+  if (error) throw error;
+}
+
+// ========== 精彩表现 (weekly_achievements表) ==========
+
+export async function getWeeklyAchievements(studentId = DEFAULT_STUDENT_ID) {
+  const { data, error } = await supabase
+    .from('weekly_achievements')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('achievement_date', { ascending: false });
+  
+  if (error) {
+    console.warn('weekly_achievements表可能不存在:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function addWeeklyAchievement(achievement, studentId = DEFAULT_STUDENT_ID) {
+  const { data, error } = await supabase
+    .from('weekly_achievements')
+    .insert([{
+      student_id: studentId,
+      achievement_date: achievement.date,
+      title: achievement.title,
+      category: achievement.category,
+      icon: achievement.icon,
+      score: achievement.score,
+      comment: achievement.comment,
+      media_url: achievement.media_url,
+      video_url: achievement.video_url
+    }])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+export async function updateWeeklyAchievement(id, updates) {
+  const { data, error } = await supabase
+    .from('weekly_achievements')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}

@@ -1,4 +1,8 @@
-// ====== 纯前端 Mockup 版本 - 不依赖 Supabase ======
+// ====== 剑客游学 - Supabase 集成版本 ======
+import * as SupabaseClient from './supabase-client.js';
+
+// 配置：是否使用Supabase（检测环境变量）
+const USE_SUPABASE = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 const HABIT_KEYS = ['wake', 'piano', 'exercise', 'read', 'spine', 'math', 'sleep'];
 const CHOICE_TITLE_MAP = {
@@ -123,33 +127,29 @@ let dragStartY = 0;
 let dragStartHour = 0;
 
 // ====== 本周精彩表现（已完成成就）======
+// 数据结构预留 media_url 和 video_url 字段用于Supabase同步
 const WEEKLY_ACHIEVEMENTS = [
   { 
+    id: 'speech_0203',
     date: '2月3日', 
     title: 'Impromptu Speech 即兴演讲',
     category: '语言训练',
     icon: '🎤',
     score: null,
     comment: '表现自信大方，语言流畅！',
-    photo: null
+    media_url: null,  // 图片链接（Supabase storage）
+    video_url: null   // 视频链接
   },
   { 
+    id: 'taoli_0205',
     date: '2月5日', 
     title: '桃李未来数学思维课',
     category: '数学逻辑',
     icon: '🧮',
     score: null,
     comment: '积极参与课堂讨论，思维活跃！',
-    photo: null
-  },
-  { 
-    date: '2月6日', 
-    title: 'Beach 英语测试',
-    category: '英语能力',
-    icon: '📝',
-    score: '84/90',
-    comment: '太棒了！接近满分！',
-    photo: null
+    media_url: null,
+    video_url: null
   }
 ];
 
@@ -800,10 +800,19 @@ document.addEventListener('DOMContentLoaded', () => {
   initApp();
 });
 
-function initApp() {
+async function initApp() {
   setOfflineBadge(false);
   bindModal();
   initLandingPage();
+  
+  // 尝试从Supabase加载数据
+  if (USE_SUPABASE) {
+    console.log('🔌 使用 Supabase 模式');
+    await loadFromSupabase();
+  } else {
+    console.log('📦 使用本地 Mockup 模式');
+  }
+  
   initDayNumber();
   initDashboard();
   initWeeklyHighlights();
@@ -814,6 +823,75 @@ function initApp() {
   initAchievements();
   initEvents();
   initProfile();
+}
+
+// 从Supabase加载数据
+async function loadFromSupabase() {
+  try {
+    // 加载今日进度
+    const progress = await SupabaseClient.getTodayProgress();
+    if (progress) {
+      localProgress = {
+        math_progress: progress.math_progress || 0,
+        english_progress: progress.english_progress || 0,
+        habits_progress: progress.habits_progress || 0
+      };
+    }
+    
+    // 加载今日习惯
+    const habits = await SupabaseClient.getTodayHabits();
+    habits.forEach(h => {
+      if (h.is_completed) {
+        localHabits[h.habit_type] = true;
+      }
+    });
+    
+    // 加载兴趣分数
+    const interests = await SupabaseClient.getInterests();
+    if (Object.keys(interests).length > 0) {
+      Object.assign(localInterests, interests);
+    }
+    
+    // 加载今日日程
+    const schedule = await SupabaseClient.getTodaySchedule();
+    if (schedule && schedule.length > 0) {
+      todaySchedule = schedule.map(s => ({
+        id: s.id,
+        event_title: s.event_title,
+        event_icon: s.event_icon || '📌',
+        startHour: s.start_hour,
+        startMin: s.start_minute,
+        endHour: s.end_hour,
+        endMin: s.end_minute,
+        color: s.color || '#F4D03F',
+        status: s.status || 'pending'
+      }));
+    }
+    
+    // 加载精彩表现
+    const achievements = await SupabaseClient.getWeeklyAchievements();
+    if (achievements && achievements.length > 0) {
+      // 替换本地数据
+      WEEKLY_ACHIEVEMENTS.length = 0;
+      achievements.forEach(a => {
+        WEEKLY_ACHIEVEMENTS.push({
+          id: a.id,
+          date: a.achievement_date,
+          title: a.title,
+          category: a.category,
+          icon: a.icon || '🌟',
+          score: a.score,
+          comment: a.comment,
+          media_url: a.media_url,
+          video_url: a.video_url
+        });
+      });
+    }
+    
+    console.log('✅ Supabase 数据加载完成');
+  } catch (err) {
+    console.error('❌ Supabase 加载失败，使用本地数据:', err);
+  }
 }
 
 function initDayNumber() {
@@ -1198,6 +1276,7 @@ function renderCalendarTimeline() {
     return `
       <div class="calendar-event-wrapper" data-id="${item.id}" style="top: ${startPos}px; height: ${height}px;">
         <div class="event-delete-bg">🗑️ 删除</div>
+        <div class="event-edit-bg">✏️ 编辑</div>
         <div class="calendar-event ${item.status}" 
              data-id="${item.id}"
              style="height: 100%; background: ${item.color}20; border-left: 4px solid ${item.color};"
@@ -1241,7 +1320,7 @@ function getStatusIcon(status) {
   return '⬜';
 }
 
-// ====== 触摸事件处理 - 右滑删除 + 上下拖拽 ======
+// ====== 触摸事件处理 - 右滑删除 + 左滑编辑 + 上下拖拽 ======
 let touchStartX = 0;
 let touchStartY = 0;
 let touchStartTop = 0;
@@ -1286,14 +1365,22 @@ window.eventTouchMove = function(event, id) {
   }
   
   if (touchMode === 'swipe') {
-    // 右滑删除 - 限制只能右滑
-    const swipeX = Math.max(0, Math.min(deltaX, 120));
+    // 左右滑动：右滑删除，左滑编辑
+    const swipeX = Math.max(-120, Math.min(deltaX, 120));
     eventEl.style.transform = `translateX(${swipeX}px)`;
     
-    // 显示删除背景
+    // 显示对应背景
     const deleteBg = wrapper.querySelector('.event-delete-bg');
-    if (deleteBg) {
+    const editBg = wrapper.querySelector('.event-edit-bg');
+    
+    if (swipeX > 0 && deleteBg) {
+      // 右滑 - 显示删除
       deleteBg.style.opacity = Math.min(swipeX / 80, 1);
+      if (editBg) editBg.style.opacity = '0';
+    } else if (swipeX < 0 && editBg) {
+      // 左滑 - 显示编辑
+      editBg.style.opacity = Math.min(Math.abs(swipeX) / 80, 1);
+      if (deleteBg) deleteBg.style.opacity = '0';
     }
   } else if (touchMode === 'drag') {
     // 上下拖拽 - 移动整个wrapper
@@ -1313,7 +1400,7 @@ window.eventTouchEnd = function(event, id) {
     const swipeDistance = match ? parseInt(match[1]) : 0;
     
     if (swipeDistance > 60) {
-      // 删除事件 - 滑出动画
+      // 右滑删除 - 滑出动画
       eventEl.style.transform = 'translateX(150%)';
       eventEl.style.opacity = '0';
       wrapper.style.transition = 'opacity 0.3s';
@@ -1321,12 +1408,20 @@ window.eventTouchEnd = function(event, id) {
       setTimeout(() => {
         deleteEvent(null, id);
       }, 300);
+    } else if (swipeDistance < -60) {
+      // 左滑编辑 - 打开编辑弹窗
+      eventEl.style.transform = 'translateX(0)';
+      const editBg = wrapper?.querySelector('.event-edit-bg');
+      if (editBg) editBg.style.opacity = '0';
+      openEditEventModal(id);
     } else {
       // 恢复位置
       eventEl.style.transform = 'translateX(0)';
       if (wrapper) {
         const deleteBg = wrapper.querySelector('.event-delete-bg');
+        const editBg = wrapper.querySelector('.event-edit-bg');
         if (deleteBg) deleteBg.style.opacity = '0';
+        if (editBg) editBg.style.opacity = '0';
       }
     }
   } else if (touchMode === 'drag' && wrapper && touchCurrentEvent) {
@@ -1893,7 +1988,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHabits();
 });
 
-window.toggleHabit = function toggleHabit(habitType) {
+window.toggleHabit = async function toggleHabit(habitType) {
   localHabits[habitType] = !localHabits[habitType];
   
   const card = document.getElementById(`habit-${habitType}`);
@@ -1903,12 +1998,30 @@ window.toggleHabit = function toggleHabit(habitType) {
 
   recalculateHabitsProgress();
   showToast(localHabits[habitType] ? '✅ 已打卡' : '已取消打卡');
+  
+  // 同步到Supabase
+  if (USE_SUPABASE) {
+    try {
+      await SupabaseClient.toggleHabit(habitType);
+    } catch (err) {
+      console.error('习惯同步失败:', err);
+    }
+  }
 };
 
-function recalculateHabitsProgress() {
+async function recalculateHabitsProgress() {
   const completed = HABIT_KEYS.filter(k => localHabits[k]).length;
   localProgress.habits_progress = Math.round((completed / HABIT_KEYS.length) * 100);
   renderProgressBars(localProgress);
+  
+  // 同步进度到Supabase
+  if (USE_SUPABASE) {
+    try {
+      await SupabaseClient.updateProgress('habits', localProgress.habits_progress);
+    } catch (err) {
+      console.error('进度同步失败:', err);
+    }
+  }
 }
 
 // ====== 每日选择 ======

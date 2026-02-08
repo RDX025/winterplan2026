@@ -116,3 +116,43 @@ CREATE INDEX idx_daily_progress_student_date ON daily_progress(student_id, date)
 CREATE INDEX idx_habit_checks_student_date ON habit_checks(student_id, date);
 CREATE INDEX idx_course_timeline_student_date ON course_timeline(student_id, date);
 CREATE INDEX idx_daily_choices_student_date ON daily_choices(student_id, date);
+
+-- 9. 日程事项表 (schedule_items)
+CREATE TABLE schedule_items (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+  date DATE DEFAULT CURRENT_DATE,
+  event_title TEXT NOT NULL,
+  event_icon TEXT DEFAULT '📌',
+  start_hour INTEGER NOT NULL,
+  start_minute INTEGER DEFAULT 0,
+  end_hour INTEGER NOT NULL,
+  end_minute INTEGER DEFAULT 0,
+  color TEXT DEFAULT '#F4D03F',
+  status TEXT DEFAULT 'pending', -- 'pending', 'completed', 'skipped'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE schedule_items ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "允许所有操作" ON schedule_items FOR ALL USING (true);
+CREATE INDEX idx_schedule_items_student_date ON schedule_items(student_id, date);
+
+-- 10. 精彩表现表 (weekly_achievements)
+CREATE TABLE weekly_achievements (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+  achievement_date TEXT NOT NULL, -- '2月3日' 格式
+  title TEXT NOT NULL,
+  category TEXT,
+  icon TEXT DEFAULT '🌟',
+  score TEXT, -- '84/90' 格式
+  comment TEXT,
+  media_url TEXT, -- 图片链接 (Supabase Storage)
+  video_url TEXT, -- 视频链接
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE weekly_achievements ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "允许所有操作" ON weekly_achievements FOR ALL USING (true);
+CREATE INDEX idx_weekly_achievements_student ON weekly_achievements(student_id);
