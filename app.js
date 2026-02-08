@@ -874,6 +874,68 @@ let localProgress = { ...MOCKUP_PROGRESS };
 let localInterests = { ...MOCKUP_INTERESTS };
 let currentTab = 'home';
 
+// ====== 本地存储工具 ======
+const STORAGE_KEYS = {
+  habits: 'jkxx_habits',
+  progress: 'jkxx_progress',
+  interests: 'jkxx_interests',
+  schedule: 'jkxx_schedule',
+  habitsData: 'habitsData'
+};
+
+function saveToLocal(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.warn('本地存储失败:', e);
+  }
+}
+
+function loadFromLocal(key, defaultValue) {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch (e) {
+    console.warn('本地加载失败:', e);
+    return defaultValue;
+  }
+}
+
+function loadAllLocalData() {
+  // 加载习惯打卡状态
+  const savedHabits = loadFromLocal(STORAGE_KEYS.habits, null);
+  if (savedHabits) {
+    Object.assign(localHabits, savedHabits);
+  }
+  
+  // 加载进度
+  const savedProgress = loadFromLocal(STORAGE_KEYS.progress, null);
+  if (savedProgress) {
+    Object.assign(localProgress, savedProgress);
+  }
+  
+  // 加载兴趣分数
+  const savedInterests = loadFromLocal(STORAGE_KEYS.interests, null);
+  if (savedInterests) {
+    Object.assign(localInterests, savedInterests);
+  }
+  
+  // 加载今日日程
+  const savedSchedule = loadFromLocal(STORAGE_KEYS.schedule, null);
+  if (savedSchedule && Array.isArray(savedSchedule)) {
+    todaySchedule = savedSchedule;
+  }
+  
+  console.log('✅ 本地数据已加载');
+}
+
+function saveAllLocalData() {
+  saveToLocal(STORAGE_KEYS.habits, localHabits);
+  saveToLocal(STORAGE_KEYS.progress, localProgress);
+  saveToLocal(STORAGE_KEYS.interests, localInterests);
+  saveToLocal(STORAGE_KEYS.schedule, todaySchedule);
+}
+
 // ====== 初始化 ======
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
@@ -884,12 +946,15 @@ async function initApp() {
   bindModal();
   initLandingPage();
   
-  // 尝试从Supabase加载数据
+  // 先从本地加载数据
+  loadAllLocalData();
+  
+  // 尝试从Supabase加载数据（会覆盖本地）
   if (USE_SUPABASE) {
     console.log('🔌 使用 Supabase 模式');
     await loadFromSupabase();
   } else {
-    console.log('📦 使用本地 Mockup 模式');
+    console.log('📦 使用本地存储模式');
   }
   
   initDayNumber();
@@ -1019,7 +1084,7 @@ function initLandingPage() {
 
   // 文字粒子采样
   const chars = ['馬', '到', '成', '功'];
-  const fontSize = Math.min(180, width * 0.25);
+  const fontSize = Math.min(220, width * 0.30);
   const centerX = width / 2;
   const startY = height * 0.12;
   const lineGap = fontSize * 1.15;
@@ -1724,6 +1789,7 @@ window.submitNewEvent = async function() {
   showSuccessAnimation('🎉 日程已添加！');
   
   renderCalendarTimeline();
+  saveAllLocalData();
   
   // 同步到 Supabase
   if (USE_SUPABASE) {
@@ -1823,6 +1889,7 @@ window.submitEditEvent = async function(id) {
 
   showSuccessAnimation('✨ 日程已更新');
   renderCalendarTimeline();
+  saveAllLocalData();
   
   // 同步到 Supabase
   if (USE_SUPABASE) {
@@ -1844,6 +1911,7 @@ window.deleteEvent = async function(event, id) {
     todaySchedule.splice(idx, 1);
     showToast('🗑️ 已删除');
     renderCalendarTimeline();
+    saveAllLocalData();
     
     // 同步到 Supabase
     if (USE_SUPABASE && item.id) {
@@ -1870,6 +1938,7 @@ window.toggleEventStatus = async function(e, id) {
     showSuccessAnimation('✅ 任务完成！');
   }
   renderCalendarTimeline();
+  saveAllLocalData();
   
   // 同步到 Supabase
   if (USE_SUPABASE) {
@@ -2154,6 +2223,7 @@ async function recalculateHabitsProgress() {
   const completed = HABIT_KEYS.filter(k => localHabits[k]).length;
   localProgress.habits_progress = Math.round((completed / HABIT_KEYS.length) * 100);
   renderProgressBars(localProgress);
+  saveAllLocalData();
   
   // 同步进度到Supabase
   if (USE_SUPABASE) {
@@ -2177,6 +2247,7 @@ window.selectChoice = async function selectChoice(element) {
   if (interest && localInterests[interest] !== undefined) {
     localInterests[interest] = Math.min(100, localInterests[interest] + 10);
     drawRadarChart(localInterests);
+    saveAllLocalData();
     
     // 同步到 Supabase
     if (USE_SUPABASE) {
