@@ -73,6 +73,38 @@ h1, h2, h3 {
     padding-bottom: 80px;
 }
 
+/* ====== Landing Page ====== */
+.landing-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, #0b0b14 0%, #050508 70%, #000 100%);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: opacity 0.8s ease;
+}
+
+.landing-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#landingCanvas {
+    position: absolute;
+    inset: 0;
+}
+
+.landing-glow {
+    position: absolute;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(244,208,63,0.15), rgba(244,208,63,0));
+    filter: blur(20px);
+    opacity: 0.6;
+}
+
 /* ====== 顶部导航 ====== */
 .header {
     display: flex;
@@ -420,6 +452,11 @@ h1, h2, h3 {
     position: absolute;
     left: 0;
     right: 0;
+    z-index: 2;
+}
+
+.calendar-event-wrapper.dragging {
+    z-index: 50;
 }
 
 .event-delete-bg {

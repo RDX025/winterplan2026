@@ -803,6 +803,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initApp() {
   setOfflineBadge(false);
   bindModal();
+  initLandingPage();
   initDayNumber();
   initDashboard();
   initWeeklyHighlights();
@@ -817,6 +818,119 @@ function initApp() {
 
 function initDayNumber() {
   document.getElementById('dayNum').textContent = MOCKUP_STUDENT.current_day;
+}
+
+// ====== Landing Page 动画 ======
+function initLandingPage() {
+  const overlay = document.getElementById('landingOverlay');
+  const canvas = document.getElementById('landingCanvas');
+  if (!overlay || !canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  const resize = () => {
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.scale(dpr, dpr);
+  };
+
+  resize();
+  window.addEventListener('resize', () => {
+    ctx.setTransform(1,0,0,1,0,0);
+    resize();
+  });
+
+  const chars = ['馬', '到', '成', '功'];
+  const fontSize = Math.min(140, window.innerWidth * 0.2);
+  const centerX = window.innerWidth / 2;
+  const startY = window.innerHeight * 0.2;
+  const lineGap = fontSize * 1.1;
+
+  const particles = [];
+  const off = document.createElement('canvas');
+  const offCtx = off.getContext('2d');
+  off.width = window.innerWidth;
+  off.height = window.innerHeight;
+
+  offCtx.fillStyle = '#000';
+  offCtx.fillRect(0,0,off.width,off.height);
+  offCtx.font = `${fontSize}px "Ma Shan Zheng", "Noto Sans SC", serif`;
+  offCtx.textAlign = 'center';
+  offCtx.textBaseline = 'middle';
+
+  chars.forEach((ch, i) => {
+    const y = startY + i * lineGap;
+    offCtx.fillStyle = '#fff';
+    offCtx.fillText(ch, centerX, y);
+
+    const imageData = offCtx.getImageData(centerX - fontSize, y - fontSize, fontSize * 2, fontSize * 2);
+    for (let x = 0; x < imageData.width; x += 4) {
+      for (let y2 = 0; y2 < imageData.height; y2 += 4) {
+        const idx = (y2 * imageData.width + x) * 4 + 3;
+        if (imageData.data[idx] > 50) {
+          const tx = centerX - fontSize + x;
+          const ty = y - fontSize + y2;
+          particles.push({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            tx,
+            ty,
+            alpha: 0,
+            delay: i * 700,
+            charIndex: i,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4
+          });
+        }
+      }
+    }
+  });
+
+  let startTime = performance.now();
+  const duration = 5200;
+
+  function draw(now) {
+    const t = now - startTime;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    // 背景微光
+    ctx.fillStyle = 'rgba(5,5,10,0.15)';
+    ctx.fillRect(0,0,window.innerWidth, window.innerHeight);
+
+    particles.forEach(p => {
+      if (t < p.delay) return;
+      const progress = Math.min((t - p.delay) / 1500, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      p.x += (p.tx - p.x) * 0.06;
+      p.y += (p.ty - p.y) * 0.06;
+      p.alpha = Math.min(1, p.alpha + 0.03);
+
+      const jitter = (1 - ease) * 0.8;
+      const px = p.x + Math.sin(now / 200 + p.tx) * jitter;
+      const py = p.y + Math.cos(now / 200 + p.ty) * jitter;
+
+      ctx.fillStyle = `rgba(244, 208, 63, ${p.alpha})`;
+      ctx.fillRect(px, py, 2, 2);
+    });
+
+    if (t < duration) {
+      requestAnimationFrame(draw);
+    } else {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 800);
+    }
+  }
+
+  requestAnimationFrame(draw);
+
+  // 点击跳过
+  overlay.addEventListener('click', () => {
+    overlay.classList.add('fade-out');
+    setTimeout(() => overlay.remove(), 500);
+  });
 }
 
 // ====== 仪表盘 ======
@@ -979,8 +1093,9 @@ function renderCalendarTimeline() {
              style="height: 100%; background: ${item.color}20; border-left: 4px solid ${item.color};"
              ontouchstart="eventTouchStart(event, ${item.id})"
              ontouchmove="eventTouchMove(event, ${item.id})"
-             ontouchend="eventTouchEnd(event, ${item.id})">
-          <div class="event-content" onclick="toggleEventStatus(${item.id})">
+             ontouchend="eventTouchEnd(event, ${item.id})"
+             onmousedown="mouseEventDragStart(event, ${item.id})">
+          <div class="event-content" onclick="openEditEventModal(${item.id})">
             <span class="event-icon">${item.event_icon}</span>
             <div class="event-text">
               <span class="event-title">${item.event_title}</span>
@@ -1022,6 +1137,7 @@ let touchStartY = 0;
 let touchStartTop = 0;
 let touchCurrentEvent = null;
 let touchMode = null; // 'drag' | 'swipe' | null
+let isDragging = false;
 
 window.eventTouchStart = function(event, id) {
   const touch = event.touches[0];
@@ -1051,8 +1167,10 @@ window.eventTouchMove = function(event, id) {
   if (!touchMode) {
     if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
       touchMode = 'swipe';
+      isDragging = true;
     } else if (Math.abs(deltaY) > 15 && Math.abs(deltaY) > Math.abs(deltaX)) {
       touchMode = 'drag';
+      isDragging = true;
       wrapper.classList.add('dragging');
     }
   }
@@ -1083,8 +1201,6 @@ window.eventTouchEnd = function(event, id) {
     const transform = eventEl.style.transform || '';
     const match = transform.match(/translateX\((-?\d+)px\)/);
     const swipeDistance = match ? parseInt(match[1]) : 0;
-    
-    console.log('Swipe distance:', swipeDistance);
     
     if (swipeDistance > 60) {
       // 删除事件 - 滑出动画
@@ -1124,6 +1240,7 @@ window.eventTouchEnd = function(event, id) {
   
   touchCurrentEvent = null;
   touchMode = null;
+  setTimeout(() => { isDragging = false; }, 50);
 };
 
 // 保留旧函数兼容
@@ -1132,18 +1249,19 @@ window.touchDragStart = function() {};
 window.touchDragMove = function() {};
 window.touchDragEnd = function() {};
 
-// 鼠标拖拽
-window.mouseDragStart = function(event, id) {
+// 鼠标拖拽（桌面端上下移动）
+window.mouseEventDragStart = function(event, id) {
   event.preventDefault();
   
   draggedEvent = todaySchedule.find(e => e.id === id);
   if (!draggedEvent) return;
   
+  isDragging = true;
   dragStartY = event.clientY;
-  const eventEl = event.target.closest('.calendar-event');
-  if (eventEl) {
-    touchStartTop = parseFloat(eventEl.style.top) || 0;
-    eventEl.classList.add('dragging');
+  const wrapper = event.target.closest('.calendar-event-wrapper');
+  if (wrapper) {
+    touchStartTop = parseFloat(wrapper.style.top) || 0;
+    wrapper.classList.add('dragging');
     
     document.addEventListener('mousemove', mouseDragMove);
     document.addEventListener('mouseup', mouseDragEnd);
@@ -1156,20 +1274,20 @@ function mouseDragMove(event) {
   const deltaY = event.clientY - dragStartY;
   const newTop = touchStartTop + deltaY;
   
-  const eventEl = document.querySelector(`.calendar-event[data-id="${draggedEvent.id}"]`);
-  if (eventEl) {
-    eventEl.style.top = newTop + 'px';
+  const wrapper = document.querySelector(`.calendar-event-wrapper[data-id="${draggedEvent.id}"]`);
+  if (wrapper) {
+    wrapper.style.top = newTop + 'px';
   }
 }
 
 function mouseDragEnd(event) {
   if (!draggedEvent) return;
   
-  const eventEl = document.querySelector(`.calendar-event[data-id="${draggedEvent.id}"]`);
-  if (eventEl) {
-    eventEl.classList.remove('dragging');
+  const wrapper = document.querySelector(`.calendar-event-wrapper[data-id="${draggedEvent.id}"]`);
+  if (wrapper) {
+    wrapper.classList.remove('dragging');
     
-    const newTop = parseFloat(eventEl.style.top) || 0;
+    const newTop = parseFloat(wrapper.style.top) || 0;
     let newStartHour = TIMELINE_START_HOUR + newTop / HOUR_HEIGHT;
     newStartHour = Math.round(newStartHour * 2) / 2;
     newStartHour = Math.max(TIMELINE_START_HOUR, Math.min(TIMELINE_END_HOUR - 1, newStartHour));
@@ -1181,13 +1299,14 @@ function mouseDragEnd(event) {
     draggedEvent.endHour = Math.floor(newStartHour + duration);
     draggedEvent.endMin = ((newStartHour + duration) % 1) * 60;
     
-    showSuccessAnimation('🎯 已调整时间');
+    showToast(`📍 ${draggedEvent.startHour}:${draggedEvent.startMin < 10 ? '0' + draggedEvent.startMin : draggedEvent.startMin}`);
   }
   
   document.removeEventListener('mousemove', mouseDragMove);
   document.removeEventListener('mouseup', mouseDragEnd);
   draggedEvent = null;
   renderCalendarTimeline();
+  setTimeout(() => { isDragging = false; }, 50);
 }
 
 // ====== 添加日程 ======
@@ -1305,6 +1424,92 @@ window.submitNewEvent = function() {
   // 显示成功动画
   showSuccessAnimation('🎉 日程已添加！');
   
+  renderCalendarTimeline();
+};
+
+// ====== 编辑日程 ======
+window.openEditEventModal = function(id) {
+  if (isDragging) return;
+  const item = todaySchedule.find(e => e.id === id);
+  if (!item) return;
+
+  const modal = document.getElementById('notifyModal');
+  const titleEl = document.getElementById('modalTitle');
+  const bodyEl = document.getElementById('modalBody');
+  const closeBtn = document.getElementById('modalClose');
+  if (!modal || !titleEl || !bodyEl) return;
+
+  titleEl.textContent = '✏️ 修改日程';
+  bodyEl.innerHTML = `
+    <div class="add-event-form">
+      <input type="text" id="editEventTitle" class="form-input" value="${item.event_title}">
+      <div class="time-row">
+        <select id="editEventStartHour" class="form-select">
+          ${Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => {
+            const h = TIMELINE_START_HOUR + i;
+            return `<option value="${h}" ${h === item.startHour ? 'selected' : ''}>${h < 10 ? '0' + h : h}:00</option>`;
+          }).join('')}
+        </select>
+        <span>→</span>
+        <select id="editEventEndHour" class="form-select">
+          ${Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => {
+            const h = TIMELINE_START_HOUR + i;
+            return `<option value="${h}" ${h === item.endHour ? 'selected' : ''}>${h < 10 ? '0' + h : h}:00</option>`;
+          }).join('')}
+        </select>
+      </div>
+      <div class="icon-picker">
+        ${['📚', '🎯', '🎹', '🏃', '✍️', '🎮', '🍽️', '😴'].map(icon => 
+          `<span class="icon-option ${icon === item.event_icon ? 'selected' : ''}" onclick="selectEventIcon('${icon}')">${icon}</span>`
+        ).join('')}
+      </div>
+      <input type="hidden" id="newEventIcon" value="${item.event_icon}">
+      <div class="color-picker">
+        ${['#3498db', '#e74c3c', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c'].map(color => 
+          `<span class="color-option ${color === item.color ? 'selected' : ''}" style="background:${color}" onclick="selectEventColor('${color}')"></span>`
+        ).join('')}
+      </div>
+      <input type="hidden" id="newEventColor" value="${item.color}">
+      <button class="submit-btn" onclick="submitEditEvent(${item.id})">✅ 保存修改</button>
+    </div>
+  `;
+
+  closeBtn.textContent = '取消';
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+};
+
+window.submitEditEvent = function(id) {
+  const item = todaySchedule.find(e => e.id === id);
+  if (!item) return;
+
+  const title = document.getElementById('editEventTitle').value.trim();
+  const startHour = parseInt(document.getElementById('editEventStartHour').value);
+  const endHour = parseInt(document.getElementById('editEventEndHour').value);
+  const icon = document.getElementById('newEventIcon').value;
+  const color = document.getElementById('newEventColor').value;
+
+  if (!title) {
+    showToast('请输入日程标题');
+    return;
+  }
+  if (endHour <= startHour) {
+    showToast('结束时间需大于开始时间');
+    return;
+  }
+
+  item.event_title = title;
+  item.startHour = startHour;
+  item.endHour = endHour;
+  item.startMin = 0;
+  item.endMin = 0;
+  item.event_icon = icon;
+  item.color = color;
+
+  const modal = document.getElementById('notifyModal');
+  modal.classList.remove('show');
+
+  showSuccessAnimation('✨ 日程已更新');
   renderCalendarTimeline();
 };
 
