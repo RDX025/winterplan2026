@@ -2422,27 +2422,79 @@ function renderEvents(city) {
       : `<span class="event-title-text">${e.title}</span>`;
     
     return `
-    <div class="event-card" onclick="if(!event.target.closest('button')){if('${e.url}')window.open('${e.url}','_blank')}">
-      <div class="event-date">
-        <span class="month">${e.month}</span>
-        <span class="day">${e.day}</span>
-      </div>
-      <div class="event-details">
-        ${categoryTag}
-        ${titleLink}
-        <p class="event-desc">${e.desc}</p>
-        <div class="event-meta">
-          <span class="event-location">📍 ${e.location}</span>
-          <span class="event-price">🎫 ${e.price}</span>
+    <div class="event-card activity-card" data-city="${city}" data-idx="${idx}" ontouchstart="activityTouchStart(event, '${city}', ${idx})" ontouchmove="activityTouchMove(event)" ontouchend="activityTouchEnd(event)">
+      <div class="event-add-bg">📅 加入日程</div>
+      <div class="event-card-content">
+        <div class="event-date">
+          <span class="month">${e.month}</span>
+          <span class="day">${e.day}</span>
         </div>
-      </div>
-      <div class="event-action">
-        <button class="event-add-btn" onclick="addEventToSchedule('${city}', ${idx})" title="加入日程">+</button>
+        <div class="event-details">
+          ${categoryTag}
+          ${titleLink}
+          <p class="event-desc">${e.desc}</p>
+          <div class="event-meta">
+            <span class="event-location">📍 ${e.location}</span>
+            <span class="event-price">🎫 ${e.price}</span>
+          </div>
+        </div>
       </div>
     </div>
   `;
   }).join('');
 }
+
+// 活动卡片触摸事件
+let activityTouchStartX = 0;
+let activityTouchCity = null;
+let activityTouchIdx = null;
+let activitySwiped = false;
+
+window.activityTouchStart = function(event, city, idx) {
+  activityTouchStartX = event.touches[0].clientX;
+  activityTouchCity = city;
+  activityTouchIdx = idx;
+  activitySwiped = false;
+};
+
+window.activityTouchMove = function(event) {
+  if (!activityTouchCity) return;
+  
+  const deltaX = event.touches[0].clientX - activityTouchStartX;
+  const card = event.target.closest('.activity-card');
+  
+  if (!card) return;
+  
+  if (deltaX > 60 && !activitySwiped) {
+    // 左滑添加
+    activitySwiped = true;
+    card.style.transform = 'translateX(120px)';
+    card.querySelector('.event-add-bg').style.opacity = '1';
+  } else if (deltaX < 0 && activitySwiped) {
+    // 右滑恢复
+    activitySwiped = false;
+    card.style.transform = 'translateX(0)';
+    card.querySelector('.event-add-bg').style.opacity = '0';
+  }
+};
+
+window.activityTouchEnd = function(event) {
+  if (activitySwiped && activityTouchCity !== null && activityTouchIdx !== null) {
+    // 添加到日程
+    addEventToSchedule(activityTouchCity, activityTouchIdx);
+    
+    // 恢复卡片
+    const card = event.target.closest('.activity-card');
+    if (card) {
+      card.style.transform = 'translateX(0)';
+      card.querySelector('.event-add-bg').style.opacity = '0';
+    }
+  }
+  
+  activityTouchCity = null;
+  activityTouchIdx = null;
+  activitySwiped = false;
+};
 
 // 添加活动到今日日程
 window.addEventToSchedule = function addEventToSchedule(city, idx) {
