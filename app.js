@@ -1,6 +1,6 @@
 // ====== 纯前端 Mockup 版本 - 不依赖 Supabase ======
 
-const HABIT_KEYS = ['wake', 'piano', 'exercise', 'read', 'sleep', 'math'];
+const HABIT_KEYS = ['wake', 'piano', 'exercise', 'read', 'spine', 'math', 'sleep'];
 const CHOICE_TITLE_MAP = {
   engineering: '打印历史名剑',
   music: '学一首古风曲',
@@ -1774,6 +1774,124 @@ function initHabits() {
     }
   });
 }
+
+// 习惯数据（可编辑）
+let habitsData = {
+  wake: { name: '早起', subtitle: '7:30前起床', icon: '🌅' },
+  piano: { name: '练琴', subtitle: '30分钟', icon: '🎹' },
+  exercise: { name: '运动', subtitle: '30分钟', icon: '🏃' },
+  read: { name: '阅读', subtitle: '30分钟', icon: '📖' },
+  spine: { name: '李医生脊椎操', subtitle: '睡前五套动作', icon: '🧘' },
+  math: { name: '数学复习', subtitle: '费曼笔记法', icon: '📝' },
+  sleep: { name: '早睡', subtitle: '22:00前', icon: '🌙' }
+};
+
+// 从localStorage加载习惯数据
+function loadHabitsData() {
+  const saved = localStorage.getItem('habitsData');
+  if (saved) {
+    habitsData = JSON.parse(saved);
+  }
+}
+
+// 保存习惯数据
+function saveHabitsData() {
+  localStorage.setItem('habitsData', JSON.stringify(habitsData));
+}
+
+// 渲染习惯列表
+function renderHabits() {
+  const grid = document.getElementById('habitsGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = '';
+  
+  Object.keys(habitsData).forEach(id => {
+    const h = habitsData[id];
+    const isChecked = localHabits[id];
+    
+    const card = document.createElement('div');
+    card.className = `habit-card${isChecked ? ' checked' : ''}`;
+    card.id = `habit-${id}`;
+    card.onclick = () => toggleHabit(id);
+    
+    card.innerHTML = `
+      <span class="habit-icon">${h.icon}</span>
+      <div class="habit-content">
+        <span class="habit-name">${h.name}</span>
+        <span class="habit-subtitle">${h.subtitle}</span>
+      </div>
+      <div class="habit-check"></div>
+      <button class="habit-edit-btn" onclick="editHabit(event, '${id}')">✏️</button>
+    `;
+    
+    grid.appendChild(card);
+  });
+}
+
+// 编辑习惯
+let currentEditHabitId = null;
+let selectedHabitIcon = null;
+
+window.editHabit = function(e, id) {
+  e.stopPropagation();
+  currentEditHabitId = id;
+  const h = habitsData[id];
+  
+  document.getElementById('editHabitId').value = id;
+  document.getElementById('editHabitName').value = h.name;
+  document.getElementById('editHabitSubtitle').value = h.subtitle;
+  
+  // 重置图标选择
+  document.querySelectorAll('#habitIconPicker .icon-option').forEach(opt => {
+    opt.classList.toggle('selected', opt.dataset.icon === h.icon);
+    if (opt.dataset.icon === h.icon) {
+      selectedHabitIcon = h.icon;
+    }
+  });
+  
+  document.getElementById('editHabitModal').classList.add('show');
+};
+
+window.closeEditHabitModal = function() {
+  document.getElementById('editHabitModal').classList.remove('show');
+  currentEditHabitId = null;
+};
+
+window.saveHabitEdit = function() {
+  if (!currentEditHabitId) return;
+  
+  const name = document.getElementById('editHabitName').value.trim();
+  const subtitle = document.getElementById('editHabitSubtitle').value.trim();
+  
+  if (name) {
+    habitsData[currentEditHabitId].name = name;
+    habitsData[currentEditHabitId].subtitle = subtitle;
+    if (selectedHabitIcon) {
+      habitsData[currentEditHabitId].icon = selectedHabitIcon;
+    }
+    
+    saveHabitsData();
+    renderHabits();
+    showToast('✅ 习惯已更新');
+  }
+  
+  closeEditHabitModal();
+};
+
+// 图标选择事件
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('#habitIconPicker .icon-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('#habitIconPicker .icon-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      selectedHabitIcon = opt.dataset.icon;
+    });
+  });
+  
+  loadHabitsData();
+  renderHabits();
+});
 
 window.toggleHabit = function toggleHabit(habitType) {
   localHabits[habitType] = !localHabits[habitType];

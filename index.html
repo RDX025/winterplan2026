@@ -103,36 +103,69 @@
                 <!-- 习惯打卡 -->
                 <section class="habits-section">
                     <h2 class="section-title">🥋 武德修养</h2>
-                    <div class="habits-grid">
+                    <div class="habits-grid" id="habitsGrid">
                         <div class="habit-card" id="habit-wake" onclick="toggleHabit('wake')">
                             <span class="habit-icon">🌅</span>
-                            <span class="habit-name">早起(7:30前)</span>
+                            <div class="habit-content">
+                                <span class="habit-name">早起</span>
+                                <span class="habit-subtitle">7:30前起床</span>
+                            </div>
                             <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'wake')">✏️</button>
                         </div>
                         <div class="habit-card" id="habit-piano" onclick="toggleHabit('piano')">
                             <span class="habit-icon">🎹</span>
-                            <span class="habit-name">练琴30分钟</span>
+                            <div class="habit-content">
+                                <span class="habit-name">练琴</span>
+                                <span class="habit-subtitle">30分钟</span>
+                            </div>
                             <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'piano')">✏️</button>
                         </div>
                         <div class="habit-card" id="habit-exercise" onclick="toggleHabit('exercise')">
                             <span class="habit-icon">🏃</span>
-                            <span class="habit-name">运动30分钟</span>
+                            <div class="habit-content">
+                                <span class="habit-name">运动</span>
+                                <span class="habit-subtitle">30分钟</span>
+                            </div>
                             <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'exercise')">✏️</button>
                         </div>
                         <div class="habit-card" id="habit-read" onclick="toggleHabit('read')">
                             <span class="habit-icon">📖</span>
-                            <span class="habit-name">阅读30分钟</span>
+                            <div class="habit-content">
+                                <span class="habit-name">阅读</span>
+                                <span class="habit-subtitle">30分钟</span>
+                            </div>
                             <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'read')">✏️</button>
                         </div>
-                        <div class="habit-card" id="habit-sleep" onclick="toggleHabit('sleep')">
-                            <span class="habit-icon">🌙</span>
-                            <span class="habit-name">早睡(22:00前)</span>
+                        <div class="habit-card" id="habit-spine" onclick="toggleHabit('spine')">
+                            <span class="habit-icon">🧘</span>
+                            <div class="habit-content">
+                                <span class="habit-name">李医生脊椎操</span>
+                                <span class="habit-subtitle">睡前五套动作</span>
+                            </div>
                             <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'spine')">✏️</button>
                         </div>
                         <div class="habit-card" id="habit-math" onclick="toggleHabit('math')">
                             <span class="habit-icon">📝</span>
-                            <span class="habit-name">数学复习</span>
+                            <div class="habit-content">
+                                <span class="habit-name">数学复习</span>
+                                <span class="habit-subtitle">费曼笔记法</span>
+                            </div>
                             <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'math')">✏️</button>
+                        </div>
+                        <div class="habit-card" id="habit-sleep" onclick="toggleHabit('sleep')">
+                            <span class="habit-icon">🌙</span>
+                            <div class="habit-content">
+                                <span class="habit-name">早睡</span>
+                                <span class="habit-subtitle">22:00前</span>
+                            </div>
+                            <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'sleep')">✏️</button>
                         </div>
                     </div>
                 </section>
@@ -286,6 +319,46 @@
             <div class="modal-title" id="modalTitle"></div>
             <div class="modal-body" id="modalBody"></div>
             <button class="modal-close" id="modalClose">知道了</button>
+        </div>
+    </div>
+
+    <!-- 编辑习惯 Modal -->
+    <div class="modal" id="editHabitModal" aria-hidden="true">
+        <div class="modal-content glass-modal">
+            <div class="modal-header">
+                <span class="modal-title">编辑习惯</span>
+                <button class="modal-close-x" onclick="closeEditHabitModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editHabitId">
+                <div class="form-group">
+                    <label>名称</label>
+                    <input type="text" id="editHabitName" class="glass-input" placeholder="习惯名称">
+                </div>
+                <div class="form-group">
+                    <label>说明</label>
+                    <input type="text" id="editHabitSubtitle" class="glass-input" placeholder="时间或要求">
+                </div>
+                <div class="form-group">
+                    <label>图标</label>
+                    <div class="icon-picker" id="habitIconPicker">
+                        <span class="icon-option" data-icon="🌅">🌅</span>
+                        <span class="icon-option" data-icon="🎹">🎹</span>
+                        <span class="icon-option" data-icon="🏃">🏃</span>
+                        <span class="icon-option" data-icon="📖">📖</span>
+                        <span class="icon-option" data-icon="🧘">🧘</span>
+                        <span class="icon-option" data-icon="📝">📝</span>
+                        <span class="icon-option" data-icon="🌙">🌙</span>
+                        <span class="icon-option" data-icon="💪">💪</span>
+                        <span class="icon-option" data-icon="🎯">🎯</span>
+                        <span class="icon-option" data-icon="🧠">🧠</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeEditHabitModal()">取消</button>
+                <button class="btn-save" onclick="saveHabitEdit()">保存</button>
+            </div>
         </div>
     </div>
 
