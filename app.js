@@ -820,10 +820,11 @@ function initDayNumber() {
   document.getElementById('dayNum').textContent = MOCKUP_STUDENT.current_day;
 }
 
-// ====== Landing Page 动画 ======
+// ====== Landing Page 动画 (GSAP + Canvas粒子) ======
 function initLandingPage() {
   const overlay = document.getElementById('landingOverlay');
   const canvas = document.getElementById('landingCanvas');
+  const skipBtn = document.querySelector('.landing-skip');
   if (!overlay || !canvas) return;
 
   const ctx = canvas.getContext('2d');
@@ -843,26 +844,38 @@ function initLandingPage() {
   };
   resize();
 
-  const chars = ['馬', '到', '成', '功'];
-  const fontSize = Math.min(140, width * 0.2);
-  const centerX = width / 2;
-  const startY = height * 0.15;
-  const lineGap = fontSize * 1.3;
+  // 粒子系统
+  const particles = [];
+  const dustParticles = [];
   
-  let particles = [];
-  let animationStarted = false;
+  // 背景星尘粒子
+  for (let i = 0; i < 150; i++) {
+    dustParticles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() * 2 + 0.5,
+      speedX: (Math.random() - 0.5) * 0.3,
+      speedY: (Math.random() - 0.5) * 0.3,
+      alpha: Math.random() * 0.5 + 0.2
+    });
+  }
 
-  // 等待字体加载完成后采样
+  // 文字粒子采样
+  const chars = ['馬', '到', '成', '功'];
+  const fontSize = Math.min(140, width * 0.18);
+  const centerX = width / 2;
+  const startY = height * 0.18;
+  const lineGap = fontSize * 1.25;
+
   function sampleCharacters() {
-    particles = [];
+    particles.length = 0;
     
     chars.forEach((ch, charIdx) => {
       const targetY = startY + charIdx * lineGap;
       
-      // 单独的离屏canvas
       const off = document.createElement('canvas');
       const offCtx = off.getContext('2d');
-      const size = Math.ceil(fontSize * 1.5);
+      const size = Math.ceil(fontSize * 1.6);
       off.width = size;
       off.height = size;
       
@@ -875,134 +888,167 @@ function initLandingPage() {
       offCtx.fillText(ch, size / 2, size / 2);
       
       const imageData = offCtx.getImageData(0, 0, size, size);
-      const step = 3; // 采样密度
+      const step = 3;
       
       for (let x = 0; x < size; x += step) {
         for (let y = 0; y < size; y += step) {
           const idx = (y * size + x) * 4;
-          const r = imageData.data[idx];
-          
-          if (r > 128) { // 白色像素 = 文字区域
+          if (imageData.data[idx] > 128) {
             const tx = centerX - size / 2 + x;
             const ty = targetY - size / 2 + y;
             
             particles.push({
-              x: Math.random() * width,
-              y: Math.random() * height,
+              x: centerX + (Math.random() - 0.5) * width * 0.8,
+              y: height + Math.random() * 200,
               tx: tx,
               ty: ty,
-              size: 1.5 + Math.random() * 1,
+              size: 1.2 + Math.random() * 1.2,
               alpha: 0,
-              delay: charIdx * 1500,
+              delay: charIdx * 1.2,
               charIdx: charIdx,
-              speed: 0.03 + Math.random() * 0.04
+              progress: 0
             });
           }
         }
       }
     });
     
-    console.log(`采样完成: ${particles.length} 个粒子`);
+    console.log(`粒子采样完成: ${particles.length} 个`);
   }
 
-  // 主绘制循环
-  let startTime = 0;
-  const duration = 8000;
+  // 动画状态
+  let animProgress = { value: 0 };
+  let isAnimating = true;
 
-  function draw(now) {
-    if (!animationStarted) {
-      startTime = now;
-      animationStarted = true;
-    }
+  // GSAP 主时间线
+  function startAnimation() {
+    const tl = gsap.timeline({
+      onComplete: () => {
+        isAnimating = false;
+        gsap.to(overlay, {
+          opacity: 0,
+          duration: 0.8,
+          ease: 'power2.inOut',
+          onComplete: () => overlay.remove()
+        });
+      }
+    });
+
+    // 背景光晕脉动
+    tl.to('.landing-glow', {
+      scale: 1.2,
+      opacity: 0.8,
+      duration: 2,
+      ease: 'power2.out'
+    }, 0);
+
+    // 粒子动画进度
+    tl.to(animProgress, {
+      value: 1,
+      duration: 6,
+      ease: 'power2.out'
+    }, 0.5);
+
+    // 文字依次显现 (GSAP控制DOM文字作为高光层)
+    chars.forEach((ch, i) => {
+      tl.to(`.landing-char[data-char="${i}"]`, {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        color: 'rgba(255, 250, 230, 0.95)',
+        textShadow: '0 0 60px rgba(244, 208, 63, 0.8), 0 0 120px rgba(244, 208, 63, 0.4)',
+        duration: 1.5,
+        ease: 'power3.out'
+      }, 1 + i * 1.2);
+    });
+
+    // 跳过按钮淡入
+    tl.to('.landing-skip', {
+      opacity: 1,
+      duration: 0.5
+    }, 2);
+  }
+
+  // Canvas 渲染循环
+  function render() {
+    if (!isAnimating) return;
     
-    const elapsed = now - startTime;
-    
-    // 清屏
     ctx.fillStyle = '#050510';
     ctx.fillRect(0, 0, width, height);
     
     // 背景光晕
-    const gradient = ctx.createRadialGradient(centerX, height * 0.4, 0, centerX, height * 0.4, height * 0.6);
-    gradient.addColorStop(0, 'rgba(244, 208, 63, 0.08)');
+    const gradient = ctx.createRadialGradient(centerX, height * 0.4, 0, centerX, height * 0.4, height * 0.5);
+    gradient.addColorStop(0, 'rgba(244, 208, 63, 0.06)');
     gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, width, height);
     
-    // 绘制粒子
-    particles.forEach(p => {
-      if (elapsed < p.delay) return;
+    // 星尘粒子
+    dustParticles.forEach(p => {
+      p.x += p.speedX;
+      p.y += p.speedY;
+      if (p.x < 0) p.x = width;
+      if (p.x > width) p.x = 0;
+      if (p.y < 0) p.y = height;
+      if (p.y > height) p.y = 0;
       
-      const t = (elapsed - p.delay) / 2500;
-      const ease = Math.min(1, t);
-      const easeOut = 1 - Math.pow(1 - ease, 3);
-      
-      // 向目标移动
-      p.x += (p.tx - p.x) * p.speed;
-      p.y += (p.ty - p.y) * p.speed;
-      
-      // 透明度渐变
-      p.alpha = Math.min(1, p.alpha + 0.025);
-      
-      // 微抖动
-      const jitter = (1 - easeOut) * 2;
-      const px = p.x + Math.sin(now * 0.005 + p.tx) * jitter;
-      const py = p.y + Math.cos(now * 0.005 + p.ty) * jitter;
-      
-      // 金色粒子
       ctx.beginPath();
-      ctx.arc(px, py, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(244, 208, 63, ${p.alpha * 0.9})`;
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * 0.3})`;
       ctx.fill();
     });
     
-    // 文字高光层（粒子聚合后显示）
-    ctx.save();
-    ctx.font = `bold ${fontSize}px "Ma Shan Zheng", "Noto Sans SC", serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    chars.forEach((ch, i) => {
-      const y = startY + i * lineGap;
-      const charElapsed = elapsed - i * 1500;
+    // 文字粒子
+    const now = performance.now();
+    particles.forEach(p => {
+      const charProgress = Math.max(0, animProgress.value - p.delay / 6);
+      if (charProgress <= 0) return;
       
-      if (charElapsed > 2000) {
-        const glowAlpha = Math.min(0.3, (charElapsed - 2000) / 2000 * 0.3);
-        ctx.shadowColor = 'rgba(244, 208, 63, 0.8)';
-        ctx.shadowBlur = 30;
-        ctx.fillStyle = `rgba(255, 250, 230, ${glowAlpha})`;
-        ctx.fillText(ch, centerX, y);
-        ctx.shadowBlur = 0;
-      }
+      const ease = 1 - Math.pow(1 - Math.min(charProgress * 1.5, 1), 3);
+      
+      p.x += (p.tx - p.x) * 0.08;
+      p.y += (p.ty - p.y) * 0.08;
+      p.alpha = Math.min(1, p.alpha + 0.03);
+      
+      const jitter = (1 - ease) * 3;
+      const px = p.x + Math.sin(now * 0.003 + p.tx) * jitter;
+      const py = p.y + Math.cos(now * 0.003 + p.ty) * jitter;
+      
+      ctx.beginPath();
+      ctx.arc(px, py, p.size * (0.5 + ease * 0.5), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(244, 208, 63, ${p.alpha * 0.85})`;
+      ctx.fill();
     });
-    ctx.restore();
     
-    // 继续动画或结束
-    if (elapsed < duration) {
-      requestAnimationFrame(draw);
-    } else {
-      // 淡出
-      overlay.classList.add('fade-out');
-      setTimeout(() => overlay.remove(), 800);
-    }
+    requestAnimationFrame(render);
   }
 
-  // 点击跳过
-  overlay.addEventListener('click', () => {
-    overlay.classList.add('fade-out');
-    setTimeout(() => overlay.remove(), 500);
-  });
+  // 跳过功能
+  function skip() {
+    isAnimating = false;
+    gsap.killTweensOf('*');
+    gsap.to(overlay, {
+      opacity: 0,
+      duration: 0.4,
+      onComplete: () => overlay.remove()
+    });
+  }
 
-  // 确保字体加载后再开始
+  overlay.addEventListener('click', skip);
+  if (skipBtn) skipBtn.addEventListener('click', skip);
+
+  // 启动
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => {
       sampleCharacters();
-      requestAnimationFrame(draw);
+      render();
+      startAnimation();
     });
   } else {
-    // fallback: 延迟500ms
     setTimeout(() => {
       sampleCharacters();
-      requestAnimationFrame(draw);
+      render();
+      startAnimation();
     }, 500);
   }
 }
