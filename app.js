@@ -949,18 +949,8 @@ function initLandingPage() {
       ease: 'power2.out'
     }, 0.5);
 
-    // 文字依次显现 (GSAP控制DOM文字作为高光层)
-    chars.forEach((ch, i) => {
-      tl.to(`.landing-char[data-char="${i}"]`, {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        color: 'rgba(255, 250, 230, 0.95)',
-        textShadow: '0 0 60px rgba(244, 208, 63, 0.8), 0 0 120px rgba(244, 208, 63, 0.4)',
-        duration: 1.5,
-        ease: 'power3.out'
-      }, 1 + i * 1.2);
-    });
+    // 文字依次显现 (纯粒子，无DOM文字)
+    // GSAP只控制动画进度和光晕
 
     // 跳过按钮淡入
     tl.to('.landing-skip', {
