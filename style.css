@@ -1024,17 +1024,19 @@ h1, h2, h3 {
 }
 
 /* ====== 磨砂玻璃Modal ====== */
-.glass-modal {
-    background: rgba(30, 30, 40, 0.95);
+.glass-modal,
+.modal-content.glass-modal {
+    background: rgba(30, 30, 40, 0.98);
     backdrop-filter: blur(30px) saturate(180%);
     -webkit-backdrop-filter: blur(30px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 20px;
     padding: 0;
-    overflow: hidden;
-    max-width: 90vw;
-    max-height: 90vh;
+    width: 90%;
+    max-width: 400px;
+    max-height: 85vh;
     overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .modal-header {
