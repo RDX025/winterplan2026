@@ -1059,7 +1059,7 @@ function initLandingPage() {
               y: height + Math.random() * 200,
               tx: tx,
               ty: ty,
-              size: 1.5 + Math.random() * 1.5,
+              size: 0.8 + Math.random() * 0.8,
               alpha: 0,
               delay: charIdx * 1.5,
               charIdx: charIdx,
@@ -1161,8 +1161,16 @@ function initLandingPage() {
       const px = p.x + Math.sin(now * 0.003 + p.tx) * jitter;
       const py = p.y + Math.cos(now * 0.003 + p.ty) * jitter;
       
+      // 呼吸效果：粒子聚合后大小周期性变化
+      let breathScale = 1;
+      if (ease > 0.9) {
+        // 聚合完成后开始呼吸
+        const breathPhase = Math.sin(now * 0.004 + p.tx * 0.1 + p.ty * 0.1);
+        breathScale = 1 + breathPhase * 0.3; // 0.7 ~ 1.3 范围
+      }
+      
       ctx.beginPath();
-      ctx.arc(px, py, p.size * (0.5 + ease * 0.5), 0, Math.PI * 2);
+      ctx.arc(px, py, p.size * (0.5 + ease * 0.5) * breathScale, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(244, 208, 63, ${p.alpha * 0.85})`;
       ctx.fill();
     });
