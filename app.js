@@ -2407,22 +2407,69 @@ window.selectCity = function selectCity(event, city) {
   renderEvents(city);
 };
 
+let currentCity = 'shenzhen';
+let currentCategory = 'all';
+
 function renderEvents(city) {
+  currentCity = city;
+  filterEvents();
+}
+
+function filterEvents() {
+  const searchInput = document.getElementById('eventSearch');
+  const searchText = searchInput ? searchInput.value.toLowerCase() : '';
+  renderFilteredEvents(currentCity, currentCategory, searchText);
+}
+
+function filterByCategory(category) {
+  currentCategory = category;
+  
+  // 更新按钮状态
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.cat === category);
+  });
+  
+  filterEvents();
+}
+
+function renderFilteredEvents(city, category, searchText) {
   const eventsList = document.getElementById('eventsList');
   if (!eventsList) return;
   
-  const events = CITY_EVENTS[city] || [];
+  const allEvents = CITY_EVENTS[city] || [];
+  
+  // 筛选
+  const filtered = allEvents.filter(e => {
+    const matchCategory = category === 'all' || e.category === category;
+    const matchSearch = !searchText || 
+      e.title.toLowerCase().includes(searchText) ||
+      e.desc.toLowerCase().includes(searchText) ||
+      e.location.toLowerCase().includes(searchText);
+    return matchCategory && matchSearch;
+  });
 
-  eventsList.innerHTML = events.map((e, idx) => {
+  if (filtered.length === 0) {
+    eventsList.innerHTML = `
+      <div class="empty-events">
+        <p>没有找到相关活动</p>
+        <small>试试其他关键词或分类</small>
+      </div>
+    `;
+    return;
+  }
+
+  eventsList.innerHTML = filtered.map((e) => {
+    const originalIdx = allEvents.indexOf(e);
     const categoryColor = CATEGORY_COLORS[e.category] || '#888';
-    const categoryTag = e.category ? `<span class="event-category" style="background:${categoryColor}20;color:${categoryColor}">${e.category}</span>` : '';
-    const eventId = `${city}_${idx}`;
+    const categoryTag = e.category 
+      ? `<span class="event-category" style="background:${categoryColor}20;color:${categoryColor}">${e.category}</span>` 
+      : '';
     const titleLink = e.url 
       ? `<a href="${e.url}" target="_blank" class="event-title-link">${e.title} ↗</a>`
       : `<span class="event-title-text">${e.title}</span>`;
     
     return `
-    <div class="event-card" onclick="if(!event.target.closest('button')){if('${e.url}')window.open('${e.url}','_blank')}">
+    <div class="event-card" onclick="if(!event.target.closest('button')&&'${e.url}')window.open('${e.url}','_blank')">
       <div class="event-date">
         <span class="month">${e.month}</span>
         <span class="day">${e.day}</span>
@@ -2437,7 +2484,7 @@ function renderEvents(city) {
         </div>
       </div>
       <div class="event-action">
-        <button class="event-add-btn" onclick="addEventToSchedule('${city}', ${idx})" title="加入日程">+</button>
+        <button class="event-add-btn" onclick="addEventToSchedule('${city}', ${originalIdx})" title="加入日程">+</button>
       </div>
     </div>
   `;
