@@ -834,7 +834,7 @@ function initLandingPage() {
     canvas.height = window.innerHeight * dpr;
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   };
 
   resize();
@@ -844,45 +844,43 @@ function initLandingPage() {
   });
 
   const chars = ['馬', '到', '成', '功'];
-  const fontSize = Math.min(140, window.innerWidth * 0.2);
+  const fontSize = Math.min(160, window.innerWidth * 0.22);
   const centerX = window.innerWidth / 2;
-  const startY = window.innerHeight * 0.2;
-  const lineGap = fontSize * 1.1;
+  const startY = window.innerHeight * 0.18;
+  const lineGap = fontSize * 1.25;
 
   const particles = [];
   const off = document.createElement('canvas');
   const offCtx = off.getContext('2d');
-  off.width = window.innerWidth;
-  off.height = window.innerHeight;
+  off.width = Math.max(400, fontSize * 2.2);
+  off.height = Math.max(400, fontSize * 2.2);
 
-  offCtx.fillStyle = '#000';
-  offCtx.fillRect(0,0,off.width,off.height);
   offCtx.font = `${fontSize}px "Ma Shan Zheng", "Noto Sans SC", serif`;
   offCtx.textAlign = 'center';
   offCtx.textBaseline = 'middle';
 
   chars.forEach((ch, i) => {
     const y = startY + i * lineGap;
-    offCtx.fillStyle = '#fff';
-    offCtx.fillText(ch, centerX, y);
 
-    const imageData = offCtx.getImageData(centerX - fontSize, y - fontSize, fontSize * 2, fontSize * 2);
-    for (let x = 0; x < imageData.width; x += 4) {
-      for (let y2 = 0; y2 < imageData.height; y2 += 4) {
+    offCtx.clearRect(0,0,off.width,off.height);
+    offCtx.fillStyle = '#fff';
+    offCtx.fillText(ch, off.width / 2, off.height / 2);
+
+    const imageData = offCtx.getImageData(0, 0, off.width, off.height);
+    for (let x = 0; x < imageData.width; x += 3) {
+      for (let y2 = 0; y2 < imageData.height; y2 += 3) {
         const idx = (y2 * imageData.width + x) * 4 + 3;
-        if (imageData.data[idx] > 50) {
-          const tx = centerX - fontSize + x;
-          const ty = y - fontSize + y2;
+        if (imageData.data[idx] > 40) {
+          const tx = centerX - off.width / 2 + x;
+          const ty = y - off.height / 2 + y2;
           particles.push({
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
             tx,
             ty,
             alpha: 0,
-            delay: i * 700,
-            charIndex: i,
-            vx: (Math.random() - 0.5) * 0.4,
-            vy: (Math.random() - 0.5) * 0.4
+            delay: i * 1200,
+            charIndex: i
           });
         }
       }
@@ -890,31 +888,46 @@ function initLandingPage() {
   });
 
   let startTime = performance.now();
-  const duration = 5200;
+  const duration = 8000;
 
   function draw(now) {
     const t = now - startTime;
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
     // 背景微光
-    ctx.fillStyle = 'rgba(5,5,10,0.15)';
+    ctx.fillStyle = 'rgba(5,5,12,0.25)';
     ctx.fillRect(0,0,window.innerWidth, window.innerHeight);
 
+    // 粒子聚合
     particles.forEach(p => {
       if (t < p.delay) return;
-      const progress = Math.min((t - p.delay) / 1500, 1);
+      const progress = Math.min((t - p.delay) / 2000, 1);
       const ease = 1 - Math.pow(1 - progress, 3);
-      p.x += (p.tx - p.x) * 0.06;
-      p.y += (p.ty - p.y) * 0.06;
-      p.alpha = Math.min(1, p.alpha + 0.03);
+      p.x += (p.tx - p.x) * 0.08;
+      p.y += (p.ty - p.y) * 0.08;
+      p.alpha = Math.min(1, p.alpha + 0.02);
 
-      const jitter = (1 - ease) * 0.8;
-      const px = p.x + Math.sin(now / 200 + p.tx) * jitter;
-      const py = p.y + Math.cos(now / 200 + p.ty) * jitter;
+      const jitter = (1 - ease) * 0.6;
+      const px = p.x + Math.sin(now / 180 + p.tx) * jitter;
+      const py = p.y + Math.cos(now / 180 + p.ty) * jitter;
 
       ctx.fillStyle = `rgba(244, 208, 63, ${p.alpha})`;
       ctx.fillRect(px, py, 2, 2);
     });
+
+    // 文字兜底显示（避免字体未加载）
+    ctx.save();
+    ctx.font = `${fontSize}px "Ma Shan Zheng", "Noto Sans SC", serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    chars.forEach((ch, i) => {
+      const y = startY + i * lineGap;
+      const showProgress = Math.min(Math.max((t - i * 1200) / 2000, 0), 1);
+      const alpha = showProgress * 0.9;
+      ctx.fillStyle = `rgba(255, 240, 200, ${alpha})`;
+      ctx.fillText(ch, centerX, y);
+    });
+    ctx.restore();
 
     if (t < duration) {
       requestAnimationFrame(draw);
