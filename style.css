@@ -1312,6 +1312,64 @@ h1, h2, h3 {
     gap: var(--spacing-md);
 }
 
+.event-filters {
+    margin-bottom: var(--spacing-md);
+}
+
+.filter-row {
+    margin-bottom: var(--spacing-sm);
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.search-input:focus {
+    border-color: rgba(244, 208, 63, 0.5);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.category-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: var(--spacing-sm);
+}
+
+.cat-btn {
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cat-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.cat-btn.active {
+    background: rgba(244, 208, 63, 0.2);
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
 .event-card {
     display: flex;
     gap: var(--spacing-md);
