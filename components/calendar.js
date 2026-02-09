@@ -244,12 +244,24 @@ const Calendar = {
   
   getDayEvents(date) {
     if (!window.todaySchedule || !Array.isArray(window.todaySchedule)) return [];
-    // 简化：返回所有事件（实际应该按日期筛选）
-    return window.todaySchedule.map(e => ({
+    
+    // 简化处理：对于演示，显示当前选中日的事件或所有事件
+    // 实际生产环境应该按 date 字段筛选
+    const events = window.todaySchedule.filter(e => {
+      // 如果有 date 字段，按日期筛选
+      if (e.date) {
+        const eventDate = new Date(e.date);
+        return this.isSameDay(eventDate, date);
+      }
+      // 演示用：如果没有 date，显示今天的事件（通过 startHour 判断）
+      return true; // 暂时显示所有事件用于演示
+    }).map(e => ({
       title: e.event_title,
       color: e.color || '#F4D03F',
       status: e.status
     }));
+    
+    return events;
   },
   
   calculateWeekStats(days) {
