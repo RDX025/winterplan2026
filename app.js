@@ -2197,15 +2197,26 @@ function initIOSWheel(elementId, defaultIndex) {
   function renderWheel(index) {
     items.forEach((item, i) => {
       const offset = i - index;
-      const angle = offset * 20; // 每项旋转角度
+      const absOffset = Math.abs(offset);
+      
+      // 只显示可见范围内的项目（±3项）
+      if (absOffset > 3) {
+        item.style.opacity = '0';
+        item.style.pointerEvents = 'none';
+        return;
+      }
+      
+      const angle = offset * 25; // 每项旋转角度
       const translateY = Math.sin(angle * Math.PI / 180) * WHEEL_RADIUS;
       const translateZ = Math.cos(angle * Math.PI / 180) * WHEEL_RADIUS - WHEEL_RADIUS;
-      const opacity = Math.max(0.2, 1 - Math.abs(offset) * 0.25);
-      const scale = Math.max(0.7, 1 - Math.abs(offset) * 0.1);
+      const opacity = Math.max(0.15, 1 - absOffset * 0.3);
+      const scale = Math.max(0.75, 1 - absOffset * 0.12);
       
+      // 设置3D变换，以容器中心为基准
       item.style.transform = `translateY(${80 + translateY}px) translateZ(${translateZ}px) scale(${scale})`;
       item.style.opacity = opacity;
-      item.classList.toggle('active', Math.abs(offset) < 0.5);
+      item.style.pointerEvents = absOffset < 1 ? 'auto' : 'none';
+      item.classList.toggle('active', absOffset < 0.5);
     });
   }
   

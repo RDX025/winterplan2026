@@ -1359,10 +1359,13 @@ h1, h2, h3 {
     font-size: 1.2rem;
     color: rgba(255,255,255,0.4);
     backface-visibility: hidden;
-    transition: color 0.1s ease;
+    transition: color 0.1s ease, opacity 0.1s ease;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
+    /* 初始隐藏，由JS控制显示 */
+    opacity: 0;
+    will-change: transform, opacity;
 }
 
 .ios-wheel-item.active {
