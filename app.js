@@ -970,8 +970,25 @@ function saveAllLocalData() {
   saveToLocal(STORAGE_KEYS.habits, localHabits);
   saveToLocal(STORAGE_KEYS.progress, localProgress);
   saveToLocal(STORAGE_KEYS.interests, localInterests);
-  saveToLocal(STORAGE_KEYS.schedule, todaySchedule);
+  // 保存完整 scheduleByDate 对象
+  if (window.scheduleByDate) {
+    saveToLocal(STORAGE_KEYS.schedule, window.scheduleByDate);
+  } else {
+    // 如果没有 scheduleByDate，创建它
+    const today = new Date().toISOString().split('T')[0];
+    const scheduleObj = {};
+    scheduleObj[today] = todaySchedule;
+    saveToLocal(STORAGE_KEYS.schedule, scheduleObj);
+  }
   saveToLocal(STORAGE_KEYS.choice, localChoice);
+}
+
+// 更新 window.scheduleByDate (供日历三视图使用)
+function updateScheduleByDate() {
+  const today = new Date().toISOString().split('T')[0];
+  window.scheduleByDate = window.scheduleByDate || {};
+  window.scheduleByDate[today] = todaySchedule;
+  saveToLocal(STORAGE_KEYS.schedule, window.scheduleByDate);
 }
 
 // ====== 初始化 ======
@@ -1250,8 +1267,25 @@ function initCalendar() {
   const calendarSection = document.getElementById('calendarSection');
   
   if (calendarSection && typeof Calendar !== 'undefined') {
+    // 确保 scheduleByDate 已加载
+    if (!window.scheduleByDate) {
+      const savedSchedule = loadFromLocal(STORAGE_KEYS.schedule, null);
+      if (savedSchedule && typeof savedSchedule === 'object') {
+        window.scheduleByDate = savedSchedule;
+      } else {
+        window.scheduleByDate = {};
+      }
+    }
+    
     Calendar.init();
-    Calendar.switchView('day'); // 默认显示日视图（时间轴）
+    Calendar.switchView('day');
+    
+    // 延迟刷新以确保数据已加载
+    setTimeout(() => {
+      if (typeof Calendar.refresh === 'function') {
+        Calendar.refresh();
+      }
+    }, 100);
   }
 }
 
@@ -2332,6 +2366,9 @@ window.submitNewEvent = async function() {
   };
   
   todaySchedule.push(newEvent);
+  
+  // 更新 scheduleByDate 和 localStorage
+  updateScheduleByDate();
   
   // 关闭弹窗
   const modal = document.getElementById('notifyModal');
