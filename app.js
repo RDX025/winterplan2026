@@ -2418,31 +2418,25 @@ function renderEvents(city) {
     const categoryTag = e.category ? `<span class="event-category" style="background:${categoryColor}20;color:${categoryColor}">${e.category}</span>` : '';
     
     return `
-    <div class="event-card activity-card" data-city="${city}" data-idx="${idx}" ondblclick="addEventToSchedule('${city}', ${idx})">
-      <div class="event-card-content">
-        <div class="event-date">
-          <span class="month">${e.month}</span>
-          <span class="day">${e.day}</span>
-        </div>
-        <div class="event-details">
-          ${categoryTag}
-          <span class="event-title-text">${e.title}</span>
-          <p class="event-desc">${e.desc}</p>
-          <div class="event-meta">
-            <span class="event-location">📍 ${e.location}</span>
-            <span class="event-price">🎫 ${e.price}</span>
-          </div>
+    <div class="event-card">
+      <div class="event-date">
+        <span class="month">${e.month}</span>
+        <span class="day">${e.day}</span>
+      </div>
+      <div class="event-details">
+        ${categoryTag}
+        <span class="event-title-text">${e.title}</span>
+        <p class="event-desc">${e.desc}</p>
+        <div class="event-meta">
+          <span class="event-location">📍 ${e.location}</span>
+          <span class="event-price">🎫 ${e.price}</span>
         </div>
       </div>
+      <button class="event-add-btn" onclick="addEventToSchedule('${city}', ${idx})" title="添加">+</button>
     </div>
   `;
   }).join('');
 }
-
-// 移除触摸事件
-window.activityTouchStart = null;
-window.activityTouchMove = null;
-window.activityTouchEnd = null;
 
 // 添加活动到今日日程
 window.addEventToSchedule = function addEventToSchedule(city, idx) {
@@ -2472,7 +2466,7 @@ window.addEventToSchedule = function addEventToSchedule(city, idx) {
 
   saveAllLocalData();
   renderCalendarTimeline();
-  showToast('✅ 已添加到今日日程');
+  showSuccessAnimation('🎉 已添加到今日日程！');
 };
 
 function getCategoryIcon(category) {
