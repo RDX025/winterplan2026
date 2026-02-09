@@ -1614,8 +1614,6 @@ function renderCalendarTimeline() {
       <div class="calendar-event-wrapper" data-id="${item.id}" style="top: ${startPos}px; height: ${height}px;">
         <div class="event-delete-bg">🗑️ 删除</div>
         <div class="event-edit-bg">✏️ 编辑</div>
-        <button class="event-delete-btn" data-id="${item.id}">🗑️</button>
-        <button class="event-edit-btn" data-id="${item.id}">✏️</button>
         <div class="calendar-event ${item.status}" 
              data-id="${item.id}"
              style="height: 100%; background: ${item.color}20; border-left: 4px solid ${item.color};">
@@ -1745,45 +1743,33 @@ window.eventTouchMove = function(event, id) {
   if (touchMode === 'swipe') {
     // 左右滑动：右滑删除，左滑编辑
     const swipeX = Math.max(-120, Math.min(deltaX, 120));
-    eventEl.style.transform = `translateX(${swipeX}px`;
+    eventEl.style.transform = `translateX(${swipeX}px)`;
 
-    // 显示对应背景和按钮
+    // 显示对应背景
     const deleteBg = wrapper.querySelector('.event-delete-bg');
     const editBg = wrapper.querySelector('.event-edit-bg');
-    const deleteBtn = wrapper.querySelector('.event-delete-btn');
-    const editBtn = wrapper.querySelector('.event-edit-btn');
 
     // 重置类名
     wrapper.classList.remove('showing-delete', 'showing-edit');
 
     if (swipeX > 0 && deleteBg) {
-      // 右滑 - 显示删除
-      deleteBg.style.opacity = Math.min(swipeX / 80, 1);
+      // 右滑 - 显示删除背景
+      deleteBg.style.opacity = Math.min(swipeX / 60, 1);
       if (editBg) editBg.style.opacity = '0';
       if (swipeX > 40) {
-        deleteBtn.style.display = 'flex';
         wrapper.classList.add('showing-delete');
-      } else {
-        deleteBtn.style.display = 'none';
       }
-      if (editBtn) editBtn.style.display = 'none';
     } else if (swipeX < 0 && editBg) {
-      // 左滑 - 显示编辑
-      editBg.style.opacity = Math.min(Math.abs(swipeX) / 80, 1);
+      // 左滑 - 显示编辑背景
+      editBg.style.opacity = Math.min(Math.abs(swipeX) / 60, 1);
       if (deleteBg) deleteBg.style.opacity = '0';
       if (Math.abs(swipeX) > 40) {
-        editBtn.style.display = 'flex';
         wrapper.classList.add('showing-edit');
-      } else {
-        editBtn.style.display = 'none';
       }
-      if (deleteBtn) deleteBtn.style.display = 'none';
     } else {
-      // 中间位置 - 隐藏按钮
+      // 中间位置 - 隐藏背景
       if (deleteBg) deleteBg.style.opacity = '0';
       if (editBg) editBg.style.opacity = '0';
-      if (deleteBtn) deleteBtn.style.display = 'none';
-      if (editBtn) editBtn.style.display = 'none';
     }
   } else if (touchMode === 'drag') {
     // 上下拖拽 - 移动整个wrapper
@@ -1814,14 +1800,10 @@ window.eventTouchEnd = function(event, id) {
     wrapper.classList.remove('showing-delete', 'showing-edit', 'dragging');
   }
 
-  // 隐藏所有按钮
+  // 隐藏所有背景
   if (wrapper) {
-    const deleteBtn = wrapper.querySelector('.event-delete-btn');
-    const editBtn = wrapper.querySelector('.event-edit-btn');
     const deleteBg = wrapper.querySelector('.event-delete-bg');
     const editBg = wrapper.querySelector('.event-edit-bg');
-    if (deleteBtn) deleteBtn.style.display = 'none';
-    if (editBtn) editBtn.style.display = 'none';
     if (deleteBg) deleteBg.style.opacity = '0';
     if (editBg) editBg.style.opacity = '0';
   }
