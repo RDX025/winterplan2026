@@ -2044,7 +2044,12 @@ window.deleteEvent = async function(event, id) {
 
 // 切换完成状态
 window.toggleEventStatus = async function(e, id) {
-  e.stopPropagation(); // 阻止冒泡
+  // 兼容不同调用方式
+  if (typeof e === 'number' && id === undefined) {
+    id = e;
+    e = null;
+  }
+  if (e && e.stopPropagation) e.stopPropagation();
   const item = todaySchedule.find(ev => ev.id === id);
   if (!item) return;
   
@@ -2108,7 +2113,7 @@ window.handleDragStart = function(event, id) {};
 window.handleDragEnd = function(event) {};
 window.handleDragOver = function(event) { event.preventDefault(); };
 window.handleDrop = function(event) { event.preventDefault(); };
-window.showEventModal = function(id) { toggleEventStatus(id); };
+window.showEventModal = function(id) { openEditEventModal(id); };
 
 window.handleTimelineClick = function handleTimelineClick(id) {
   const item = todaySchedule.find(t => t.id === id);
@@ -2859,6 +2864,99 @@ window.saveProfileSettings = async function() {
     modal.setAttribute('aria-hidden', 'true');
   }
   showToast('✅ 名号已保存');
+};
+
+const GUIDED_DAY_TEMPLATE = [
+  { title: '晨读/背诵', start: '07:30', end: '08:00', icon: '📖' },
+  { title: '数学训练', start: '09:00', end: '10:30', icon: '🧮' },
+  { title: '兴趣探索/科技', start: '14:00', end: '15:30', icon: '⚙️' },
+  { title: '运动与拉伸', start: '17:00', end: '17:30', icon: '🏃' },
+  { title: '复盘总结', start: '20:00', end: '20:20', icon: '📝' }
+];
+
+window.openGuidedDayModal = function() {
+  const modal = document.getElementById('notifyModal');
+  const titleEl = document.getElementById('modalTitle');
+  const bodyEl = document.getElementById('modalBody');
+  const closeBtn = document.getElementById('modalClose');
+  if (!modal || !titleEl || !bodyEl) return;
+
+  titleEl.textContent = '✨ 引导填写今日修炼';
+  bodyEl.innerHTML = `
+    <div class="add-event-form">
+      ${GUIDED_DAY_TEMPLATE.map((item, idx) => `
+        <div class="guided-item" style="margin-bottom:12px;">
+          <div style="display:flex; gap:8px; margin-bottom:6px;">
+            <input type="text" class="form-input" style="flex:1;" id="guideTitle-${idx}" value="${item.title}">
+            <input type="text" class="form-input" style="width:54px; text-align:center;" id="guideIcon-${idx}" value="${item.icon}">
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="time" class="form-input" id="guideStart-${idx}" value="${item.start}">
+            <span style="color:rgba(255,255,255,0.6);">→</span>
+            <input type="time" class="form-input" id="guideEnd-${idx}" value="${item.end}">
+          </div>
+        </div>
+      `).join('')}
+      <button class="submit-btn" style="margin-top:10px;" onclick="saveGuidedDay()">✅ 一键生成</button>
+    </div>
+  `;
+
+  closeBtn.textContent = '取消';
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+};
+
+window.saveGuidedDay = async function() {
+  if (todaySchedule.length > 0) {
+    const ok = confirm('今天已有日程，是否继续添加引导计划？');
+    if (!ok) return;
+  }
+
+  const items = GUIDED_DAY_TEMPLATE.map((_, idx) => {
+    const title = document.getElementById(`guideTitle-${idx}`).value.trim();
+    const icon = document.getElementById(`guideIcon-${idx}`).value.trim() || '📌';
+    const start = document.getElementById(`guideStart-${idx}`).value || '09:00';
+    const end = document.getElementById(`guideEnd-${idx}`).value || '10:00';
+    return { title, icon, start, end };
+  }).filter(i => i.title);
+
+  items.forEach(item => {
+    const [sh, sm] = item.start.split(':').map(n => parseInt(n, 10));
+    const [eh, em] = item.end.split(':').map(n => parseInt(n, 10));
+    todaySchedule.push({
+      id: Date.now() + Math.random(),
+      startHour: sh,
+      startMin: sm,
+      endHour: eh,
+      endMin: em,
+      event_title: item.title,
+      event_icon: item.icon,
+      status: 'pending',
+      color: '#F4D03F'
+    });
+  });
+
+  saveAllLocalData();
+  renderCalendarTimeline();
+
+  if (USE_SUPABASE) {
+    for (const item of todaySchedule.slice(-items.length)) {
+      try {
+        const saved = await SupabaseClient.saveScheduleItem(item);
+        if (saved && saved.id) item.id = saved.id;
+      } catch (err) {
+        console.error('引导日程同步失败:', err.message);
+      }
+    }
+  }
+
+  const modal = document.getElementById('notifyModal');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  showSuccessAnimation('✨ 已生成今日引导计划');
 };
 
 function renderAvatarGrid() {
