@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Supabase 连接测试</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      background: linear-gradient(135deg, #1a1a2e, #16213e); 
+      color: #fff; 
+      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; }
+    .test-btn {
+      width: 100%;
+      padding: 16px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .test-btn.primary {
+      background: linear-gradient(135deg, #f4d03f, #e6a817);
+      color: #1a1a2e;
+      font-weight: 600;
+    }
+    .log {
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .log-item { margin: 4px 0; }
+    .success { color: #2ecc71; }
+    .error { color: #e74c3c; }
+    .info { color: #3498db; }
+    .warn { color: #f39c12; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔌 Supabase 连接测试</h1>
+    
+    <button class="test-btn primary" onclick="runTests()">▶️ 运行所有测试</button>
+    <button class="test-btn" onclick="clearLog()">🗑️ 清空日志</button>
+    
+    <div class="log" id="log"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://hsybcomykhfnyngtytyg.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzeWJjb215a2hmbnluZ3R5dHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyOTc0OTIsImV4cCI6MjA4NTg3MzQ5Mn0.1qg0gv2Vgk0nwM4YcIin_GZ5XhLI8JzYqxYZ4ThFw98';
+
+    window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    function log(msg, type = 'info') {
+      const div = document.getElementById('log');
+      const time = new Date().toLocaleTimeString('zh-CN');
+      div.innerHTML += `<div class="log-item ${type}">[${time}] ${msg}</div>`;
+      div.scrollTop = div.scrollHeight;
+    }
+
+    window.clearLog = () => document.getElementById('log').innerHTML = '';
+
+    async function runTests() {
+      log('🧪 开始 Supabase 连接测试...', 'info');
+      log(`📡 URL: ${SUPABASE_URL}`, 'info');
+      
+      try {
+        // Test 1: Connection
+        log('📡 测试 1: 连接...', 'info');
+        const { data: testData, error: testError } = await window.supabase
+          .from('students')
+          .select('id')
+          .limit(1);
+        
+        if (testError) {
+          log(`❌ 连接失败: ${testError.message}`, 'error');
+          if (testError.message.includes('RLS')) {
+            log('💡 提示: 需要配置 RLS 策略或关闭行级安全', 'warn');
+          }
+        } else {
+          log('✅ 连接成功!', 'success');
+        }
+
+        // Test 2: Read schedule_items
+        log('📡 测试 2: 读取 schedule_items 表...', 'info');
+        const { data: schedule, error: scheduleError } = await window.supabase
+          .from('schedule_items')
+          .select('*')
+          .limit(5);
+        
+        if (scheduleError) {
+          log(`❌ 读取失败: ${scheduleError.message}`, 'error');
+        } else {
+          log(`✅ 找到 ${schedule?.length || 0} 条日程记录`, 'success');
+        }
+
+        // Test 3: Read daily_progress
+        log('📡 测试 3: 读取 daily_progress 表...', 'info');
+        const today = new Date().toISOString().split('T')[0];
+        const { data: progress, error: progressError } = await window.supabase
+          .from('daily_progress')
+          .select('*')
+          .eq('date', today)
+          .limit(1);
+        
+        if (progressError) {
+          log(`❌ 读取失败: ${progressError.message}`, 'error');
+        } else {
+          log(`✅ 进度数据: ${JSON.stringify(progress)}`, 'success');
+        }
+
+        // Test 4: Write test
+        log('📡 测试 4: 写入测试...', 'info');
+        const testId = '11111111-1111-1111-1111-111111111111';
+        const { error: writeError } = await window.supabase
+          .from('daily_progress')
+          .upsert({
+            student_id: testId,
+            date: today,
+            math_progress: 100,
+            habits_progress: 100
+          }, { onConflict: 'student_id,date' });
+        
+        if (writeError) {
+          log(`❌ 写入失败: ${writeError.message}`, 'error');
+        } else {
+          log('✅ 写入成功!', 'success');
+        }
+
+        log('🏁 测试完成', 'info');
+        
+      } catch (e) {
+        log(`❌ 异常: ${e.message}`, 'error');
+      }
+    }
+
+    window.runTests = runTests;
+  </script>
+</body>
+</html>
