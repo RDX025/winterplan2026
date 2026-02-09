@@ -1223,10 +1223,56 @@ async function loadFromSupabase() {
     }
     
     console.log('✅ Supabase 数据加载完成');
+    
+    // 初始化日历
+    initCalendar();
   } catch (err) {
     console.error('❌ Supabase 加载失败，使用本地数据:', err);
+    // 即使失败也初始化日历
+    initCalendar();
   }
 }
+
+function initCalendar() {
+  const monthContainer = document.getElementById('monthCalendarContainer');
+  const weekContainer = document.getElementById('weekCalendarContainer');
+  
+  if (monthContainer && typeof MonthCalendar !== 'undefined') {
+    MonthCalendar.init('monthCalendarContainer');
+  }
+  
+  if (weekContainer && typeof WeekCalendar !== 'undefined') {
+    WeekCalendar.init('weekCalendarContainer');
+  }
+  
+  // 默认显示周视图
+  switchCalendarView('week');
+}
+
+window.switchCalendarView = function(view) {
+  // 更新tab状态
+  document.querySelectorAll('.calendar-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.textContent === view);
+  });
+  
+  const monthContainer = document.getElementById('monthCalendarContainer');
+  const weekContainer = document.getElementById('weekCalendarContainer');
+  
+  if (monthContainer) monthContainer.style.display = 'none';
+  if (weekContainer) weekContainer.style.display = 'none';
+  
+  if (view === 'month' && monthContainer) {
+    monthContainer.style.display = 'block';
+    if (typeof MonthCalendar !== 'undefined') {
+      MonthCalendar.refresh();
+    }
+  } else if (view === 'week' && weekContainer) {
+    weekContainer.style.display = 'block';
+    if (typeof WeekCalendar !== 'undefined') {
+      WeekCalendar.refresh();
+    }
+  }
+};
 
 function initDayNumber() {
   document.getElementById('dayNum').textContent = MOCKUP_STUDENT.current_day;
