@@ -672,26 +672,32 @@ h1, h2, h3 {
 }
 
 .calendar-event .event-status-icon {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     flex-shrink: 0;
-    width: 36px;
-    height: 36px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    border: none;
     cursor: pointer;
     transition: all 0.2s ease;
+    z-index: 50;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .calendar-event .event-status-icon:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.25);
     transform: scale(1.1);
 }
 
 .calendar-event .event-status-icon:active {
-    transform: scale(0.95);
+    transform: scale(0.9);
+    background: rgba(76, 175, 80, 0.4);
 }
 
 /* 旧时间线样式保留兼容 */

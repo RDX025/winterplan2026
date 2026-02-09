@@ -968,13 +968,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', function(e) {
     const deleteBtn = e.target.closest('.event-delete-btn');
     const editBtn = e.target.closest('.event-edit-btn');
+    const statusIcon = e.target.closest('.event-status-icon');
     
     if (deleteBtn) {
+      e.stopPropagation();
       const id = deleteBtn.dataset.id;
       deleteEvent(null, id);
     } else if (editBtn) {
+      e.stopPropagation();
       const id = editBtn.dataset.id;
       openEditEventModal(id);
+    } else if (statusIcon) {
+      e.stopPropagation();
+      const id = statusIcon.dataset.id;
+      toggleEventStatus(id);
     }
   });
   
@@ -982,15 +989,23 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('touchend', function(e) {
     const deleteBtn = e.target.closest('.event-delete-btn');
     const editBtn = e.target.closest('.event-edit-btn');
+    const statusIcon = e.target.closest('.event-status-icon');
     
     if (deleteBtn) {
       const id = deleteBtn.dataset.id;
       e.preventDefault();
+      e.stopPropagation();
       deleteEvent(null, id);
     } else if (editBtn) {
       const id = editBtn.dataset.id;
       e.preventDefault();
+      e.stopPropagation();
       openEditEventModal(id);
+    } else if (statusIcon) {
+      const id = statusIcon.dataset.id;
+      e.preventDefault();
+      e.stopPropagation();
+      toggleEventStatus(id);
     }
   });
 });
@@ -1589,7 +1604,7 @@ function renderCalendarTimeline() {
               <span class="event-title">${item.event_title}</span>
               <span class="event-time">${timeStr}</span>
             </div>
-            <span class="event-status-icon" onclick="event.stopPropagation(); toggleEventStatus(${item.id})">${getStatusIcon(item.status)}</span>
+            <span class="event-status-icon" data-id="${item.id}">${getStatusIcon(item.status)}</span>
           </div>
         </div>
       </div>
@@ -2144,15 +2159,12 @@ window.deleteEvent = async function(event, id) {
 };
 
 // 切换完成状态
-window.toggleEventStatus = async function(e, id) {
-  // 兼容不同调用方式
-  if (typeof e === 'number' && id === undefined) {
-    id = e;
-    e = null;
+window.toggleEventStatus = async function(id) {
+  const item = todaySchedule.find(ev => ev.id == id);
+  if (!item) {
+    console.warn('找不到日程:', id);
+    return;
   }
-  if (e && e.stopPropagation) e.stopPropagation();
-  const item = todaySchedule.find(ev => ev.id === id);
-  if (!item) return;
   
   if (item.status === 'completed') {
     item.status = 'pending';
