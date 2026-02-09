@@ -2507,7 +2507,10 @@ window.addEventToSchedule = function addEventToSchedule(city, idx) {
   const newId = Date.now();
   todaySchedule.push({
     id: newId,
-    time: '待定',
+    startHour: 9,
+    startMin: 0,
+    endHour: 10,
+    endMin: 0,
     event_title: event.title,
     event_subtitle: event.location,
     event_icon: getCategoryIcon(event.category),
@@ -2515,6 +2518,7 @@ window.addEventToSchedule = function addEventToSchedule(city, idx) {
     type: 'activity'
   });
 
+  saveAllLocalData();
   renderCalendarTimeline();
   showToast('✅ 已添加到今日日程');
 };
