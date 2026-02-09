@@ -139,6 +139,52 @@ const ACHIEVEMENTS = [
 // 深圳和广东省真实活动数据（2026年2-3月）
 const CITY_EVENTS = {
   shenzhen: [
+    // ===== 春节灯会/活动 =====
+    {
+      month: '2月', day: '17-23',
+      title: '锦绣中华非遗灯会',
+      location: '深圳锦绣中华民俗村',
+      price: '¥99起',
+      desc: '1500架无人机组成"2026"字样，非遗打钢花，新春巡游',
+      category: '春节灯会',
+      url: 'https://m.bendibao.com/'
+    },
+    {
+      month: '2月', day: '17-23',
+      title: '甘坑古镇繁花灯会',
+      location: '龙岗甘坑客家小镇',
+      price: '¥59起',
+      desc: '11个地方特色展馆+15个年味美食展，英歌舞/侗族芦笙表演',
+      category: '春节灯会',
+      url: 'https://m.bendibao.com/'
+    },
+    {
+      month: '2月', day: '17-23',
+      title: '世界之窗闪光迎新季',
+      location: '深圳世界之窗',
+      price: '¥99起',
+      desc: '千年非遗"打钢花"、飞天奇幻秀、新春大巡游',
+      category: '春节灯会',
+      url: 'https://m.bendibao.com/'
+    },
+    {
+      month: '2月', day: '17-23',
+      title: '欢乐港湾骑遇未境灯光秀',
+      location: '宝安欢乐港湾',
+      price: '免费',
+      desc: '灯光水秀+马年主题，摩天轮夜景',
+      category: '灯光秀',
+      url: 'https://m.bendibao.com/'
+    },
+    {
+      month: '2月', day: '19-22',
+      title: '小梅沙英歌舞表演',
+      location: '小梅沙海滨乐园',
+      price: '¥79起',
+      desc: '年初三到年初六英歌舞表演，马年主题游园会',
+      category: '春节活动',
+      url: 'http://sz.bendibao.com/xiuxian/202625/998081.shtm'
+    },
     // ===== 博物馆展览 =====
     {
       month: '2月', day: '6', endDate: '5月6日',
