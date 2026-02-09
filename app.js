@@ -2425,7 +2425,11 @@ window.selectWheelHour = function(type, event) {
 
 window.submitEditEvent = async function(id) {
   const item = todaySchedule.find(e => e.id == id);
-  if (!item) return;
+  if (!item) {
+    console.error('找不到日程项:', id);
+    showToast('日程不存在');
+    return;
+  }
 
   const title = document.getElementById('editEventTitle').value.trim();
   const start = getSelectedTime('wheelStart');
@@ -2433,11 +2437,18 @@ window.submitEditEvent = async function(id) {
   const icon = document.getElementById('newEventIcon').value;
   const color = document.getElementById('newEventColor').value;
 
+  console.log('📝 保存编辑:', { title, start, end, icon, color });
+
   if (!title) {
     showToast('请输入日程标题');
     return;
   }
-  if (end.hour < start.hour || (end.hour === start.hour && end.min <= start.min)) {
+  
+  // 计算总分钟数比较
+  const startMins = start.hour * 60 + start.min;
+  const endMins = end.hour * 60 + end.min;
+  
+  if (endMins <= startMins) {
     showToast('结束时间需大于开始时间');
     return;
   }
