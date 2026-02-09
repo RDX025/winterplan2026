@@ -1544,6 +1544,8 @@ function renderCalendarTimeline() {
       <div class="calendar-event-wrapper" data-id="${item.id}" style="top: ${startPos}px; height: ${height}px;">
         <div class="event-delete-bg">🗑️ 删除</div>
         <div class="event-edit-bg">✏️ 编辑</div>
+        <div class="event-delete-btn" onclick="deleteEvent(null, ${item.id})">🗑️</div>
+        <div class="event-edit-btn" onclick="openEditEventModal(${item.id})">✏️</div>
         <div class="calendar-event ${item.status}" 
              data-id="${item.id}"
              style="height: 100%; background: ${item.color}20; border-left: 4px solid ${item.color};"
@@ -1641,19 +1643,31 @@ window.eventTouchMove = function(event, id) {
     // 左右滑动：右滑删除，左滑编辑
     const swipeX = Math.max(-120, Math.min(deltaX, 120));
     eventEl.style.transform = `translateX(${swipeX}px)`;
-    
-    // 显示对应背景
+
+    // 显示对应背景和按钮
     const deleteBg = wrapper.querySelector('.event-delete-bg');
     const editBg = wrapper.querySelector('.event-edit-bg');
-    
+    const deleteBtn = wrapper.querySelector('.event-delete-btn');
+    const editBtn = wrapper.querySelector('.event-edit-btn');
+
     if (swipeX > 0 && deleteBg) {
       // 右滑 - 显示删除
       deleteBg.style.opacity = Math.min(swipeX / 80, 1);
       if (editBg) editBg.style.opacity = '0';
+      if (deleteBtn) deleteBtn.style.display = swipeX > 40 ? 'flex' : 'none';
+      if (editBtn) editBtn.style.display = 'none';
     } else if (swipeX < 0 && editBg) {
       // 左滑 - 显示编辑
       editBg.style.opacity = Math.min(Math.abs(swipeX) / 80, 1);
       if (deleteBg) deleteBg.style.opacity = '0';
+      if (editBtn) editBtn.style.display = Math.abs(swipeX) > 40 ? 'flex' : 'none';
+      if (deleteBtn) deleteBtn.style.display = 'none';
+    } else {
+      // 中间位置 - 隐藏按钮
+      if (deleteBg) deleteBg.style.opacity = '0';
+      if (editBg) editBg.style.opacity = '0';
+      if (deleteBtn) deleteBtn.style.display = 'none';
+      if (editBtn) editBtn.style.display = 'none';
     }
   } else if (touchMode === 'drag') {
     // 上下拖拽 - 移动整个wrapper
@@ -1666,37 +1680,42 @@ window.eventTouchMove = function(event, id) {
 window.eventTouchEnd = function(event, id) {
   const eventEl = document.querySelector(`.calendar-event[data-id="${id}"]`);
   const wrapper = document.querySelector(`.calendar-event-wrapper[data-id="${id}"]`);
-  
+
+  // 隐藏所有按钮
+  if (wrapper) {
+    const deleteBtn = wrapper.querySelector('.event-delete-btn');
+    const editBtn = wrapper.querySelector('.event-edit-btn');
+    const deleteBg = wrapper.querySelector('.event-delete-bg');
+    const editBg = wrapper.querySelector('.event-edit-bg');
+    if (deleteBtn) deleteBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
+    if (deleteBg) deleteBg.style.opacity = '0';
+    if (editBg) editBg.style.opacity = '0';
+  }
+
   if (touchMode === 'swipe' && eventEl) {
     const transform = eventEl.style.transform || '';
     const match = transform.match(/translateX\(([-\d.]+)px\)/);
     const swipeDistance = match ? parseFloat(match[1]) : 0;
-    
+
     if (swipeDistance > 60) {
-      // 右滑删除 - 滑出动画
+      // 右滑删除
       eventEl.style.transform = 'translateX(150%)';
       eventEl.style.opacity = '0';
-      wrapper.style.transition = 'opacity 0.3s';
-      wrapper.style.opacity = '0';
       setTimeout(() => {
         deleteEvent(null, id);
-      }, 300);
+      }, 200);
+      return;
     } else if (swipeDistance < -60) {
-      // 左滑编辑 - 打开编辑弹窗
+      // 左滑编辑
       eventEl.style.transform = 'translateX(0)';
-      const editBg = wrapper?.querySelector('.event-edit-bg');
-      if (editBg) editBg.style.opacity = '0';
-      isDragging = false; // 重置拖拽状态再打开弹窗
-      openEditEventModal(id);
+      setTimeout(() => {
+        openEditEventModal(id);
+      }, 200);
+      return;
     } else {
-      // 恢复位置
+      // 未超过阈值，恢复原位
       eventEl.style.transform = 'translateX(0)';
-      if (wrapper) {
-        const deleteBg = wrapper.querySelector('.event-delete-bg');
-        const editBg = wrapper.querySelector('.event-edit-bg');
-        if (deleteBg) deleteBg.style.opacity = '0';
-        if (editBg) editBg.style.opacity = '0';
-      }
     }
   } else if (touchMode === 'drag' && wrapper && touchCurrentEvent) {
     wrapper.classList.remove('dragging');

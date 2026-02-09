@@ -524,12 +524,14 @@ h1, h2, h3 {
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
-    padding-left: 16px;
+    padding-left: 20px;
     color: #fff;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 1rem;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.15s ease;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .event-edit-bg {
@@ -543,12 +545,53 @@ h1, h2, h3 {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding-right: 16px;
+    padding-right: 20px;
     color: #fff;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 1rem;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.15s ease;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* 删除/编辑按钮 - 点击触发 */
+.event-delete-btn {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #ff6b81;
+    color: #fff;
+    font-size: 1.5rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(255,107,129,0.4);
+}
+
+.event-edit-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #3498db;
+    color: #fff;
+    font-size: 1.5rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(52,152,219,0.4);
 }
 
 /* 日历事件块 */
