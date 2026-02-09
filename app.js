@@ -963,6 +963,36 @@ function saveAllLocalData() {
 // ====== 初始化 ======
 document.addEventListener('DOMContentLoaded', () => {
   initApp();
+  
+  // 事件委托：处理删除/编辑按钮点击
+  document.addEventListener('click', function(e) {
+    const deleteBtn = e.target.closest('.event-delete-btn');
+    const editBtn = e.target.closest('.event-edit-btn');
+    
+    if (deleteBtn) {
+      const id = deleteBtn.dataset.id;
+      deleteEvent(null, id);
+    } else if (editBtn) {
+      const id = editBtn.dataset.id;
+      openEditEventModal(id);
+    }
+  });
+  
+  // 触摸事件委托
+  document.addEventListener('touchend', function(e) {
+    const deleteBtn = e.target.closest('.event-delete-btn');
+    const editBtn = e.target.closest('.event-edit-btn');
+    
+    if (deleteBtn) {
+      const id = deleteBtn.dataset.id;
+      e.preventDefault();
+      deleteEvent(null, id);
+    } else if (editBtn) {
+      const id = editBtn.dataset.id;
+      e.preventDefault();
+      openEditEventModal(id);
+    }
+  });
 });
 
 async function initApp() {
@@ -1544,8 +1574,8 @@ function renderCalendarTimeline() {
       <div class="calendar-event-wrapper" data-id="${item.id}" style="top: ${startPos}px; height: ${height}px;">
         <div class="event-delete-bg">🗑️ 删除</div>
         <div class="event-edit-bg">✏️ 编辑</div>
-        <div class="event-delete-btn" onclick="deleteEvent(event, ${item.id})" ontouchend="deleteEvent(event, ${item.id})">🗑️</div>
-        <div class="event-edit-btn" onclick="openEditEventModal(event, ${item.id})" ontouchend="openEditEventModal(event, ${item.id})">✏️</div>
+        <button class="event-delete-btn" data-id="${item.id}">🗑️</button>
+        <button class="event-edit-btn" data-id="${item.id}">✏️</button>
         <div class="calendar-event ${item.status}" 
              data-id="${item.id}"
              style="height: 100%; background: ${item.color}20; border-left: 4px solid ${item.color};"
@@ -1764,12 +1794,6 @@ window.eventTouchEnd = function(event, id) {
   touchMode = null;
   setTimeout(() => { isDragging = false; }, 50);
 };
-
-// 保留旧函数兼容
-function initTimelineTouchDrag() {}
-window.touchDragStart = function() {};
-window.touchDragMove = function() {};
-window.touchDragEnd = function() {};
 
 // 鼠标拖拽（桌面端上下移动）
 window.mouseEventDragStart = function(event, id) {

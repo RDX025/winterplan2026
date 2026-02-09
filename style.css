@@ -564,40 +564,44 @@ h1, h2, h3 {
 /* 删除/编辑按钮 - 点击触发 */
 .event-delete-btn {
     position: absolute;
-    left: 12px;
+    left: 8px;
     top: 50%;
     transform: translateY(-50%);
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: #ff6b81;
     color: #fff;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: 200;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(255,107,129,0.4);
+    box-shadow: 0 4px 12px rgba(255,107,129,0.5);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .event-edit-btn {
     position: absolute;
-    right: 12px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     background: #3498db;
     color: #fff;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: 200;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(52,152,219,0.4);
+    box-shadow: 0 4px 12px rgba(52,152,219,0.5);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 /* 日历事件块 */
