@@ -1,52 +1,227 @@
-/* ====== 月历样式 ====== */
-.month-calendar {
-  background: rgba(30, 30, 40, 0.6);
+/* ====== 统一日历样式 ====== */
+
+/* 日历头部 */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.calendar-header .section-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* 日历Tab切换 */
+.calendar-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.calendar-tab {
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calendar-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.calendar-tab.active {
+  background: rgba(244, 208, 63, 0.15);
+  border-color: rgba(244, 208, 63, 0.3);
+  color: #F4D03F;
+}
+
+/* 视图容器 */
+.calendar-view {
+  /* glassmorphism card */
+  background: rgba(30, 30, 40, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 16px;
-  margin: 16px 0;
+  overflow: hidden;
+}
+
+/* ====== 周历视图 ====== */
+.week-calendar {
+  /* 空容器，由内部内容填充 */
+}
+
+.week-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.week-title {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.week-nav-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.week-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 60px;
+}
+
+.week-day:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.week-day.today {
+  background: rgba(244, 208, 63, 0.12);
+}
+
+.week-day.future {
+  opacity: 0.5;
+}
+
+.week-day-name {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 2px;
+}
+
+.week-day-num {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.week-day.today .week-day-num {
+  color: #F4D03F;
+}
+
+.week-day-events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 6px;
+  justify-content: center;
+  width: 100%;
+}
+
+.week-event-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #F4D03F;
+}
+
+/* 周统计 */
+.week-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.week-stat-item {
+  text-align: center;
+}
+
+.week-stat-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #F4D03F;
+}
+
+.week-stat-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 2px;
+}
+
+/* ====== 月历视图 ====== */
+.month-calendar {
+  /* 空容器 */
 }
 
 .month-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .month-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #fff;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .month-nav-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border: none;
-  color: #fff;
-  font-size: 1.5rem;
-  width: 36px;
-  height: 36px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.2rem;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .month-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
 }
 
 .weekday-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .weekday-header span {
   text-align: center;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
-  padding: 8px 0;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 6px 0;
 }
 
 .month-days {
@@ -61,19 +236,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   position: relative;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .month-day:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .month-day.today {
-  background: rgba(244, 208, 63, 0.2);
+  background: rgba(244, 208, 63, 0.15);
 }
 
 .month-day.today .day-number {
@@ -81,164 +256,82 @@
   font-weight: 600;
 }
 
-.month-day.future .day-number {
-  color: rgba(255, 255, 255, 0.3);
-}
-
 .month-day.other-month {
-  opacity: 0.3;
+  opacity: 0.25;
 }
 
-.month-day.has-events {
-  background: rgba(255, 255, 255, 0.06);
+.month-day.has-event {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.month-day.future .day-number {
+  color: rgba(255, 255, 255, 0.35);
 }
 
 .day-number {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.day-dot {
-  width: 4px;
-  height: 4px;
+.day-events {
+  display: flex;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.day-event-dot {
+  width: 3px;
+  height: 3px;
   border-radius: 50%;
-  position: absolute;
-  bottom: 6px;
 }
 
+/* 月统计 */
 .month-stats {
   display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: space-around;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.stat-item {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* ====== 周历视图 ====== */
-.week-calendar {
-  background: rgba(30, 30, 40, 0.6);
-  border-radius: 16px;
-  padding: 16px;
-  margin: 16px 0;
-}
-
-.week-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.week-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-.week-nav-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #fff;
-  font-size: 1.2rem;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.week-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-}
-
-.week-day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px 4px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.week-day:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.week-day.today {
-  background: rgba(244, 208, 63, 0.15);
-}
-
-.week-day.future .week-day-name,
-.week-day.future .week-day-num {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.week-day.today .week-day-name,
-.week-day.today .week-day-num {
-  color: #F4D03F;
-}
-
-.week-day-name {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 4px;
-}
-
-.week-day-num {
-  font-size: 1rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.week-day-events {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  margin-top: 6px;
-  justify-content: center;
-}
-
-.week-event-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-/* ====== 日历切换导航 ====== */
-.calendar-tabs {
-  display: flex;
-  gap: 8px;
-  margin: 16px 0;
-}
-
-.calendar-tab {
-  flex: 1;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
+.month-stat-item {
   text-align: center;
 }
 
-.calendar-tab:hover {
-  background: rgba(255, 255, 255, 0.1);
+.month-stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #F4D03F;
 }
 
-.calendar-tab.active {
-  background: rgba(244, 208, 63, 0.2);
-  border-color: rgba(244, 208, 63, 0.4);
-  color: #F4D03F;
+.month-stat-label {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 2px;
+}
+
+/* 响应式 */
+@media (max-width: 480px) {
+  .calendar-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .calendar-tab {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .week-day {
+    padding: 6px 2px;
+    min-height: 50px;
+  }
+  
+  .week-day-name {
+    font-size: 0.6rem;
+  }
+  
+  .week-day-num {
+    font-size: 0.85rem;
+  }
 }

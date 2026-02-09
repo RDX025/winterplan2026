@@ -10,8 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="components/month-calendar.css">
-    <script src="components/month-calendar.js"></script>
-    <script src="components/week-calendar.js"></script>
+    <script src="components/calendar.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
 <body>
@@ -92,23 +91,28 @@
                     </div>
                 </section>
 
-                <!-- 今日时间线 -->
-                <section class="timeline-section">
-                    <h2 class="section-title">📅 今日修炼</h2>
-                    <div class="timeline" id="timelineContainer">
-                        <!-- 由 JS 渲染 -->
+                <!-- 统一日历视图 -->
+                <section class="calendar-section" id="calendarSection">
+                    <div class="calendar-header">
+                        <h2 class="section-title">📅 日程安排</h2>
+                        <div class="calendar-tabs">
+                            <button class="calendar-tab" id="tab-day" onclick="Calendar.switchView('day')">日</button>
+                            <button class="calendar-tab active" id="tab-week" onclick="Calendar.switchView('week')">周</button>
+                            <button class="calendar-tab" id="tab-month" onclick="Calendar.switchView('month')">月</button>
+                        </div>
                     </div>
-                </section>
-
-                <!-- 日历视图切换 -->
-                <section class="calendar-section">
-                    <div class="calendar-tabs">
-                        <button class="calendar-tab" onclick="switchCalendarView('day')">日</button>
-                        <button class="calendar-tab active" onclick="switchCalendarView('week')">周</button>
-                        <button class="calendar-tab" onclick="switchCalendarView('month')">月</button>
+                    <!-- 日视图：时间轴 -->
+                    <div class="calendar-view" id="view-day" style="display: none;">
+                        <div class="timeline" id="timelineContainer"></div>
                     </div>
-                    <div id="monthCalendarContainer"></div>
-                    <div id="weekCalendarContainer"></div>
+                    <!-- 周视图：7天网格 -->
+                    <div class="calendar-view" id="view-week">
+                        <div class="week-calendar" id="weekCalendarContainer"></div>
+                    </div>
+                    <!-- 月视图：月历 -->
+                    <div class="calendar-view" id="view-month" style="display: none;">
+                        <div class="month-calendar" id="monthCalendarContainer"></div>
+                    </div>
                 </section>
             </div>
 

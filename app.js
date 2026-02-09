@@ -1234,43 +1234,17 @@ async function loadFromSupabase() {
 }
 
 function initCalendar() {
-  const monthContainer = document.getElementById('monthCalendarContainer');
-  const weekContainer = document.getElementById('weekCalendarContainer');
+  const calendarSection = document.getElementById('calendarSection');
   
-  if (monthContainer && typeof MonthCalendar !== 'undefined') {
-    MonthCalendar.init('monthCalendarContainer');
+  if (calendarSection && typeof Calendar !== 'undefined') {
+    Calendar.init();
+    Calendar.switchView('day'); // 默认显示日视图（时间轴）
   }
-  
-  if (weekContainer && typeof WeekCalendar !== 'undefined') {
-    WeekCalendar.init('weekCalendarContainer');
-  }
-  
-  // 默认显示周视图
-  switchCalendarView('week');
 }
 
 window.switchCalendarView = function(view) {
-  // 更新tab状态
-  document.querySelectorAll('.calendar-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.textContent === view);
-  });
-  
-  const monthContainer = document.getElementById('monthCalendarContainer');
-  const weekContainer = document.getElementById('weekCalendarContainer');
-  
-  if (monthContainer) monthContainer.style.display = 'none';
-  if (weekContainer) weekContainer.style.display = 'none';
-  
-  if (view === 'month' && monthContainer) {
-    monthContainer.style.display = 'block';
-    if (typeof MonthCalendar !== 'undefined') {
-      MonthCalendar.refresh();
-    }
-  } else if (view === 'week' && weekContainer) {
-    weekContainer.style.display = 'block';
-    if (typeof WeekCalendar !== 'undefined') {
-      WeekCalendar.refresh();
-    }
+  if (typeof Calendar !== 'undefined') {
+    Calendar.switchView(view);
   }
 };
 
