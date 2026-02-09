@@ -2394,7 +2394,7 @@ window.openEditEventModal = function(id) {
       </div>
       <input type="hidden" id="newEventColor" value="${item.color}">
       
-      <button class="submit-btn" style="margin-top: 20px;" onclick="submitEditEvent(${id})">✅ 保存修改</button>
+      <button class="submit-btn" style="margin-top: 20px;" onclick="submitEditEvent('${id}')">✅ 保存修改</button>
     </div>
   `;
 
