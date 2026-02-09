@@ -1640,24 +1640,45 @@ function getStatusIcon(status) {
   return '⬜';
 }
 
-// ====== 触摸事件处理 - 右滑删除 + 左滑编辑 + 上下拖拽 ======
+// ====== 触摸事件处理 - 右滑删除 + 左滑编辑 + 长按拖拽 ======
 let touchStartX = 0;
 let touchStartY = 0;
 let touchStartTop = 0;
 let touchCurrentEvent = null;
 let touchMode = null; // 'drag' | 'swipe' | null
 let isDragging = false;
+let longPressTimer = null;
+let isLongPress = false;
 
 window.eventTouchStart = function(event, id) {
+  // 如果点击的是勾选图标，不处理
+  if (event.target.closest('.event-status-icon')) {
+    return;
+  }
+
   const touch = event.touches[0];
   touchStartX = touch.clientX;
   touchStartY = touch.clientY;
   touchCurrentEvent = todaySchedule.find(e => e.id === id);
   touchMode = null;
+  isLongPress = false;
   
   const wrapper = event.target.closest('.calendar-event-wrapper');
   if (wrapper) {
     touchStartTop = parseFloat(wrapper.style.top) || 0;
+    
+    // 长按计时器 - 300ms后激活拖拽模式
+    longPressTimer = setTimeout(() => {
+      isLongPress = true;
+      touchMode = 'drag';
+      isDragging = true;
+      wrapper.classList.add('dragging');
+      
+      // 触觉反馈（如果支持）
+      if (navigator.vibrate) navigator.vibrate(50);
+      
+      showToast('📍 拖拽调整时间');
+    }, 300);
   }
 };
 
@@ -1672,8 +1693,16 @@ window.eventTouchMove = function(event, id) {
   const wrapper = event.target.closest('.calendar-event-wrapper');
   if (!eventEl || !wrapper) return;
   
-  // 判断滑动方向
-  if (!touchMode) {
+  // 如果移动了，取消长按计时器
+  if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+  
+  // 判断滑动方向（如果还没确定模式且不是长按）
+  if (!touchMode && !isLongPress) {
     if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
       touchMode = 'swipe';
       isDragging = true;
@@ -1682,6 +1711,14 @@ window.eventTouchMove = function(event, id) {
       isDragging = true;
       wrapper.classList.add('dragging');
     }
+  }
+  
+  // 长按模式下直接拖拽
+  if (isLongPress && touchMode === 'drag') {
+    event.preventDefault();
+    const newTop = touchStartTop + deltaY;
+    wrapper.style.top = newTop + 'px';
+    return;
   }
   
   if (touchMode === 'swipe') {
@@ -1736,8 +1773,15 @@ window.eventTouchMove = function(event, id) {
 };
 
 window.eventTouchEnd = function(event, id) {
+  // 清除长按计时器
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+
   // 如果点击的是勾选图标，直接返回让事件委托处理
   if (event.target.closest('.event-status-icon')) {
+    isLongPress = false;
     return;
   }
 
@@ -1773,6 +1817,7 @@ window.eventTouchEnd = function(event, id) {
       setTimeout(() => {
         deleteEvent(null, id);
       }, 200);
+      isLongPress = false;
       return;
     } else if (swipeDistance < -60) {
       // 左滑编辑
@@ -1780,6 +1825,7 @@ window.eventTouchEnd = function(event, id) {
       setTimeout(() => {
         openEditEventModal(id);
       }, 200);
+      isLongPress = false;
       return;
     } else {
       // 未超过阈值，恢复原位
@@ -1812,6 +1858,7 @@ window.eventTouchEnd = function(event, id) {
   
   touchCurrentEvent = null;
   touchMode = null;
+  isLongPress = false;
   setTimeout(() => { isDragging = false; }, 50);
 };
 

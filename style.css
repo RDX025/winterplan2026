@@ -511,7 +511,14 @@ h1, h2, h3 {
 }
 
 .calendar-event-wrapper.dragging {
-    z-index: 50;
+    z-index: 100;
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    opacity: 0.9;
+}
+
+.calendar-event-wrapper.dragging .calendar-event {
+    border: 2px solid var(--gold);
 }
 
 /* 确保wrapper在按钮显示时保持可点击 */
