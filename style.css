@@ -409,29 +409,6 @@ h1, h2, h3 {
     gap: var(--spacing-sm);
 }
 
-.section-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-md);
-}
-
-.guide-btn {
-    padding: 6px 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.15);
-    background: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.85);
-    font-size: 0.8rem;
-    cursor: pointer;
-}
-
-.guide-btn:hover {
-    background: rgba(244, 208, 63, 0.18);
-    border-color: rgba(244, 208, 63, 0.4);
-    color: var(--gold);
-}
-
 /* ====== 日历时间轴视图 ====== */
 .timeline {
     background: var(--gradient-card);
