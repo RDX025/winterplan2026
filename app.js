@@ -2007,6 +2007,102 @@ window.selectEventColor = function(color) {
   event.target.classList.add('selected');
 };
 
+// ====== iOS风格滚轮选择器 ======
+function initIOSWheel(elementId, defaultIndex) {
+  const wheel = document.getElementById(elementId);
+  if (!wheel) return;
+  
+  const itemHeight = 44;
+  const visibleCount = 5;
+  const totalItems = wheel.children.length;
+  
+  // 滚动到默认位置
+  wheel.scrollTop = defaultIndex * itemHeight;
+  
+  // 触摸滑动
+  let startY = 0;
+  let startScroll = 0;
+  let isDragging = false;
+  
+  wheel.addEventListener('touchstart', (e) => {
+    startY = e.touches[0].clientY;
+    startScroll = wheel.scrollTop;
+    isDragging = true;
+  }, { passive: true });
+  
+  wheel.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const deltaY = e.touches[0].clientY - startY;
+    wheel.scrollTop = startScroll - deltaY;
+  }, { passive: true });
+  
+  wheel.addEventListener('touchend', () => {
+    isDragging = false;
+    // 吸附到最近的选项
+    const index = Math.round(wheel.scrollTop / itemHeight);
+    wheel.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
+    
+    // 更新选中状态
+    updateWheelSelection(wheel, index);
+  });
+  
+  // 鼠标滑动（桌面端）
+  wheel.addEventListener('mousedown', (e) => {
+    startY = e.clientY;
+    startScroll = wheel.scrollTop;
+    isDragging = true;
+    wheel.style.cursor = 'grabbing';
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaY = e.clientY - startY;
+    wheel.scrollTop = startScroll - deltaY;
+  });
+  
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    wheel.style.cursor = 'grab';
+    
+    const index = Math.round(wheel.scrollTop / itemHeight);
+    wheel.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
+    updateWheelSelection(wheel, index);
+  });
+}
+
+function updateWheelSelection(wheel, index) {
+  Array.from(wheel.children).forEach((child, i) => {
+    child.classList.toggle('selected', i === index);
+  });
+}
+
+function getSelectedTime(elementId) {
+  const wheel = document.getElementById(elementId);
+  if (!wheel) return { hour: 9, min: 0 };
+  
+  const selected = wheel.querySelector('.ios-wheel-item.selected');
+  if (selected) {
+    return {
+      hour: parseInt(selected.dataset.hour),
+      min: parseInt(selected.dataset.min)
+    };
+  }
+  
+  // 备用：从scroll位置计算
+  const itemHeight = 44;
+  const index = Math.round(wheel.scrollTop / itemHeight);
+  const children = wheel.children;
+  if (children[index]) {
+    return {
+      hour: parseInt(children[index].dataset.hour),
+      min: parseInt(children[index].dataset.min)
+    };
+  }
+  
+  return { hour: 9, min: 0 };
+}
+
 window.submitNewEvent = async function() {
   const title = document.getElementById('newEventTitle').value.trim();
   const startHour = parseInt(document.getElementById('newEventStartHour').value);
@@ -2069,9 +2165,14 @@ window.submitNewEvent = async function() {
 
 // ====== 编辑日程 ======
 window.openEditEventModal = function(id) {
-  if (isDragging) return;
-  const item = todaySchedule.find(e => e.id === id);
-  if (!item) return;
+  // 强制重置拖拽状态
+  isDragging = false;
+  
+  const item = todaySchedule.find(e => e.id == id);
+  if (!item) {
+    console.warn('找不到日程:', id);
+    return;
+  }
 
   const modal = document.getElementById('notifyModal');
   const titleEl = document.getElementById('modalTitle');
@@ -2079,32 +2180,42 @@ window.openEditEventModal = function(id) {
   const closeBtn = document.getElementById('modalClose');
   if (!modal || !titleEl || !bodyEl) return;
 
-  // 生成小时滚轮数据
-  const hours = Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => TIMELINE_START_HOUR + i);
-  const startOptions = hours.map(h => `<div class="wheel-item ${h === item.startHour ? 'selected' : ''}" data-value="${h}">${h < 10 ? '0' + h : h}:00</div>`).join('');
-  const endOptions = hours.map(h => `<div class="wheel-item ${h === item.endHour ? 'selected' : ''}" data-value="${h}">${h < 10 ? '0' + h : h}:00</div>`).join('');
+  // 生成时间选项（15分钟间隔）
+  const timeOptions = [];
+  for (let h = TIMELINE_START_HOUR; h <= TIMELINE_END_HOUR; h++) {
+    for (let m = 0; m < 60; m += 15) {
+      timeOptions.push({ hour: h, min: m, label: `${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}` });
+    }
+  }
+  
+  const currentStartIdx = timeOptions.findIndex(t => t.hour === item.startHour && t.min === (item.startMin || 0));
+  const currentEndIdx = timeOptions.findIndex(t => t.hour === item.endHour && t.min === (item.endMin || 0));
 
   titleEl.textContent = '✏️ 修改日程';
   bodyEl.innerHTML = `
     <div class="add-event-form">
       <input type="text" id="editEventTitle" class="form-input" value="${item.event_title}" placeholder="日程标题">
       
-      <label style="display:block; margin: 16px 0 8px; font-size: 0.85rem; color: rgba(255,255,255,0.6);">开始时间</label>
-      <div class="wheel-column">
-        <div class="wheel-scroll" id="wheelStart" onclick="selectWheelHour('start', event)">
-          ${startOptions}
+      <div class="time-picker-row">
+        <div class="time-picker-col">
+          <label>开始时间</label>
+          <div class="ios-wheel-container">
+            <div class="ios-wheel" id="wheelStart">
+              ${timeOptions.map((t, i) => `<div class="ios-wheel-item ${i === currentStartIdx ? 'selected' : ''}" data-hour="${t.hour}" data-min="${t.min}">${t.label}</div>`).join('')}
+            </div>
+            <div class="ios-wheel-highlight"></div>
+          </div>
+        </div>
+        <div class="time-picker-col">
+          <label>结束时间</label>
+          <div class="ios-wheel-container">
+            <div class="ios-wheel" id="wheelEnd">
+              ${timeOptions.map((t, i) => `<div class="ios-wheel-item ${i === currentEndIdx ? 'selected' : ''}" data-hour="${t.hour}" data-min="${t.min}">${t.label}</div>`).join('')}
+            </div>
+            <div class="ios-wheel-highlight"></div>
+          </div>
         </div>
       </div>
-      
-      <label style="display:block; margin: 16px 0 8px; font-size: 0.85rem; color: rgba(255,255,255,0.6);">结束时间</label>
-      <div class="wheel-column">
-        <div class="wheel-scroll" id="wheelEnd" onclick="selectWheelHour('end', event)">
-          ${endOptions}
-        </div>
-      </div>
-      
-      <input type="hidden" id="editStartHour" value="${item.startHour}">
-      <input type="hidden" id="editEndHour" value="${item.endHour}">
       
       <div class="icon-picker">
         ${['📚', '🎯', '🎹', '🏃', '✍️', '🎮', '🍽️', '😴'].map(icon => 
@@ -2123,6 +2234,12 @@ window.openEditEventModal = function(id) {
       <button class="submit-btn" style="margin-top: 20px;" onclick="submitEditEvent(${id})">✅ 保存修改</button>
     </div>
   `;
+
+  // 初始化iOS滚轮
+  setTimeout(() => {
+    initIOSWheel('wheelStart', currentStartIdx >= 0 ? currentStartIdx : 0);
+    initIOSWheel('wheelEnd', currentEndIdx >= 0 ? currentEndIdx : 0);
+  }, 50);
 
   closeBtn.textContent = '取消';
   modal.classList.add('show');
@@ -2149,12 +2266,12 @@ window.selectWheelHour = function(type, event) {
 };
 
 window.submitEditEvent = async function(id) {
-  const item = todaySchedule.find(e => e.id === id);
+  const item = todaySchedule.find(e => e.id == id);
   if (!item) return;
 
   const title = document.getElementById('editEventTitle').value.trim();
-  const startHour = parseInt(document.getElementById('editStartHour').value || item.startHour);
-  const endHour = parseInt(document.getElementById('editEndHour').value || item.endHour);
+  const start = getSelectedTime('wheelStart');
+  const end = getSelectedTime('wheelEnd');
   const icon = document.getElementById('newEventIcon').value;
   const color = document.getElementById('newEventColor').value;
 
@@ -2162,16 +2279,16 @@ window.submitEditEvent = async function(id) {
     showToast('请输入日程标题');
     return;
   }
-  if (endHour <= startHour) {
+  if (end.hour < start.hour || (end.hour === start.hour && end.min <= start.min)) {
     showToast('结束时间需大于开始时间');
     return;
   }
 
   item.event_title = title;
-  item.startHour = startHour;
-  item.endHour = endHour;
-  item.startMin = 0;
-  item.endMin = 0;
+  item.startHour = start.hour;
+  item.startMin = start.min;
+  item.endHour = end.hour;
+  item.endMin = end.min;
   item.event_icon = icon;
   item.color = color;
 

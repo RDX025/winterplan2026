@@ -1311,6 +1311,78 @@ h1, h2, h3 {
     color: rgba(255, 255, 255, 0.8);
 }
 
+/* ====== iOS风格滚轮选择器 ====== */
+.time-picker-row {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0;
+}
+
+.time-picker-col {
+    flex: 1;
+}
+
+.time-picker-col label {
+    display: block;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.ios-wheel-container {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.ios-wheel {
+    height: 100%;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.ios-wheel::-webkit-scrollbar {
+    display: none;
+}
+
+.ios-wheel-item {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.5);
+    scroll-snap-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ios-wheel-item.selected {
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 600;
+    background: rgba(244, 208, 63, 0.15);
+}
+
+.ios-wheel-highlight {
+    position: absolute;
+    top: 50%;
+    left: 8px;
+    right: 8px;
+    height: 44px;
+    transform: translateY(-50%);
+    border-top: 1px solid rgba(244, 208, 63, 0.3);
+    border-bottom: 1px solid rgba(244, 208, 63, 0.3);
+    pointer-events: none;
+    border-radius: 8px;
+}
+
 /* ====== 电影卡片 ====== */
 .movies-section {
     margin-top: var(--spacing-xl);
