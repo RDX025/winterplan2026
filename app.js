@@ -1736,6 +1736,11 @@ window.eventTouchMove = function(event, id) {
 };
 
 window.eventTouchEnd = function(event, id) {
+  // 如果点击的是勾选图标，直接返回让事件委托处理
+  if (event.target.closest('.event-status-icon')) {
+    return;
+  }
+
   const eventEl = document.querySelector(`.calendar-event[data-id="${id}"]`);
   const wrapper = document.querySelector(`.calendar-event-wrapper[data-id="${id}"]`);
 
