@@ -1008,6 +1008,31 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleEventStatus(id);
     }
   });
+  
+  // iOS Safari 触摸事件委托 (passive: false 必须)
+  document.addEventListener('touchstart', function(e) {
+    const calendarEvent = e.target.closest('.calendar-event');
+    if (calendarEvent) {
+      const id = calendarEvent.dataset.id;
+      if (id) eventTouchStart(e, id);
+    }
+  }, { passive: false });
+  
+  document.addEventListener('touchmove', function(e) {
+    const calendarEvent = e.target.closest('.calendar-event');
+    if (calendarEvent && touchCurrentEvent) {
+      const id = calendarEvent.dataset.id;
+      if (id) eventTouchMove(e, id);
+    }
+  }, { passive: false });
+  
+  document.addEventListener('touchend', function(e) {
+    const calendarEvent = e.target.closest('.calendar-event');
+    if (calendarEvent && touchCurrentEvent) {
+      const id = calendarEvent.dataset.id;
+      if (id) eventTouchEnd(e, id);
+    }
+  }, { passive: false });
 });
 
 async function initApp() {
@@ -1593,11 +1618,7 @@ function renderCalendarTimeline() {
         <button class="event-edit-btn" data-id="${item.id}">✏️</button>
         <div class="calendar-event ${item.status}" 
              data-id="${item.id}"
-             style="height: 100%; background: ${item.color}20; border-left: 4px solid ${item.color};"
-             ontouchstart="eventTouchStart(event, ${item.id})"
-             ontouchmove="eventTouchMove(event, ${item.id})"
-             ontouchend="eventTouchEnd(event, ${item.id})"
-             onmousedown="mouseEventDragStart(event, ${item.id})">
+             style="height: 100%; background: ${item.color}20; border-left: 4px solid ${item.color};">
           <div class="event-content" onclick="openEditEventModal(${item.id})">
             <span class="event-icon">${item.event_icon}</span>
             <div class="event-text">
