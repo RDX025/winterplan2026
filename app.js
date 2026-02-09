@@ -1864,9 +1864,6 @@ window.submitNewEvent = async function() {
       console.error('❌ Supabase日程同步失败:', err.message);
     }
   }
-      console.error('日程同步失败:', err);
-    }
-  }
 };
 
 // ====== 编辑日程 ======
@@ -2313,8 +2310,6 @@ window.toggleHabit = async function toggleHabit(habitType) {
       console.log('✅ Supabase习惯同步成功');
     } catch (err) {
       console.error('❌ Supabase习惯同步失败:', err.message);
-    }
-  }
     }
   }
 };
