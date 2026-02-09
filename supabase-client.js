@@ -7,6 +7,10 @@ import { createClient } from '@supabase/supabase-js';
 const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const rawSupabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+console.log('🔧 Supabase配置检查:');
+console.log('  URL:', rawSupabaseUrl ? '✅ 已配置' : '❌ 未配置');
+console.log('  Key:', rawSupabaseKey ? '✅ 已配置 (' + rawSupabaseKey.substring(0, 20) + '...)' : '❌ 未配置');
+
 const isValidUrl = (value) => {
   try {
     const url = new URL(value);
@@ -17,7 +21,7 @@ const isValidUrl = (value) => {
 };
 
 const supabaseUrl = isValidUrl(rawSupabaseUrl) ? rawSupabaseUrl : 'http://localhost';
-const supabaseKey = rawSupabaseKey && rawSupabaseKey !== 'YOUR_SUPABASE_ANON_KEY'
+const supabaseKey = rawSupabaseKey && rawSupabaseKey.startsWith('eyJ')
   ? rawSupabaseKey
   : 'public-anon-key';
 
@@ -25,6 +29,22 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // 默认学生 ID（演示用，生产环境应该从认证系统获取）
 const DEFAULT_STUDENT_ID = '11111111-1111-1111-1111-111111111111';
+
+// Supabase连接测试
+export async function testConnection() {
+  try {
+    const { data, error } = await supabase.from('students').select('id').limit(1);
+    if (error) {
+      console.error('❌ Supabase连接失败:', error.message);
+      return false;
+    }
+    console.log('✅ Supabase连接成功');
+    return true;
+  } catch (e) {
+    console.error('❌ Supabase异常:', e.message);
+    return false;
+  }
+}
 
 // ========== 学生信息 ==========
 

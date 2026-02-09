@@ -964,7 +964,15 @@ async function initApp() {
   // 尝试从Supabase加载数据（会覆盖本地）
   if (USE_SUPABASE) {
     console.log('🔌 使用 Supabase 模式');
-    await loadFromSupabase();
+    // 测试连接
+    const connected = await SupabaseClient.testConnection();
+    if (connected) {
+      console.log('✅ Supabase连接成功，开始同步数据...');
+      await loadFromSupabase();
+    } else {
+      console.warn('⚠️ Supabase连接失败，降级到本地存储模式');
+      USE_SUPABASE = false;
+    }
   } else {
     console.log('📦 使用本地存储模式');
   }
@@ -1806,12 +1814,17 @@ window.submitNewEvent = async function() {
   // 同步到 Supabase
   if (USE_SUPABASE) {
     try {
+      console.log('📤 同步日程到Supabase:', newEvent.event_title);
       const saved = await SupabaseClient.saveScheduleItem(newEvent);
+      console.log('✅ Supabase保存成功:', saved);
       // 更新本地ID为Supabase返回的UUID
       if (saved && saved.id) {
         newEvent.id = saved.id;
       }
     } catch (err) {
+      console.error('❌ Supabase日程同步失败:', err.message);
+    }
+  }
       console.error('日程同步失败:', err);
     }
   }
@@ -2256,9 +2269,13 @@ window.toggleHabit = async function toggleHabit(habitType) {
   // 同步到Supabase
   if (USE_SUPABASE) {
     try {
+      console.log('📤 同步习惯到Supabase:', habitType, localHabits[habitType]);
       await SupabaseClient.toggleHabit(habitType);
+      console.log('✅ Supabase习惯同步成功');
     } catch (err) {
-      console.error('习惯同步失败:', err);
+      console.error('❌ Supabase习惯同步失败:', err.message);
+    }
+  }
     }
   }
 };
