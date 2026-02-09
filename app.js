@@ -942,10 +942,19 @@ function loadAllLocalData() {
     Object.assign(localInterests, savedInterests);
   }
   
-  // 加载今日日程
+  // 加载今日日程（支持分组数据）
   const savedSchedule = loadFromLocal(STORAGE_KEYS.schedule, null);
-  if (savedSchedule && Array.isArray(savedSchedule)) {
-    todaySchedule = savedSchedule;
+  if (savedSchedule) {
+    if (Array.isArray(savedSchedule)) {
+      // 旧格式：数组
+      todaySchedule = savedSchedule;
+    } else if (typeof savedSchedule === 'object') {
+      // 新格式：按日期分组的对象
+      const today = new Date().toISOString().split('T')[0];
+      todaySchedule = savedSchedule[today] || [];
+      // 保存全局访问
+      window.scheduleByDate = savedSchedule;
+    }
   }
 
   // 加载今日选择
@@ -1104,9 +1113,13 @@ async function loadFromSupabase() {
     }
     
     // 加载今日日程
-    const schedule = await SupabaseClient.getTodaySchedule();
-    if (schedule && schedule.length > 0) {
-      todaySchedule = schedule.map(s => ({
+    const scheduleResult = await SupabaseClient.getTodaySchedule();
+    
+    // 保存分组数据到全局
+    window.scheduleByDate = scheduleResult.byDate || {};
+    
+    if (scheduleResult.today && scheduleResult.today.length > 0) {
+      todaySchedule = scheduleResult.today.map(s => ({
         id: s.id,
         event_title: s.event_title,
         event_icon: s.event_icon || '📌',

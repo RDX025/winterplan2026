@@ -511,22 +511,49 @@ export async function countHabitChecks(habitType, studentId = DEFAULT_STUDENT_ID
 // ========== 今日日程 (schedule_items表) ==========
 
 export async function getTodaySchedule(studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
-  
+  // 获取所有日期的数据，用于日/周/月三视图
   const { data, error } = await supabase
     .from('schedule_items')
     .select('*')
     .eq('student_id', studentId)
-    .eq('date', today)
+    .order('date', { ascending: true })
     .order('start_hour', { ascending: true })
     .order('start_minute', { ascending: true });
   
   if (error) {
-    // 表不存在时降级
     console.warn('schedule_items表可能不存在:', error);
-    return [];
+    return { today: [], byDate: {} };
   }
-  return data || [];
+  
+  // 按日期分组存储
+  const byDate = {};
+  (data || []).forEach(item => {
+    if (!byDate[item.date]) {
+      byDate[item.date] = [];
+    }
+    byDate[item.date].push({
+      id: item.id,
+      event_title: item.event_title,
+      event_icon: item.event_icon || '📌',
+      startHour: item.start_hour,
+      startMin: item.start_minute,
+      endHour: item.end_hour,
+      endMin: item.end_minute,
+      color: item.color || '#F4D03F',
+      status: item.status || 'pending',
+      date: item.date
+    });
+  });
+  
+  // 保存到 localStorage
+  localStorage.setItem('jkxx_schedule', JSON.stringify(byDate));
+  
+  // 返回分组数据
+  const today = new Date().toISOString().split('T')[0];
+  return {
+    today: byDate[today] || [],
+    byDate: byDate
+  };
 }
 
 export async function saveScheduleItem(item, studentId = DEFAULT_STUDENT_ID) {
