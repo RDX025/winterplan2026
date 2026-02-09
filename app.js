@@ -1825,10 +1825,12 @@ window.eventTouchEnd = function(event, id) {
     } else if (swipeDistance < -60) {
       // 左滑编辑
       eventEl.style.transform = 'translateX(0)';
+      isDragging = false; // 重置拖拽状态
+      isLongPress = false;
+      touchMode = null;
       setTimeout(() => {
         openEditEventModal(id);
-      }, 200);
-      isLongPress = false;
+      }, 100);
       return;
     } else {
       // 未超过阈值，恢复原位
