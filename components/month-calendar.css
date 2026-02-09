@@ -335,3 +335,169 @@
     font-size: 0.85rem;
   }
 }
+
+/* ====== 初中生创新功能样式 ====== */
+
+/* 考试倒计时 */
+.exam-countdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(241, 196, 15, 0.2));
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.exam-icon {
+  font-size: 1.2rem;
+}
+
+.exam-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.exam-days {
+  font-size: 0.8rem;
+  color: #F4D03F;
+  margin-left: auto;
+}
+
+/* 成就徽章 */
+.week-badge {
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+
+/* 作业标签 */
+.homework-tag {
+  font-size: 0.55rem;
+  padding: 2px 4px;
+  border: 1px solid;
+  border-radius: 4px;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* 学习时长柱状图 */
+.study-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.study-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* 月度目标 */
+.monthly-goal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(244, 208, 63, 0.1);
+  border: 1px solid rgba(244, 208, 63, 0.2);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.goal-label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+}
+
+.goal-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.goal-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #F4D03F, #e67e22);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.goal-text {
+  font-size: 0.8rem;
+  color: #F4D03F;
+  white-space: nowrap;
+}
+
+/* 日期指示器 */
+.day-indicators {
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.day-indicator {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.day-indicator.exam {
+  background: #e74c3c;
+}
+
+.day-indicator.homework {
+  background: #3498db;
+}
+
+/* 特殊日期样式 */
+.month-day.has-homework {
+  background: rgba(52, 152, 219, 0.1);
+}
+
+.month-day.has-exam {
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.month-day.has-exam .day-number {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+/* 周统计增强 */
+.week-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 响应式优化 */
+@media (max-width: 380px) {
+  .exam-countdown {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  
+  .exam-name {
+    font-size: 0.8rem;
+  }
+  
+  .monthly-goal {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .goal-label {
+    width: 100%;
+  }
+}
