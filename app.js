@@ -1783,38 +1783,48 @@ window.openEditEventModal = function(id) {
   const closeBtn = document.getElementById('modalClose');
   if (!modal || !titleEl || !bodyEl) return;
 
+  // 生成小时滚轮数据
+  const hours = Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => TIMELINE_START_HOUR + i);
+  const startOptions = hours.map(h => `<div class="wheel-item ${h === item.startHour ? 'selected' : ''}" data-value="${h}">${h < 10 ? '0' + h : h}:00</div>`).join('');
+  const endOptions = hours.map(h => `<div class="wheel-item ${h === item.endHour ? 'selected' : ''}" data-value="${h}">${h < 10 ? '0' + h : h}:00</div>`).join('');
+
   titleEl.textContent = '✏️ 修改日程';
   bodyEl.innerHTML = `
     <div class="add-event-form">
-      <input type="text" id="editEventTitle" class="form-input" value="${item.event_title}">
-      <div class="time-row">
-        <select id="editEventStartHour" class="form-select">
-          ${Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => {
-            const h = TIMELINE_START_HOUR + i;
-            return `<option value="${h}" ${h === item.startHour ? 'selected' : ''}>${h < 10 ? '0' + h : h}:00</option>`;
-          }).join('')}
-        </select>
-        <span>→</span>
-        <select id="editEventEndHour" class="form-select">
-          ${Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => {
-            const h = TIMELINE_START_HOUR + i;
-            return `<option value="${h}" ${h === item.endHour ? 'selected' : ''}>${h < 10 ? '0' + h : h}:00</option>`;
-          }).join('')}
-        </select>
+      <input type="text" id="editEventTitle" class="form-input" value="${item.event_title}" placeholder="日程标题">
+      
+      <label style="display:block; margin: 16px 0 8px; font-size: 0.85rem; color: rgba(255,255,255,0.6);">开始时间</label>
+      <div class="wheel-column">
+        <div class="wheel-scroll" id="wheelStart" onclick="selectWheelHour('start', event)">
+          ${startOptions}
+        </div>
       </div>
+      
+      <label style="display:block; margin: 16px 0 8px; font-size: 0.85rem; color: rgba(255,255,255,0.6);">结束时间</label>
+      <div class="wheel-column">
+        <div class="wheel-scroll" id="wheelEnd" onclick="selectWheelHour('end', event)">
+          ${endOptions}
+        </div>
+      </div>
+      
+      <input type="hidden" id="editStartHour" value="${item.startHour}">
+      <input type="hidden" id="editEndHour" value="${item.endHour}">
+      
       <div class="icon-picker">
         ${['📚', '🎯', '🎹', '🏃', '✍️', '🎮', '🍽️', '😴'].map(icon => 
           `<span class="icon-option ${icon === item.event_icon ? 'selected' : ''}" onclick="selectEventIcon('${icon}')">${icon}</span>`
         ).join('')}
       </div>
       <input type="hidden" id="newEventIcon" value="${item.event_icon}">
+      
       <div class="color-picker">
         ${['#3498db', '#e74c3c', '#2ecc71', '#9b59b6', '#f39c12', '#1abc9c'].map(color => 
           `<span class="color-option ${color === item.color ? 'selected' : ''}" style="background:${color}" onclick="selectEventColor('${color}')"></span>`
         ).join('')}
       </div>
       <input type="hidden" id="newEventColor" value="${item.color}">
-      <button class="submit-btn" onclick="submitEditEvent(${item.id})">✅ 保存修改</button>
+      
+      <button class="submit-btn" style="margin-top: 20px;" onclick="submitEditEvent(${id})">✅ 保存修改</button>
     </div>
   `;
 
@@ -1823,13 +1833,32 @@ window.openEditEventModal = function(id) {
   modal.setAttribute('aria-hidden', 'false');
 };
 
+// 滚轮选择时间
+window.selectWheelHour = function(type, event) {
+  const target = event.target.closest('.wheel-item');
+  if (!target) return;
+  
+  const value = target.dataset.value;
+  if (type === 'start') {
+    document.getElementById('editStartHour').value = value;
+  } else {
+    document.getElementById('editEndHour').value = value;
+  }
+  
+  // 更新选中状态
+  const container = type === 'start' ? document.getElementById('wheelStart') : document.getElementById('wheelEnd');
+  container.querySelectorAll('.wheel-item').forEach(item => {
+    item.classList.toggle('selected', item.dataset.value === value);
+  });
+};
+
 window.submitEditEvent = async function(id) {
   const item = todaySchedule.find(e => e.id === id);
   if (!item) return;
 
   const title = document.getElementById('editEventTitle').value.trim();
-  const startHour = parseInt(document.getElementById('editEventStartHour').value);
-  const endHour = parseInt(document.getElementById('editEventEndHour').value);
+  const startHour = parseInt(document.getElementById('editStartHour').value || item.startHour);
+  const endHour = parseInt(document.getElementById('editEndHour').value || item.endHour);
   const icon = document.getElementById('newEventIcon').value;
   const color = document.getElementById('newEventColor').value;
 
@@ -2687,3 +2716,113 @@ function setOfflineBadge(show) {
     badge.style.display = show ? 'inline-block' : 'none';
   }
 }
+
+// ====== 寒假电影数据 ======
+const WINTER_MOVIES = [
+  {
+    id: 'movie_1',
+    title: '熊出没·年年有熊',
+    date: '2月17日',
+    emoji: '🐻',
+    desc: '熊强三人组获得奇遇解锁属性之力，熊二头上生角威风凛凛，光头强长出浓密秀发，颠覆以往形象！',
+    type: '动画/喜剧',
+    rating: '⭐⭐⭐⭐⭐'
+  },
+  {
+    id: 'movie_2',
+    title: '星河入梦',
+    date: '2月',
+    emoji: '🌙',
+    desc: '韩延执导，王鹤棣、宋茜主演。虚拟梦境系统"良梦"问世，人们可在梦中随心所欲，但危机悄然而至。中国版《盗梦空间》！',
+    type: '奇幻/冒险',
+    rating: '⭐⭐⭐⭐'
+  },
+  {
+    id: 'movie_3',
+    title: '惊蛰无声',
+    date: '2月17日',
+    emoji: '🎬',
+    desc: '张艺谋执导的最新力作，大年初一上映。悬疑大片，值得期待！',
+    type: '悬疑/剧情',
+    rating: '⭐⭐⭐⭐⭐'
+  },
+  {
+    id: 'movie_4',
+    title: '飞驰人生3',
+    date: '2月',
+    emoji: '🚗',
+    desc: '韩寒执导，沈腾主演。飞驰人生系列最新作，赛车手热血归来！',
+    type: '喜剧/运动',
+    rating: '⭐⭐⭐⭐'
+  },
+  {
+    id: 'movie_5',
+    title: '镖人：风起大漠',
+    date: '2月',
+    emoji: '⚔️',
+    desc: '根据同名国漫改编，隋末唐初的侠客故事，仗剑天涯，快意恩仇！',
+    type: '武侠/动作',
+    rating: '⭐⭐⭐⭐'
+  },
+  {
+    id: 'movie_6',
+    title: '年年有余',
+    date: '1月24日',
+    emoji: '🐟',
+    desc: '喜剧/动画/冒险，85分钟。讲述关于成长与团圆的故事，适合全家观看。',
+    type: '动画/家庭',
+    rating: '⭐⭐⭐⭐'
+  }
+];
+
+// 渲染电影卡片
+function renderMovies() {
+  const container = document.getElementById('movieGrid');
+  if (!container) return;
+  
+  container.innerHTML = WINTER_MOVIES.map(movie => `
+    <div class="movie-card" onclick="addMovieToSchedule('${movie.id}')">
+      <div class="movie-poster">${movie.emoji}</div>
+      <div class="movie-info">
+        <div class="movie-title">${movie.title}</div>
+        <div class="movie-date">📅 ${movie.date}</div>
+        <div class="movie-desc">${movie.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// 添加电影到日程
+window.addMovieToSchedule = function(movieId) {
+  const movie = WINTER_MOVIES.find(m => m.id === movieId);
+  if (!movie) return;
+  
+  // 检查是否已添加
+  const exists = todaySchedule.some(t => t.event_title === movie.title && t.type === 'activity');
+  if (exists) {
+    showToast('该电影已在日程中');
+    return;
+  }
+  
+  todaySchedule.push({
+    id: Date.now(),
+    startHour: 14,
+    startMin: 0,
+    endHour: 16,
+    endMin: 0,
+    event_title: movie.title,
+    event_subtitle: `${movie.type} | ${movie.rating}`,
+    event_icon: '🎬',
+    status: 'pending',
+    type: 'activity'
+  });
+  
+  saveAllLocalData();
+  renderCalendarTimeline();
+  showSuccessAnimation('🎬 已添加观影计划！');
+};
+
+// 页面加载时渲染电影
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(renderMovies, 100);
+});

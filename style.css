@@ -1172,6 +1172,144 @@ h1, h2, h3 {
     box-shadow: 0 4px 15px rgba(244, 208, 63, 0.4);
 }
 
+/* ====== iOS滚轮选择器 ====== */
+.wheel-picker {
+    display: flex;
+    gap: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+}
+
+.wheel-column {
+    flex: 1;
+    position: relative;
+    height: 160px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.wheel-column::before,
+.wheel-column::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 60px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.wheel-column::before {
+    top: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 100%);
+}
+
+.wheel-column::after {
+    bottom: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.5) 0%, transparent 100%);
+}
+
+.wheel-scroll {
+    height: 100%;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 60px 0;
+}
+
+.wheel-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.wheel-item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1.1rem;
+    scroll-snap-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wheel-item.selected {
+    color: var(--gold);
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.wheel-item:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ====== 电影卡片 ====== */
+.movies-section {
+    margin-top: var(--spacing-xl);
+}
+
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.movie-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: var(--spacing-md);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.movie-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(244, 208, 63, 0.3);
+    box-shadow: 0 8px 30px rgba(244, 208, 63, 0.15);
+}
+
+.movie-poster {
+    width: 100%;
+    aspect-ratio: 2/3;
+    background: linear-gradient(135deg, rgba(244, 208, 63, 0.2), rgba(244, 208, 63, 0.05));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.movie-info {
+    text-align: center;
+}
+
+.movie-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.movie-date {
+    font-size: 0.8rem;
+    color: var(--gold);
+    margin-bottom: 6px;
+}
+
+.movie-desc {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 /* ====== 奖励 ====== */
 .rewards-subtitle {
     color: rgba(255, 255, 255, 0.6);
