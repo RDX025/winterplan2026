@@ -7,9 +7,12 @@ import { createClient } from '@supabase/supabase-js';
 const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const rawSupabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+const fallbackSupabaseUrl = 'https://hsybcomykhfnyngtytyg.supabase.co';
+const fallbackSupabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzeWJjb215a2hmbnluZ3R5dHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyOTc0OTIsImV4cCI6MjA4NTg3MzQ5Mn0.1qg0gv2Vgk0nwM4YcIin_GZ5XhLI8JzYqxYZ4ThFw98';
+
 console.log('🔧 Supabase配置检查:');
-console.log('  URL:', rawSupabaseUrl ? '✅ 已配置' : '❌ 未配置');
-console.log('  Key:', rawSupabaseKey ? '✅ 已配置 (' + rawSupabaseKey.substring(0, 20) + '...)' : '❌ 未配置');
+console.log('  URL:', rawSupabaseUrl || fallbackSupabaseUrl ? '✅ 已配置' : '❌ 未配置');
+console.log('  Key:', rawSupabaseKey || fallbackSupabaseKey ? '✅ 已配置 (fallback/配置)' : '❌ 未配置');
 
 const isValidUrl = (value) => {
   try {
@@ -20,11 +23,12 @@ const isValidUrl = (value) => {
   }
 };
 
-const supabaseUrl = isValidUrl(rawSupabaseUrl) ? rawSupabaseUrl : 'http://localhost';
+const supabaseUrl = isValidUrl(rawSupabaseUrl) ? rawSupabaseUrl : fallbackSupabaseUrl;
 const supabaseKey = rawSupabaseKey && rawSupabaseKey.startsWith('eyJ')
   ? rawSupabaseKey
-  : 'public-anon-key';
+  : fallbackSupabaseKey;
 
+export const SUPABASE_ENABLED = !!(supabaseUrl && supabaseKey);
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // 默认学生 ID（演示用，生产环境应该从认证系统获取）

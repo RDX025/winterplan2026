@@ -1,8 +1,8 @@
 // ====== 剑客游学 - Supabase 集成版本 ======
 import * as SupabaseClient from './supabase-client.js';
 
-// 配置：是否使用Supabase（检测环境变量）
-const USE_SUPABASE = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+// 配置：是否使用Supabase（优先环境变量，fallback到内置配置）
+const USE_SUPABASE = SupabaseClient.SUPABASE_ENABLED;
 
 const HABIT_KEYS = ['wake', 'piano', 'exercise', 'read', 'spine', 'math', 'sleep'];
 const CHOICE_TITLE_MAP = {
@@ -99,6 +99,7 @@ const AVATAR_OPTIONS = [
 // 用户上传的照片
 let userPhotos = [];
 let selectedAvatar = 'ninja';
+let isPhotoEditMode = false;
 
 const MOCKUP_HABITS = {
   wake: false,
@@ -2643,7 +2644,10 @@ window.handlePhotoUpload = function handlePhotoUpload(event) {
       // 同步到Supabase
       if (USE_SUPABASE) {
         try {
-          await SupabaseClient.addUserPhoto(photoData);
+          const saved = await SupabaseClient.addUserPhoto(photoData);
+          if (saved && saved.id) {
+            photoData.id = saved.id;
+          }
           console.log('✅ 照片同步到Supabase');
         } catch (err) {
           console.error('❌ 照片同步失败:', err);
@@ -2656,6 +2660,31 @@ window.handlePhotoUpload = function handlePhotoUpload(event) {
   showToast(`已上传 ${files.length}张照片`);
 };
 
+window.togglePhotoEditMode = function() {
+  isPhotoEditMode = !isPhotoEditMode;
+  const btn = document.querySelector('.edit-btn');
+  if (btn) btn.classList.toggle('active', isPhotoEditMode);
+  renderPhotoGrid();
+};
+
+window.deletePhoto = async function(photoId) {
+  const idx = userPhotos.findIndex(p => p.id == photoId);
+  if (idx === -1) return;
+  const photo = userPhotos[idx];
+  userPhotos.splice(idx, 1);
+  renderPhotoGrid();
+  showToast('已删除照片');
+
+  if (USE_SUPABASE) {
+    try {
+      await SupabaseClient.deleteUserPhoto(photo.id);
+      console.log('✅ 照片删除同步到Supabase');
+    } catch (err) {
+      console.error('❌ 照片删除同步失败:', err.message);
+    }
+  }
+};
+
 function renderPhotoGrid() {
   const container = document.getElementById('photoGrid');
   if (!container) return;
@@ -2666,8 +2695,9 @@ function renderPhotoGrid() {
   }
 
   container.innerHTML = userPhotos.map(photo => `
-    <div class="photo-item">
+    <div class="photo-item ${isPhotoEditMode ? 'editing' : ''}">
       <img src="${photo.src}" alt="修炼日记" onclick="viewPhoto('${photo.id}')">
+      <span class="photo-delete" onclick="deletePhoto('${photo.id}')">✕</span>
       <span class="photo-date">${photo.date}</span>
     </div>
   `).join('');

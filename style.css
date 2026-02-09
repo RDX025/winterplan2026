@@ -1806,6 +1806,29 @@ h1, h2, h3 {
     margin-top: var(--spacing-lg);
 }
 
+.photo-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+}
+
+.edit-btn {
+    padding: 6px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.85);
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.edit-btn.active {
+    background: rgba(244, 208, 63, 0.2);
+    border-color: rgba(244, 208, 63, 0.5);
+    color: var(--gold);
+}
+
 .subsection-title {
     font-size: 1rem;
     margin-bottom: var(--spacing-md);
@@ -1835,6 +1858,26 @@ h1, h2, h3 {
 
 .photo-item img:hover {
     transform: scale(1.05);
+}
+
+.photo-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 0.8rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.photo-item.editing .photo-delete {
+    display: flex;
 }
 
 .photo-date {
