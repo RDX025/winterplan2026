@@ -57,6 +57,9 @@ curl -s -X POST "$API_BASE/database/query" \
   -H "Content-Type: application/json" \
   -d '{"query": "CREATE TABLE IF NOT EXISTS weekly_achievements (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), student_id UUID REFERENCES students(id), achievement_date DATE NOT NULL, title TEXT NOT NULL, category TEXT, icon TEXT DEFAULT '\''🌟'\'', score INT DEFAULT 0, comment TEXT, media_url TEXT, video_url TEXT, created_at TIMESTAMPTZ DEFAULT NOW())"}'
 
+# daily_choices
+curl -s -X POST "$API_BASE/database/query" \n  -H "Authorization: Bearer $TOKEN" \n  -H "Content-Type: application/json" \n  -d "{"query": "CREATE TABLE IF NOT EXISTS daily_choices (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), student_id UUID REFERENCES students(id), date DATE NOT NULL, choice_type TEXT NOT NULL, choice_title TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(student_id, date))"}"
+
 curl -s -X POST "$API_BASE/database/query" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -67,6 +70,9 @@ echo -e "${GREEN}✅ 表创建完成${NC}"
 echo -e "${YELLOW}🔓 禁用行级安全(RLS)...${NC}"
 
 for table in students daily_progress habit_checks interest_scores schedule_items weekly_achievements user_photos; do
+
+# daily_choices
+curl -s -X POST "$API_BASE/database/query" \n  -H "Authorization: Bearer $TOKEN" \n  -H "Content-Type: application/json" \n  -d "{"query": "CREATE TABLE IF NOT EXISTS daily_choices (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), student_id UUID REFERENCES students(id), date DATE NOT NULL, choice_type TEXT NOT NULL, choice_title TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(student_id, date))"}"
   curl -s -X POST "$API_BASE/database/query" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
@@ -90,6 +96,9 @@ curl -s -X POST "$API_BASE/database/query" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "SELECT table_name FROM information_schema.tables WHERE table_schema = '\''public'\'' AND table_name IN ('\''students'\'', '\''daily_progress'\'', '\''habit_checks'\'', '\''interest_scores'\'', '\''schedule_items'\'', '\''weekly_achievements'\'', '\''user_photos'\'')"}'
+
+# daily_choices
+curl -s -X POST "$API_BASE/database/query" \n  -H "Authorization: Bearer $TOKEN" \n  -H "Content-Type: application/json" \n  -d "{"query": "CREATE TABLE IF NOT EXISTS daily_choices (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), student_id UUID REFERENCES students(id), date DATE NOT NULL, choice_type TEXT NOT NULL, choice_title TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), UNIQUE(student_id, date))"}"
 
 echo -e "${GREEN}🎉 Supabase设置完成！${NC}"
 

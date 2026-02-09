@@ -321,10 +321,23 @@ export async function updateInterest(interestType, increment, studentId = DEFAUL
 
 // ========== 每日选择 ==========
 
+export async function getTodayChoice(studentId = DEFAULT_STUDENT_ID) {
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await supabase
+    .from('daily_choices')
+    .select('*')
+    .eq('student_id', studentId)
+    .eq('date', today)
+    .single();
+
+  if (error && error.code === 'PGRST116') return null;
+  if (error) throw error;
+  return data;
+}
+
 export async function recordChoice(choiceType, choiceTitle, studentId = DEFAULT_STUDENT_ID) {
   const today = new Date().toISOString().split('T')[0];
 
-  // 保证每日仅一条记录（先删除当日旧记录）
   await supabase
     .from('daily_choices')
     .delete()

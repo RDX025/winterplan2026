@@ -887,6 +887,7 @@ const CITY_EVENTS = {
 let localHabits = { ...MOCKUP_HABITS };
 let localProgress = { ...MOCKUP_PROGRESS };
 let localInterests = { ...MOCKUP_INTERESTS };
+let localChoice = null;
 let currentTab = 'home';
 
 // ====== 本地存储工具 ======
@@ -895,6 +896,7 @@ const STORAGE_KEYS = {
   progress: 'jkxx_progress',
   interests: 'jkxx_interests',
   schedule: 'jkxx_schedule',
+  choice: 'jkxx_choice',
   habitsData: 'habitsData'
 };
 
@@ -940,6 +942,12 @@ function loadAllLocalData() {
   if (savedSchedule && Array.isArray(savedSchedule)) {
     todaySchedule = savedSchedule;
   }
+
+  // 加载今日选择
+  const savedChoice = loadFromLocal(STORAGE_KEYS.choice, null);
+  if (savedChoice) {
+    localChoice = savedChoice;
+  }
   
   console.log('✅ 本地数据已加载');
 }
@@ -949,6 +957,7 @@ function saveAllLocalData() {
   saveToLocal(STORAGE_KEYS.progress, localProgress);
   saveToLocal(STORAGE_KEYS.interests, localInterests);
   saveToLocal(STORAGE_KEYS.schedule, todaySchedule);
+  saveToLocal(STORAGE_KEYS.choice, localChoice);
 }
 
 // ====== 初始化 ======
@@ -1033,6 +1042,19 @@ async function loadFromSupabase() {
         color: s.color || '#F4D03F',
         status: s.status || 'pending'
       }));
+    }
+
+    // 加载今日选择
+    try {
+      const choice = await SupabaseClient.getTodayChoice();
+      if (choice) {
+        localChoice = { interest: choice.choice_type, title: choice.choice_title };
+        document.querySelectorAll('.choice-card').forEach(card => {
+          card.classList.toggle('selected', card.dataset.interest === choice.choice_type);
+        });
+      }
+    } catch (e) {
+      console.warn('今日选择加载失败:', e.message);
     }
     
     // 加载精彩表现
@@ -2344,16 +2366,19 @@ window.selectChoice = async function selectChoice(element) {
 
   element.classList.add('selected');
   const interest = element.dataset.interest;
+  const choiceTitle = CHOICE_TITLE_MAP[interest];
 
   if (interest && localInterests[interest] !== undefined) {
     localInterests[interest] = Math.min(100, localInterests[interest] + 10);
     drawRadarChart(localInterests);
+    localChoice = { interest, title: choiceTitle };
     saveAllLocalData();
     
     // 同步到 Supabase
     if (USE_SUPABASE) {
       try {
         await SupabaseClient.updateInterest(interest, 10);
+        await SupabaseClient.recordChoice(interest, choiceTitle || '');
       } catch (err) {
         console.error('兴趣同步失败:', err);
       }
