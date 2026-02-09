@@ -2237,7 +2237,7 @@ function initIOSWheel(elementId, defaultIndex) {
   }
 }
 
-function getSelectedTime(elementId) {
+window.getSelectedTime = function(elementId) {
   const wheel = document.getElementById(elementId);
   if (!wheel) return { hour: 9, min: 0 };
   
@@ -2432,8 +2432,8 @@ window.submitEditEvent = async function(id) {
   }
 
   const title = document.getElementById('editEventTitle').value.trim();
-  const start = getSelectedTime('wheelStart');
-  const end = getSelectedTime('wheelEnd');
+  const start = window.getSelectedTime('wheelStart');
+  const end = window.getSelectedTime('wheelEnd');
   const icon = document.getElementById('newEventIcon').value;
   const color = document.getElementById('newEventColor').value;
 
