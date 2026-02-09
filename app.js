@@ -51,6 +51,11 @@ const HOUR_HEIGHT = 60; // 每小时高度px
 
 // 今日日程（初始为空，用户自行添加或从Supabase加载）
 let todaySchedule = [];
+// 使用 getter/setter 保持 window 同步
+Object.defineProperty(window, 'todaySchedule', {
+  get: () => todaySchedule,
+  set: (val) => { todaySchedule = val; }
+});
 
 // 拖拽状态
 let draggedEvent = null;
