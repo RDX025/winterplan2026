@@ -1551,13 +1551,13 @@ function renderCalendarTimeline() {
              ontouchmove="eventTouchMove(event, ${item.id})"
              ontouchend="eventTouchEnd(event, ${item.id})"
              onmousedown="mouseEventDragStart(event, ${item.id})">
-          <div class="event-content">
+          <div class="event-content" onclick="openEditEventModal(${item.id})">
             <span class="event-icon">${item.event_icon}</span>
-            <div class="event-text" onclick="openEditEventModal(${item.id})">
+            <div class="event-text">
               <span class="event-title">${item.event_title}</span>
               <span class="event-time">${timeStr}</span>
             </div>
-            <span class="event-status-icon" onclick="toggleEventStatus(event, ${item.id})">${getStatusIcon(item.status)}</span>
+            <span class="event-status-icon" onclick="event.stopPropagation(); toggleEventStatus(${item.id})">${getStatusIcon(item.status)}</span>
           </div>
         </div>
       </div>
@@ -1715,6 +1715,12 @@ window.eventTouchEnd = function(event, id) {
     
     showToast(`📍 ${touchCurrentEvent.startHour}:${touchCurrentEvent.startMin < 10 ? '0' + touchCurrentEvent.startMin : touchCurrentEvent.startMin}`);
     renderCalendarTimeline();
+    
+    // 保存到本地和Supabase
+    saveAllLocalData();
+    if (USE_SUPABASE && touchCurrentEvent.id) {
+      SupabaseClient.saveScheduleItem(touchCurrentEvent).catch(err => console.warn('拖拽同步失败:', err.message));
+    }
   }
   
   touchCurrentEvent = null;
@@ -1779,6 +1785,12 @@ function mouseDragEnd(event) {
     draggedEvent.endMin = ((newStartHour + duration) % 1) * 60;
     
     showToast(`📍 ${draggedEvent.startHour}:${draggedEvent.startMin < 10 ? '0' + draggedEvent.startMin : draggedEvent.startMin}`);
+    
+    // 保存到本地和Supabase
+    saveAllLocalData();
+    if (USE_SUPABASE && draggedEvent.id) {
+      SupabaseClient.saveScheduleItem(draggedEvent).catch(err => console.warn('拖拽同步失败:', err.message));
+    }
   }
   
   document.removeEventListener('mousemove', mouseDragMove);
