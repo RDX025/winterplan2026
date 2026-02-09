@@ -2445,3 +2445,469 @@ h1, h2, h3 {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ====== 响应式设计 - iPad & 平板 ====== */
+@media (min-width: 768px) and (max-width: 1024px) {
+    :root {
+        --spacing-xs: 6px;
+        --spacing-sm: 10px;
+        --spacing-md: 16px;
+        --spacing-lg: 24px;
+        --spacing-xl: 32px;
+        --spacing-2xl: 48px;
+    }
+    
+    .app-container {
+        max-width: 720px;
+        margin: 0 auto;
+        border-radius: 20px;
+        margin-top: var(--spacing-md);
+        margin-bottom: var(--spacing-md);
+        min-height: calc(100vh - var(--spacing-md) * 2);
+    }
+    
+    .header {
+        padding: var(--spacing-lg);
+    }
+    
+    .header h1 {
+        font-size: 1.6rem;
+    }
+    
+    .dashboard {
+        padding: var(--spacing-lg);
+        gap: var(--spacing-lg);
+    }
+    
+    .date-header {
+        padding: var(--spacing-lg);
+        border-radius: 16px;
+    }
+    
+    .today-date {
+        font-size: 1.1rem;
+    }
+    
+    .day-number {
+        font-size: 4rem;
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .progress-section {
+        padding: var(--spacing-lg);
+        border-radius: 16px;
+    }
+    
+    .progress-bars {
+        gap: var(--spacing-md);
+    }
+    
+    .progress-item {
+        padding: var(--spacing-md);
+    }
+    
+    .progress-label {
+        font-size: 0.95rem;
+    }
+    
+    .progress-bar {
+        height: 10px;
+        border-radius: 6px;
+    }
+    
+    .progress-value {
+        font-size: 1rem;
+    }
+    
+    /* Tab内容 */
+    .tab-content {
+        padding: var(--spacing-lg);
+    }
+    
+    /* 习惯卡片 - 网格布局 */
+    .habits-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+    
+    .habit-card {
+        padding: var(--spacing-md);
+    }
+    
+    .habit-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.8rem;
+    }
+    
+    .habit-name {
+        font-size: 1rem;
+    }
+    
+    .habit-subtitle {
+        font-size: 0.8rem;
+    }
+    
+    /* 活动卡片 */
+    .events-list {
+        gap: var(--spacing-md);
+    }
+    
+    .event-card {
+        padding: var(--spacing-md);
+    }
+    
+    .event-date {
+        min-width: 56px;
+    }
+    
+    .event-title-text {
+        font-size: 1.1rem;
+    }
+    
+    .event-desc {
+        font-size: 0.9rem;
+    }
+    
+    .event-add-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.5rem;
+    }
+    
+    /* 底部导航 */
+    .bottom-nav {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .nav-item {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.75rem;
+    }
+    
+    .nav-icon {
+        font-size: 1.5rem;
+        margin-bottom: 2px;
+    }
+    
+    /* 时间线 */
+    .calendar-timeline-header {
+        padding: var(--spacing-md);
+        border-radius: 12px;
+    }
+    
+    .hours-column {
+        width: 60px;
+    }
+    
+    .hour-label {
+        font-size: 0.75rem;
+    }
+    
+    /* 成就卡片 */
+    .achievements-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+    
+    .achievement-card {
+        padding: var(--spacing-md);
+    }
+    
+    .achievement-icon {
+        font-size: 2rem;
+    }
+    
+    .achievement-name {
+        font-size: 0.95rem;
+    }
+    
+    .rewards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+    
+    .reward-card {
+        padding: var(--spacing-md);
+    }
+    
+    /* 雷达图 */
+    #radarChart {
+        max-width: 280px;
+        max-height: 280px;
+    }
+    
+    /* Modal */
+    .modal-content {
+        max-width: 400px;
+        padding: var(--spacing-lg);
+    }
+    
+    .glass-modal {
+        max-width: 440px;
+    }
+}
+
+/* ====== 响应式设计 - 桌面 & 大平板 ====== */
+@media (min-width: 1024px) {
+    :root {
+        --spacing-xs: 8px;
+        --spacing-sm: 12px;
+        --spacing-md: 20px;
+        --spacing-lg: 28px;
+        --spacing-xl: 40px;
+        --spacing-2xl: 60px;
+    }
+    
+    .app-container {
+        max-width: 960px;
+        margin: var(--spacing-lg) auto;
+        min-height: calc(100vh - var(--spacing-lg) * 2);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    
+    .header {
+        padding: var(--spacing-lg) var(--spacing-xl);
+    }
+    
+    .header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .logo-icon {
+        font-size: 2rem;
+    }
+    
+    .user-title {
+        font-size: 1rem;
+    }
+    
+    .user-avatar {
+        width: 44px;
+        height: 44px;
+        font-size: 1.8rem;
+    }
+    
+    .dashboard {
+        padding: var(--spacing-xl);
+        gap: var(--spacing-xl);
+    }
+    
+    .date-header {
+        padding: var(--spacing-xl);
+        border-radius: 20px;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .today-date {
+        font-size: 1.2rem;
+    }
+    
+    .day-number {
+        font-size: 5rem;
+    }
+    
+    .section-title {
+        font-size: 1.4rem;
+    }
+    
+    .progress-section {
+        padding: var(--spacing-xl);
+        border-radius: 20px;
+    }
+    
+    .progress-bars {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-lg);
+    }
+    
+    .progress-item {
+        padding: var(--spacing-lg);
+    }
+    
+    .progress-label {
+        font-size: 1rem;
+    }
+    
+    .progress-bar {
+        height: 12px;
+        border-radius: 8px;
+    }
+    
+    .progress-value {
+        font-size: 1.1rem;
+    }
+    
+    .tab-content {
+        padding: var(--spacing-xl);
+    }
+    
+    /* 习惯卡片 - 3列网格 */
+    .habits-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-md);
+    }
+    
+    .habit-card {
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+    
+    .habit-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 2rem;
+    }
+    
+    .habit-name {
+        font-size: 1.05rem;
+    }
+    
+    /* 活动卡片 */
+    .event-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .event-date {
+        min-width: 64px;
+    }
+    
+    .event-date .month {
+        font-size: 0.8rem;
+    }
+    
+    .event-date .day {
+        font-size: 1.6rem;
+    }
+    
+    .event-title-text {
+        font-size: 1.15rem;
+    }
+    
+    .event-desc {
+        font-size: 0.95rem;
+    }
+    
+    .event-add-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.6rem;
+    }
+    
+    /* 底部导航 */
+    .bottom-nav {
+        padding: var(--spacing-md) var(--spacing-xl);
+        gap: var(--spacing-md);
+    }
+    
+    .nav-item {
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-size: 0.85rem;
+    }
+    
+    .nav-icon {
+        font-size: 1.6rem;
+    }
+    
+    /* 时间线 */
+    .calendar-timeline-header {
+        padding: var(--spacing-lg);
+        border-radius: 16px;
+        font-size: 1.1rem;
+    }
+    
+    .hours-column {
+        width: 70px;
+    }
+    
+    .hour-label {
+        font-size: 0.8rem;
+    }
+    
+    /* 成就卡片 */
+    .achievements-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-lg);
+    }
+    
+    .achievement-card {
+        padding: var(--spacing-lg);
+    }
+    
+    .achievement-icon {
+        font-size: 2.2rem;
+    }
+    
+    .achievement-name {
+        font-size: 1rem;
+    }
+    
+    .rewards-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-lg);
+    }
+    
+    .reward-card {
+        padding: var(--spacing-lg);
+    }
+    
+    /* 雷达图 */
+    #radarChart {
+        max-width: 320px;
+        max-height: 320px;
+    }
+    
+    /* Modal */
+    .modal-content {
+        max-width: 480px;
+        padding: var(--spacing-xl);
+    }
+    
+    .glass-modal {
+        max-width: 500px;
+    }
+    
+    /* 城市选择器 */
+    .city-selector {
+        gap: var(--spacing-sm);
+    }
+    
+    .city-btn {
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-size: 0.95rem;
+    }
+}
+
+/* ====== 大桌面 ====== */
+@media (min-width: 1280px) {
+    .app-container {
+        max-width: 1100px;
+    }
+    
+    .progress-bars {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .habits-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .events-list {
+        gap: var(--spacing-lg);
+    }
+    
+    .achievements-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .rewards-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
