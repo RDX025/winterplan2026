@@ -1052,6 +1052,45 @@ async function loadFromSupabase() {
       });
     }
     
+    // 加载学生信息
+    try {
+      const student = await SupabaseClient.getStudent();
+      if (student) {
+        if (student.name && student.name !== '彦平少侠') {
+          MOCKUP_STUDENT.name = student.name;
+        }
+        if (student.avatar) {
+          selectedAvatar = student.avatar;
+          const avatar = AVATAR_OPTIONS.find(a => a.id === student.avatar);
+          if (avatar) {
+            const profileAvatar = document.getElementById('profileAvatar');
+            const headerAvatar = document.querySelector('.user-avatar');
+            if (profileAvatar) profileAvatar.textContent = avatar.emoji;
+            if (headerAvatar) headerAvatar.textContent = avatar.emoji;
+          }
+        }
+        console.log('✅ 学生信息已加载:', student.name, student.avatar);
+      }
+    } catch (e) {
+      console.warn('学生信息加载失败:', e.message);
+    }
+    
+    // 加载照片
+    try {
+      const photos = await SupabaseClient.getUserPhotos();
+      if (photos && photos.length > 0) {
+        userPhotos = photos.map(p => ({
+          id: p.id,
+          src: p.photo_data,
+          date: p.date
+        }));
+        renderPhotoGrid();
+        console.log('✅ 照片已加载:', userPhotos.length, '张');
+      }
+    } catch (e) {
+      console.warn('照片加载失败:', e.message);
+    }
+    
     console.log('✅ Supabase 数据加载完成');
   } catch (err) {
     console.error('❌ Supabase 加载失败，使用本地数据:', err);
@@ -2592,18 +2631,29 @@ window.handlePhotoUpload = function handlePhotoUpload(event) {
 
   Array.from(files).forEach(file => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      userPhotos.push({
+    reader.onload = async (e) => {
+      const photoData = {
         id: Date.now(),
         src: e.target.result,
         date: new Date().toLocaleDateString('zh-CN')
-      });
+      };
+      userPhotos.push(photoData);
       renderPhotoGrid();
+      
+      // 同步到Supabase
+      if (USE_SUPABASE) {
+        try {
+          await SupabaseClient.addUserPhoto(photoData);
+          console.log('✅ 照片同步到Supabase');
+        } catch (err) {
+          console.error('❌ 照片同步失败:', err);
+        }
+      }
     };
     reader.readAsDataURL(file);
   });
 
-  showToast(`已上传 ${files.length} 张照片`);
+  showToast(`已上传 ${files.length}张照片`);
 };
 
 function renderPhotoGrid() {
@@ -2674,6 +2724,13 @@ window.selectAvatar = function selectAvatar(avatarId) {
     showAvatarPicker();
     
     showToast(`已切换为「${avatar.name}」`);
+    
+    // 同步到Supabase
+    if (USE_SUPABASE) {
+      SupabaseClient.createOrUpdateStudent(DEFAULT_STUDENT_ID, '彦平少侠', avatarId)
+        .then(() => console.log('✅ 头像同步到Supabase'))
+        .catch(err => console.error('❌ 头像同步失败:', err));
+    }
   }
 };
 

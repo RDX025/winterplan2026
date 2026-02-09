@@ -55,8 +55,75 @@ export async function getStudent(studentId = DEFAULT_STUDENT_ID) {
     .eq('id', studentId)
     .single();
   
+  if (error && error.code !== 'PGRST116') throw error;
+  return data;
+}
+
+export async function updateStudent(updates, studentId = DEFAULT_STUDENT_ID) {
+  const { data, error } = await supabase
+    .from('students')
+    .update(updates)
+    .eq('id', studentId)
+    .select()
+    .single();
+  
   if (error) throw error;
   return data;
+}
+
+export async function createOrUpdateStudent(studentId = DEFAULT_STUDENT_ID, name = '彦平少侠', avatar = '🥷') {
+  const { data, error } = await supabase
+    .from('students')
+    .upsert({
+      id: studentId,
+      name: name,
+      avatar: avatar,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'id' })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+// ========== 用户照片 ==========
+
+export async function getUserPhotos(studentId = DEFAULT_STUDENT_ID) {
+  const { data, error } = await supabase
+    .from('user_photos')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addUserPhoto(photoData, studentId = DEFAULT_STUDENT_ID) {
+  const { data, error } = await supabase
+    .from('user_photos')
+    .insert([{
+      student_id: studentId,
+      photo_data: photoData.src,
+      date: photoData.date
+    }])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteUserPhoto(photoId, studentId = DEFAULT_STUDENT_ID) {
+  const { error } = await supabase
+    .from('user_photos')
+    .delete()
+    .eq('id', photoId)
+    .eq('student_id', studentId);
+  
+  if (error) throw error;
+  return true;
 }
 
 // ========== 每日进度 ==========
