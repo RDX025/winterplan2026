@@ -2212,8 +2212,8 @@ function initIOSWheel(elementId, defaultIndex) {
       const opacity = Math.max(0.15, 1 - absOffset * 0.3);
       const scale = Math.max(0.75, 1 - absOffset * 0.12);
       
-      // 设置3D变换，以容器中心为基准
-      item.style.transform = `translateY(${80 + translateY}px) translateZ(${translateZ}px) scale(${scale})`;
+      // 设置3D变换，以容器中心为基准（高度140px，中心70px）
+      item.style.transform = `translateY(${50 + translateY}px) translateZ(${translateZ}px) scale(${scale})`;
       item.style.opacity = opacity;
       item.style.pointerEvents = absOffset < 1 ? 'auto' : 'none';
       item.classList.toggle('active', absOffset < 0.5);
