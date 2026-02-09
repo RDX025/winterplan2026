@@ -2418,8 +2418,7 @@ function renderEvents(city) {
     const categoryTag = e.category ? `<span class="event-category" style="background:${categoryColor}20;color:${categoryColor}">${e.category}</span>` : '';
     
     return `
-    <div class="event-card activity-card" data-city="${city}" data-idx="${idx}" ontouchstart="activityTouchStart(event, '${city}', ${idx})" ontouchmove="activityTouchMove(event)" ontouchend="activityTouchEnd(event)">
-      <div class="event-add-bg">📅 加入日程</div>
+    <div class="event-card activity-card" data-city="${city}" data-idx="${idx}" ondblclick="addEventToSchedule('${city}', ${idx})">
       <div class="event-card-content">
         <div class="event-date">
           <span class="month">${e.month}</span>
@@ -2440,57 +2439,10 @@ function renderEvents(city) {
   }).join('');
 }
 
-// 活动卡片触摸事件
-let activityTouchStartX = 0;
-let activityTouchCity = null;
-let activityTouchIdx = null;
-let activitySwiped = false;
-
-window.activityTouchStart = function(event, city, idx) {
-  activityTouchStartX = event.touches[0].clientX;
-  activityTouchCity = city;
-  activityTouchIdx = idx;
-  activitySwiped = false;
-};
-
-window.activityTouchMove = function(event) {
-  if (!activityTouchCity) return;
-  
-  const deltaX = event.touches[0].clientX - activityTouchStartX;
-  const card = event.target.closest('.activity-card');
-  
-  if (!card) return;
-  
-  if (deltaX > 60 && !activitySwiped) {
-    // 左滑添加
-    activitySwiped = true;
-    card.style.transform = 'translateX(120px)';
-    card.querySelector('.event-add-bg').style.opacity = '1';
-  } else if (deltaX < 0 && activitySwiped) {
-    // 右滑恢复
-    activitySwiped = false;
-    card.style.transform = 'translateX(0)';
-    card.querySelector('.event-add-bg').style.opacity = '0';
-  }
-};
-
-window.activityTouchEnd = function(event) {
-  if (activitySwiped && activityTouchCity !== null && activityTouchIdx !== null) {
-    // 添加到日程
-    addEventToSchedule(activityTouchCity, activityTouchIdx);
-    
-    // 恢复卡片
-    const card = event.target.closest('.activity-card');
-    if (card) {
-      card.style.transform = 'translateX(0)';
-      card.querySelector('.event-add-bg').style.opacity = '0';
-    }
-  }
-  
-  activityTouchCity = null;
-  activityTouchIdx = null;
-  activitySwiped = false;
-};
+// 移除触摸事件
+window.activityTouchStart = null;
+window.activityTouchMove = null;
+window.activityTouchEnd = null;
 
 // 添加活动到今日日程
 window.addEventToSchedule = function addEventToSchedule(city, idx) {
