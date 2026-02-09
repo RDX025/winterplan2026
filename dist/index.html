@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剑客游学 - 寒假成长计划</title>
+    <meta name="description" content="AI驱动的寒假学习计划，让初中生在武侠世界中提升数学、英语和生活习惯">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script type="module" crossorigin src="/winterplan2026/assets/index-DhglW6Bb.js"></script>
+  <link rel="stylesheet" crossorigin href="/winterplan2026/assets/index-CHciKsc6.css">
+</head>
+<body>
+    <!-- Landing Page -->
+    <div id="landingOverlay" class="landing-overlay">
+        <div class="landing-glow"></div>
+        <canvas id="landingCanvas"></canvas>
+        <div class="landing-skip">点击跳过</div>
+    </div>
+
+    <div class="app-container">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">⚔️</span>
+                <h1>剑客游学</h1>
+                <span class="offline-badge" id="offlineBadge">离线</span>
+            </div>
+            <div class="user-info">
+                <span class="user-title">彦平少侠</span>
+                <div class="user-avatar">🥷</div>
+            </div>
+        </header>
+
+        <!-- 主仪表盘 -->
+        <main class="dashboard">
+            <!-- ========== 主页 Tab ========== -->
+            <div class="tab-content" data-tab="home">
+                <!-- 今日日期和倒计时 -->
+                <section class="date-header">
+                    <div class="today-date" id="todayDate">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                    <div class="countdown-card" id="countdownCard">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                </section>
+
+                <!-- 今日状态卡片 -->
+                <section class="status-card">
+                    <div class="date-display">
+                        <span class="day-num" id="dayNum">1</span>
+                        <span class="day-label">/ 27 天</span>
+                    </div>
+                    <div class="status-bars">
+                        <div class="stat">
+                            <span class="stat-icon">🔥</span>
+                            <span class="stat-label">内功(数学)</span>
+                            <div class="progress-bar">
+                                <div class="progress" id="mathProgress" style="width: 30%"></div>
+                            </div>
+                            <span class="stat-value">30%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-icon">💬</span>
+                            <span class="stat-label">暗语(英语)</span>
+                            <div class="progress-bar">
+                                <div class="progress english" id="engProgress" style="width: 25%"></div>
+                            </div>
+                            <span class="stat-value">25%</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-icon">🎭</span>
+                            <span class="stat-label">武德修养</span>
+                            <div class="progress-bar">
+                                <div class="progress habits" id="habitsProgress" style="width: 40%"></div>
+                            </div>
+                            <span class="stat-value">40%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 本周精彩表现 -->
+                <section class="weekly-highlights">
+                    <h2 class="section-title">🌟 本周精彩表现</h2>
+                    <div class="highlights-list" id="highlightsList">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                </section>
+
+                <!-- 今日时间线 -->
+                <section class="timeline-section">
+                    <h2 class="section-title">📅 今日修炼</h2>
+                    <div class="timeline" id="timelineContainer">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- ========== 修炼 Tab ========== -->
+            <div class="tab-content" data-tab="quests" style="display: none;">
+                <!-- 习惯打卡 -->
+                <section class="habits-section">
+                    <h2 class="section-title">🥋 武德修养</h2>
+                    <div class="habits-grid" id="habitsGrid">
+                        <div class="habit-card" id="habit-wake" onclick="toggleHabit('wake')">
+                            <span class="habit-icon">🌅</span>
+                            <div class="habit-content">
+                                <span class="habit-name">早起</span>
+                                <span class="habit-subtitle">7:30前起床</span>
+                            </div>
+                            <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'wake')">✏️</button>
+                        </div>
+                        <div class="habit-card" id="habit-piano" onclick="toggleHabit('piano')">
+                            <span class="habit-icon">🎹</span>
+                            <div class="habit-content">
+                                <span class="habit-name">练琴</span>
+                                <span class="habit-subtitle">30分钟</span>
+                            </div>
+                            <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'piano')">✏️</button>
+                        </div>
+                        <div class="habit-card" id="habit-exercise" onclick="toggleHabit('exercise')">
+                            <span class="habit-icon">🏃</span>
+                            <div class="habit-content">
+                                <span class="habit-name">运动</span>
+                                <span class="habit-subtitle">30分钟</span>
+                            </div>
+                            <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'exercise')">✏️</button>
+                        </div>
+                        <div class="habit-card" id="habit-read" onclick="toggleHabit('read')">
+                            <span class="habit-icon">📖</span>
+                            <div class="habit-content">
+                                <span class="habit-name">阅读</span>
+                                <span class="habit-subtitle">30分钟</span>
+                            </div>
+                            <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'read')">✏️</button>
+                        </div>
+                        <div class="habit-card" id="habit-spine" onclick="toggleHabit('spine')">
+                            <span class="habit-icon">🧘</span>
+                            <div class="habit-content">
+                                <span class="habit-name">李医生脊椎操</span>
+                                <span class="habit-subtitle">睡前五套动作</span>
+                            </div>
+                            <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'spine')">✏️</button>
+                        </div>
+                        <div class="habit-card" id="habit-math" onclick="toggleHabit('math')">
+                            <span class="habit-icon">📝</span>
+                            <div class="habit-content">
+                                <span class="habit-name">数学复习</span>
+                                <span class="habit-subtitle">费曼笔记法</span>
+                            </div>
+                            <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'math')">✏️</button>
+                        </div>
+                        <div class="habit-card" id="habit-sleep" onclick="toggleHabit('sleep')">
+                            <span class="habit-icon">🌙</span>
+                            <div class="habit-content">
+                                <span class="habit-name">早睡</span>
+                                <span class="habit-subtitle">22:00前</span>
+                            </div>
+                            <div class="habit-check"></div>
+                            <button class="habit-edit-btn" onclick="editHabit(event, 'sleep')">✏️</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 每日选择卡片 -->
+                <section class="choice-section">
+                    <h2 class="section-title">🎲 今日探索</h2>
+                    <p class="choice-prompt">课后你想做什么？</p>
+                    <div class="choice-grid">
+                        <button class="choice-card" data-interest="engineering" onclick="selectChoice(this)">
+                            <span class="choice-icon">🖨️</span>
+                            <span class="choice-text">打印历史名剑</span>
+                        </button>
+                        <button class="choice-card" data-interest="music" onclick="selectChoice(this)">
+                            <span class="choice-icon">🎹</span>
+                            <span class="choice-text">学一首古风曲</span>
+                        </button>
+                        <button class="choice-card" data-interest="history" onclick="selectChoice(this)">
+                            <span class="choice-icon">📚</span>
+                            <span class="choice-text">读三国故事</span>
+                        </button>
+                        <button class="choice-card" data-interest="logic" onclick="selectChoice(this)">
+                            <span class="choice-icon">🧩</span>
+                            <span class="choice-text">数学解谜挑战</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 兴趣雷达图 -->
+                <section class="radar-section">
+                    <h2 class="section-title">🔮 兴趣雷达</h2>
+                    <div class="radar-container">
+                        <canvas id="radarChart" width="300" height="300"></canvas>
+                    </div>
+                    <div class="interest-tags">
+                        <span class="tag history">📖 历史人文</span>
+                        <span class="tag engineering">🔧 工程制造</span>
+                        <span class="tag music">🎵 音乐表达</span>
+                        <span class="tag martial">⚔️ 体能武术</span>
+                        <span class="tag logic">🧮 逻辑推理</span>
+                        <span class="tag art">🎨 艺术创造</span>
+                    </div>
+                </section>
+
+                <!-- 城市活动 -->
+                <section class="events-section">
+                    <h2 class="section-title">🗺️ 江湖见闻</h2>
+                    <div class="city-selector">
+                        <button class="city-btn active" onclick="selectCity(event, 'shenzhen')">深圳</button>
+                        <button class="city-btn" onclick="selectCity(event, 'dongguan')">东莞</button>
+                        <button class="city-btn" onclick="selectCity(event, 'zhuhai')">珠海</button>
+                        <button class="city-btn" onclick="selectCity(event, 'guangdong')">更多</button>
+                    </div>
+                    <div class="events-list" id="eventsList">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                </section>
+                
+                <!-- 寒假电影 -->
+                <section class="movies-section">
+                    <h2 class="section-title">🎬 寒假电影</h2>
+                    <p class="section-subtitle" style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 16px;">点击电影添加观影计划</p>
+                    <div class="movie-grid" id="movieGrid">
+                        <!-- 由 JS 渲染 -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- ========== 成就 Tab ========== -->
+            <div class="tab-content" data-tab="rewards" style="display: none;">
+                <!-- 3D打印奖励 -->
+                <section class="rewards-section">
+                    <h2 class="section-title">🖨️ 锻造工坊</h2>
+                    <p class="rewards-subtitle">完成任务解锁3D打印模型</p>
+                    <div class="rewards-grid" id="rewardsGrid"></div>
+                </section>
+
+                <!-- 成就系统 -->
+                <section class="achievements-section">
+                    <h2 class="section-title">🏆 成就墙</h2>
+                    <div class="achievements-grid" id="achievementsGrid"></div>
+                </section>
+            </div>
+
+            <!-- ========== 少侠 Tab ========== -->
+            <div class="tab-content" data-tab="profile" style="display: none;">
+                <section class="profile-section">
+                    <div class="profile-header">
+                        <div class="profile-avatar" id="profileAvatar" onclick="showAvatarPicker()">🥷</div>
+                        <div class="profile-info">
+                            <h2 class="profile-name" id="profileName">彦平少侠</h2>
+                            <p class="profile-title" id="profileTitle">初入江湖</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 头像选择器 -->
+                    <div class="avatar-picker" id="avatarPicker" style="display: none;">
+                        <h3 class="subsection-title">🎭 选择你的江湖形象</h3>
+                        <div class="avatar-grid" id="avatarGrid">
+                            <!-- 由 JS 渲染 -->
+                        </div>
+                    </div>
+                    
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <span class="stat-num" id="profileDays">7</span>
+                            <span class="stat-label">修炼天数</span>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="stat-num" id="profileAchievements">3</span>
+                            <span class="stat-label">成就数量</span>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="stat-num" id="profileRewards">1</span>
+                            <span class="stat-label">解锁奖励</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 照片上传区 -->
+                    <div class="photo-upload-section">
+                        <div class="photo-section-header">
+                            <h3 class="subsection-title">📸 修炼日记</h3>
+                            <button class="edit-btn" onclick="togglePhotoEditMode()">✏️ 编辑</button>
+                        </div>
+                        <div class="photo-grid" id="photoGrid">
+                            <!-- 由 JS 渲染 -->
+                        </div>
+                        <label class="upload-btn">
+                            <input type="file" id="photoInput" accept="image/*" multiple hidden onchange="handlePhotoUpload(event)">
+                            <span>📷 上传照片</span>
+                        </label>
+                    </div>
+                    
+                    <div class="profile-actions">
+                        <button class="profile-btn" onclick="openProfileSettings()">⚙️ 设置</button>
+                        <button class="profile-btn" onclick="showToast('分享功能开发中')">📤 分享进度</button>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- 底部导航 -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-tab="home" onclick="switchTab(event, 'home')">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">主页</span>
+            </button>
+            <button class="nav-item" data-tab="quests" onclick="switchTab(event, 'quests')">
+                <span class="nav-icon">⚔️</span>
+                <span class="nav-label">修炼</span>
+            </button>
+            <button class="nav-item" data-tab="rewards" onclick="switchTab(event, 'rewards')">
+                <span class="nav-icon">🏆</span>
+                <span class="nav-label">成就</span>
+            </button>
+            <button class="nav-item" data-tab="profile" onclick="switchTab(event, 'profile')">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">少侠</span>
+            </button>
+        </nav>
+    </div>
+
+    <div class="modal" id="notifyModal" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-body" id="modalBody"></div>
+            <button class="modal-close" id="modalClose">知道了</button>
+        </div>
+    </div>
+
+    <!-- 编辑习惯 Modal -->
+    <div class="modal" id="editHabitModal" aria-hidden="true">
+        <div class="modal-content glass-modal">
+            <div class="modal-header">
+                <span class="modal-title">编辑习惯</span>
+                <button class="modal-close-x" onclick="closeEditHabitModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editHabitId">
+                <div class="form-group">
+                    <label>名称</label>
+                    <input type="text" id="editHabitName" class="glass-input" placeholder="习惯名称">
+                </div>
+                <div class="form-group">
+                    <label>说明</label>
+                    <input type="text" id="editHabitSubtitle" class="glass-input" placeholder="时间或要求">
+                </div>
+                <div class="form-group">
+                    <label>图标</label>
+                    <div class="icon-picker" id="habitIconPicker">
+                        <span class="icon-option" data-icon="🌅">🌅</span>
+                        <span class="icon-option" data-icon="🎹">🎹</span>
+                        <span class="icon-option" data-icon="🏃">🏃</span>
+                        <span class="icon-option" data-icon="📖">📖</span>
+                        <span class="icon-option" data-icon="🧘">🧘</span>
+                        <span class="icon-option" data-icon="📝">📝</span>
+                        <span class="icon-option" data-icon="🌙">🌙</span>
+                        <span class="icon-option" data-icon="💪">💪</span>
+                        <span class="icon-option" data-icon="🎯">🎯</span>
+                        <span class="icon-option" data-icon="🧠">🧠</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeEditHabitModal()">取消</button>
+                <button class="btn-save" onclick="saveHabitEdit()">保存</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
