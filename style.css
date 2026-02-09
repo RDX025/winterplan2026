@@ -514,6 +514,12 @@ h1, h2, h3 {
     z-index: 50;
 }
 
+/* 确保wrapper在按钮显示时保持可点击 */
+.calendar-event-wrapper.showing-delete .event-delete-btn,
+.calendar-event-wrapper.showing-edit .event-edit-btn {
+    display: flex;
+}
+
 .event-delete-bg {
     position: absolute;
     left: 0;
@@ -570,7 +576,7 @@ h1, h2, h3 {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 3;
+    z-index: 100;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(255,107,129,0.4);
 }
@@ -589,7 +595,7 @@ h1, h2, h3 {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 3;
+    z-index: 100;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(52,152,219,0.4);
 }
