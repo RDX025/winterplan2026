@@ -5,7 +5,6 @@
 
 set -e
 
-# 颜色
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -16,26 +15,22 @@ PROJECT_REF="hsybcomykhfnyngtytyg"
 API_BASE="https://api.supabase.com/v1/projects/$PROJECT_REF"
 
 echo -e "${YELLOW}🚀 开始Supabase自动化设置...${NC}"
-echo ""
 
-# 1. 检查Token
 if [ -z "$TOKEN" ]; then
-    echo -e "${RED}❌ 错误: 请提供Access Token${NC}"
-    echo "用法: ./setup-supabase.sh <ACCESS_TOKEN>"
-    echo "或设置环境变量: export SUPABASE_ACCESS_TOKEN='sbp_xxx'"
-    exit 1
+  echo -e "${RED}❌ 错误: 请提供Access Token${NC}"
+  echo "用法: ./setup-supabase.sh <ACCESS_TOKEN>"
+  echo "或设置环境变量: export SUPABASE_ACCESS_TOKEN='sbp_xxx'"
+  exit 1
 fi
 
 echo -e "${GREEN}✅ Token已获取${NC}"
 
-# 2. 执行SQL建表
-echo ""
 echo -e "${YELLOW}📦 创建数据库表...${NC}"
 
 curl -s -X POST "$API_BASE/database/query" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"query": "CREATE TABLE IF NOT EXISTS students (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT, avatar TEXT, created_at TIMESTAMPTZ DEFAULT NOW())"}'
+  -d '{"query": "CREATE TABLE IF NOT EXISTS students (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), name TEXT, avatar TEXT, created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW())"}'
 
 curl -s -X POST "$API_BASE/database/query" \
   -H "Authorization: Bearer $TOKEN" \
@@ -62,13 +57,16 @@ curl -s -X POST "$API_BASE/database/query" \
   -H "Content-Type: application/json" \
   -d '{"query": "CREATE TABLE IF NOT EXISTS weekly_achievements (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), student_id UUID REFERENCES students(id), achievement_date DATE NOT NULL, title TEXT NOT NULL, category TEXT, icon TEXT DEFAULT '\''🌟'\'', score INT DEFAULT 0, comment TEXT, media_url TEXT, video_url TEXT, created_at TIMESTAMPTZ DEFAULT NOW())"}'
 
+curl -s -X POST "$API_BASE/database/query" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "CREATE TABLE IF NOT EXISTS user_photos (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), student_id UUID REFERENCES students(id), photo_data TEXT NOT NULL, date TEXT, created_at TIMESTAMPTZ DEFAULT NOW())"}'
+
 echo -e "${GREEN}✅ 表创建完成${NC}"
 
-# 3. 禁用RLS
-echo ""
 echo -e "${YELLOW}🔓 禁用行级安全(RLS)...${NC}"
 
-for table in students daily_progress habit_checks interest_scores schedule_items weekly_achievements; do
+for table in students daily_progress habit_checks interest_scores schedule_items weekly_achievements user_photos; do
   curl -s -X POST "$API_BASE/database/query" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
@@ -77,45 +75,22 @@ done
 
 echo -e "${GREEN}✅ RLS禁用完成${NC}"
 
-# 4. 创建默认学生
-echo ""
 echo -e "${YELLOW}👤 创建默认学生...${NC}"
 
 curl -s -X POST "$API_BASE/database/query" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"query": "INSERT INTO students (id, name, avatar) VALUES ('\''11111111-1111-1111-1111-111111111111'\'', '\''彦平少侠'\'', '\''ninja'\'') ON CONFLICT (id) DO UPDATE SET name = '\''彦平少侠'\'' RETURNING *"}'
+  -d '{"query": "INSERT INTO students (id, name, avatar) VALUES ('\''11111111-1111-1111-1111-111111111111'\'', '\''彦平少侠'\'', '\''ninja'\'') ON CONFLICT (id) DO UPDATE SET name = '\''彦平少侠'\'', updated_at = NOW() RETURNING *"}'
 
-echo ""
 echo -e "${GREEN}✅ 默认学生创建完成${NC}"
 
-# 5. 验证
-echo ""
 echo -e "${YELLOW}🔍 验证数据库...${NC}"
 
-echo "表列表:"
 curl -s -X POST "$API_BASE/database/query" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"query": "SELECT table_name FROM information_schema.tables WHERE table_schema = '\''public'\'' AND table_name IN ('\''students'\'', '\''daily_progress'\'', '\''habit_checks'\'', '\''interest_scores'\'', '\''schedule_items'\'', '\''weekly_achievements'\'')"}'
+  -d '{"query": "SELECT table_name FROM information_schema.tables WHERE table_schema = '\''public'\'' AND table_name IN ('\''students'\'', '\''daily_progress'\'', '\''habit_checks'\'', '\''interest_scores'\'', '\''schedule_items'\'', '\''weekly_achievements'\'', '\''user_photos'\'')"}'
 
-echo ""
 echo -e "${GREEN}🎉 Supabase设置完成！${NC}"
-echo ""
+
 echo "下一步: 刷新前端页面测试数据同步"
-
-# 5. 创建user_photos表（照片）
-echo ""
-echo "📸 创建照片表..."
-curl -s -X POST "$API_BASE/database/query" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "CREATE TABLE IF NOT EXISTS user_photos (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), student_id UUID REFERENCES students(id), photo_data TEXT NOT NULL, date TEXT, created_at TIMESTAMPTZ DEFAULT NOW())"}'
-
-echo "🔓 禁用user_photos的RLS..."
-curl -s -X POST "$API_BASE/database/query" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "ALTER TABLE user_photos DISABLE ROW LEVEL SECURITY"}'
-
-echo "✅ user_photos表创建完成"

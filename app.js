@@ -24,6 +24,8 @@ const MOCKUP_STUDENT = {
   current_day: 7
 };
 
+const DEFAULT_STUDENT_ID = MOCKUP_STUDENT.id;
+
 // 搞笑倒计时语录
 const COUNTDOWN_QUOTES = [
   { days: 20, emoji: '😎', text: '时间还早，继续浪~' },
@@ -1056,11 +1058,14 @@ async function loadFromSupabase() {
     try {
       const student = await SupabaseClient.getStudent();
       if (student) {
-        if (student.name && student.name !== '彦平少侠') {
+        if (student.name) {
           MOCKUP_STUDENT.name = student.name;
+          const nameEl = document.getElementById('profileName');
+          if (nameEl) nameEl.textContent = student.name;
         }
         if (student.avatar) {
           selectedAvatar = student.avatar;
+          MOCKUP_STUDENT.avatar = student.avatar;
           const avatar = AVATAR_OPTIONS.find(a => a.id === student.avatar);
           if (avatar) {
             const profileAvatar = document.getElementById('profileAvatar');
@@ -2719,10 +2724,12 @@ window.selectAvatar = function selectAvatar(avatarId) {
     showAvatarPicker();
     
     showToast(`已切换为「${avatar.name}」`);
+
+    MOCKUP_STUDENT.avatar = avatarId;
     
     // 同步到Supabase
     if (USE_SUPABASE) {
-      SupabaseClient.createOrUpdateStudent(DEFAULT_STUDENT_ID, '彦平少侠', avatarId)
+      SupabaseClient.createOrUpdateStudent(DEFAULT_STUDENT_ID, MOCKUP_STUDENT.name, avatarId)
         .then(() => console.log('✅ 头像同步到Supabase'))
         .catch(err => console.error('❌ 头像同步失败:', err));
     }
@@ -2738,10 +2745,66 @@ function initProfile() {
   if (daysEl) daysEl.textContent = MOCKUP_STUDENT.current_day;
   if (achievementsEl) achievementsEl.textContent = ACHIEVEMENTS.filter(a => a.unlocked).length;
   if (rewardsEl) rewardsEl.textContent = REWARDS.filter(r => r.unlocked).length;
-  
+
+  const nameEl = document.getElementById('profileName');
+  if (nameEl) nameEl.textContent = MOCKUP_STUDENT.name;
+
   renderPhotoGrid();
   renderAvatarGrid();
 }
+
+// 打开设置面板（修改姓名）
+window.openProfileSettings = function() {
+  const modal = document.getElementById('notifyModal');
+  const titleEl = document.getElementById('modalTitle');
+  const bodyEl = document.getElementById('modalBody');
+  const closeBtn = document.getElementById('modalClose');
+  if (!modal || !titleEl || !bodyEl) return;
+
+  titleEl.textContent = '⚙️ 少侠设置';
+  bodyEl.innerHTML = `
+    <div class="add-event-form">
+      <label style="display:block; margin-bottom:8px; color:rgba(255,255,255,0.7); font-size:0.85rem;">少侠名号</label>
+      <input type="text" id="profileNameInput" class="form-input" value="${MOCKUP_STUDENT.name}" maxlength="12" />
+      <button class="submit-btn" style="margin-top:16px;" onclick="saveProfileSettings()">💾 保存</button>
+    </div>
+  `;
+
+  closeBtn.textContent = '取消';
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden', 'false');
+};
+
+window.saveProfileSettings = async function() {
+  const input = document.getElementById('profileNameInput');
+  if (!input) return;
+  const newName = input.value.trim();
+  if (!newName) {
+    showToast('请输入少侠名号');
+    return;
+  }
+
+  MOCKUP_STUDENT.name = newName;
+  const nameEl = document.getElementById('profileName');
+  if (nameEl) nameEl.textContent = newName;
+
+  // 同步到Supabase
+  if (USE_SUPABASE) {
+    try {
+      await SupabaseClient.createOrUpdateStudent(DEFAULT_STUDENT_ID, newName, selectedAvatar);
+      console.log('✅ 姓名同步到Supabase');
+    } catch (err) {
+      console.error('❌ 姓名同步失败:', err.message);
+    }
+  }
+
+  const modal = document.getElementById('notifyModal');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  showToast('✅ 名号已保存');
+};
 
 function renderAvatarGrid() {
   const grid = document.getElementById('avatarGrid');
