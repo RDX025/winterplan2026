@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger.js';
+
 // ====== 月历组件 ======
 const MonthCalendar = {
   currentDate: new Date(),
@@ -137,7 +139,7 @@ const MonthCalendar = {
   
   selectDate(dateKey) {
     // 点击日期跳转到当日时间轴
-    console.log('选择日期:', dateKey);
+    logger.log('选择日期:', dateKey);
     // 可以在这里添加跳转到指定日期的逻辑
   },
   

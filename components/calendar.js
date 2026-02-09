@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger.js';
+
 // ====== 统一日历模块 (日/周/月三视图) ======
 // 支持真实数据同步 from Supabase + LocalStorage
 
@@ -293,13 +295,16 @@ const Calendar = {
   
   // 从真实数据获取某日事件
   getRealEventsForDate(dateKey) {
-    // 优先使用真实数据 (window.scheduleByDate from Supabase)
-    if (window.scheduleByDate && window.scheduleByDate[dateKey]) {
-      return window.scheduleByDate[dateKey].map(e => ({
-        title: e.event_title,
-        color: e.color || '#F4D03F',
-        status: e.status
-      }));
+    // 优先使用真实数据 (ScheduleStore)
+    if (window.scheduleStore) {
+      const events = window.scheduleStore.getByDate(dateKey);
+      if (events && events.length > 0) {
+        return events.map(e => ({
+          title: e.event_title,
+          color: e.color || '#F4D03F',
+          status: e.status
+        }));
+      }
     }
     
     // 返回模拟数据用于演示
@@ -444,7 +449,7 @@ const Calendar = {
   },
   
   selectDay(year, month, day) {
-    console.log('选择日期:', year, month + 1, day);
+    logger.log('选择日期:', year, month + 1, day);
   },
   
   refresh() {

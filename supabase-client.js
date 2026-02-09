@@ -2,17 +2,15 @@
 // 封装所有数据库操作，供前端调用
 
 import { createClient } from '@supabase/supabase-js';
+import { logger } from './utils/logger.js';
 
 // 初始化 Supabase 客户端（前端使用公开的 URL 和 anon key）
 const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const rawSupabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-const fallbackSupabaseUrl = 'https://hsybcomykhfnyngtytyg.supabase.co';
-const fallbackSupabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhzeWJjb215a2hmbnluZ3R5dHlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyOTc0OTIsImV4cCI6MjA4NTg3MzQ5Mn0.1qg0gv2Vgk0nwM4YcIin_GZ5XhLI8JzYqxYZ4ThFw98';
-
-console.log('🔧 Supabase配置检查:');
-console.log('  URL:', rawSupabaseUrl || fallbackSupabaseUrl ? '✅ 已配置' : '❌ 未配置');
-console.log('  Key:', rawSupabaseKey || fallbackSupabaseKey ? '✅ 已配置 (fallback/配置)' : '❌ 未配置');
+logger.log('🔧 Supabase配置检查:');
+logger.log('  URL:', rawSupabaseUrl ? '✅ 已配置' : '❌ 未配置');
+logger.log('  Key:', rawSupabaseKey ? '✅ 已配置' : '❌ 未配置');
 
 const isValidUrl = (value) => {
   try {
@@ -23,13 +21,15 @@ const isValidUrl = (value) => {
   }
 };
 
-const supabaseUrl = isValidUrl(rawSupabaseUrl) ? rawSupabaseUrl : fallbackSupabaseUrl;
+const supabaseUrl = isValidUrl(rawSupabaseUrl) ? rawSupabaseUrl : '';
 const supabaseKey = rawSupabaseKey && rawSupabaseKey.startsWith('eyJ')
   ? rawSupabaseKey
-  : fallbackSupabaseKey;
+  : '';
 
 export const SUPABASE_ENABLED = !!(supabaseUrl && supabaseKey);
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = SUPABASE_ENABLED
+  ? createClient(supabaseUrl, supabaseKey)
+  : createClient('http://localhost', 'public-anon-key');
 
 // 默认学生 ID（演示用，生产环境应该从认证系统获取）
 const DEFAULT_STUDENT_ID = '11111111-1111-1111-1111-111111111111';
@@ -39,13 +39,13 @@ export async function testConnection() {
   try {
     const { data, error } = await supabase.from('students').select('id').limit(1);
     if (error) {
-      console.error('❌ Supabase连接失败:', error.message);
+      logger.error('❌ Supabase连接失败:', error.message);
       return false;
     }
-    console.log('✅ Supabase连接成功');
+    logger.log('✅ Supabase连接成功');
     return true;
   } catch (e) {
-    console.error('❌ Supabase异常:', e.message);
+    logger.error('❌ Supabase异常:', e.message);
     return false;
   }
 }
@@ -521,7 +521,7 @@ export async function getTodaySchedule(studentId = DEFAULT_STUDENT_ID) {
     .order('start_minute', { ascending: true });
   
   if (error) {
-    console.warn('schedule_items表可能不存在:', error);
+    logger.warn('schedule_items表可能不存在:', error);
     return { today: [], byDate: {} };
   }
   
@@ -613,7 +613,7 @@ export async function getWeeklyAchievements(studentId = DEFAULT_STUDENT_ID) {
     .order('achievement_date', { ascending: false });
   
   if (error) {
-    console.warn('weekly_achievements表可能不存在:', error);
+    logger.warn('weekly_achievements表可能不存在:', error);
     return [];
   }
   return data || [];

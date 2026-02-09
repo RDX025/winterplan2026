@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger.js';
+
 // ====== 周历组件 ======
 const WeekCalendar = {
   currentDate: new Date(),
@@ -102,7 +104,7 @@ const WeekCalendar = {
   },
   
   selectDay(year, month, date) {
-    console.log('选择日期:', year, month, date);
+    logger.log('选择日期:', year, month, date);
     // 跳转到指定日期的时间轴
   },
   
