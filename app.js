@@ -2008,73 +2008,222 @@ window.selectEventColor = function(color) {
 };
 
 // ====== iOS风格滚轮选择器 ======
+const WHEEL_ITEM_HEIGHT = 40;
+const WHEEL_VISIBLE_COUNT = 5;
+const WHEEL_RADIUS = 100;
+
 function initIOSWheel(elementId, defaultIndex) {
   const wheel = document.getElementById(elementId);
   if (!wheel) return;
   
-  const itemHeight = 44;
-  const visibleCount = 5;
-  const totalItems = wheel.children.length;
+  const items = wheel.querySelectorAll('.ios-wheel-item');
+  const totalItems = items.length;
   
-  // 滚动到默认位置
-  wheel.scrollTop = defaultIndex * itemHeight;
-  
-  // 触摸滑动
+  let currentIndex = defaultIndex;
   let startY = 0;
-  let startScroll = 0;
-  let isDragging = false;
+  let startIndex = 0;
+  let velocity = 0;
+  let lastY = 0;
+  let lastTime = 0;
+  let animationId = null;
   
-  wheel.addEventListener('touchstart', (e) => {
+  // 初始渲染
+  renderWheel(currentIndex);
+  
+  // 触摸事件
+  wheel.parentElement.addEventListener('touchstart', (e) => {
+    cancelAnimation();
     startY = e.touches[0].clientY;
-    startScroll = wheel.scrollTop;
-    isDragging = true;
+    lastY = startY;
+    startIndex = currentIndex;
+    lastTime = Date.now();
+    velocity = 0;
   }, { passive: true });
   
-  wheel.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    const deltaY = e.touches[0].clientY - startY;
-    wheel.scrollTop = startScroll - deltaY;
-  }, { passive: true });
-  
-  wheel.addEventListener('touchend', () => {
-    isDragging = false;
-    // 吸附到最近的选项
-    const index = Math.round(wheel.scrollTop / itemHeight);
-    wheel.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
+  wheel.parentElement.addEventListener('touchmove', (e) => {
+    const y = e.touches[0].clientY;
+    const deltaY = (y - startY) / WHEEL_ITEM_HEIGHT;
+    let newIndex = startIndex - deltaY;
     
-    // 更新选中状态
-    updateWheelSelection(wheel, index);
+    // 边界弹性
+    if (newIndex < 0) {
+      newIndex = newIndex * 0.3; // 弹性阻力
+    } else if (newIndex > totalItems - 1) {
+      newIndex = totalItems - 1 + (newIndex - totalItems + 1) * 0.3;
+    }
+    
+    // 计算速度
+    const now = Date.now();
+    const dt = now - lastTime;
+    if (dt > 0) {
+      velocity = (lastY - y) / dt;
+    }
+    lastY = y;
+    lastTime = now;
+    
+    currentIndex = newIndex;
+    renderWheel(currentIndex);
+  }, { passive: true });
+  
+  wheel.parentElement.addEventListener('touchend', () => {
+    // 惯性滑动
+    if (Math.abs(velocity) > 0.5) {
+      inertiaScroll();
+    } else {
+      snapToIndex();
+    }
   });
   
-  // 鼠标滑动（桌面端）
-  wheel.addEventListener('mousedown', (e) => {
-    startY = e.clientY;
-    startScroll = wheel.scrollTop;
+  // 鼠标事件
+  let isDragging = false;
+  
+  wheel.parentElement.addEventListener('mousedown', (e) => {
+    cancelAnimation();
     isDragging = true;
-    wheel.style.cursor = 'grabbing';
+    startY = e.clientY;
+    lastY = startY;
+    startIndex = currentIndex;
+    lastTime = Date.now();
+    velocity = 0;
   });
   
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    const deltaY = e.clientY - startY;
-    wheel.scrollTop = startScroll - deltaY;
+    const y = e.clientY;
+    const deltaY = (y - startY) / WHEEL_ITEM_HEIGHT;
+    let newIndex = startIndex - deltaY;
+    
+    // 边界弹性
+    if (newIndex < 0) {
+      newIndex = newIndex * 0.3;
+    } else if (newIndex > totalItems - 1) {
+      newIndex = totalItems - 1 + (newIndex - totalItems + 1) * 0.3;
+    }
+    
+    // 计算速度
+    const now = Date.now();
+    const dt = now - lastTime;
+    if (dt > 0) {
+      velocity = (lastY - y) / dt;
+    }
+    lastY = y;
+    lastTime = now;
+    
+    currentIndex = newIndex;
+    renderWheel(currentIndex);
   });
   
   document.addEventListener('mouseup', () => {
     if (!isDragging) return;
     isDragging = false;
-    wheel.style.cursor = 'grab';
     
-    const index = Math.round(wheel.scrollTop / itemHeight);
-    wheel.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
-    updateWheelSelection(wheel, index);
+    if (Math.abs(velocity) > 0.5) {
+      inertiaScroll();
+    } else {
+      snapToIndex();
+    }
   });
-}
-
-function updateWheelSelection(wheel, index) {
-  Array.from(wheel.children).forEach((child, i) => {
-    child.classList.toggle('selected', i === index);
-  });
+  
+  function inertiaScroll() {
+    const friction = 0.95;
+    const minVelocity = 0.01;
+    
+    function animate() {
+      velocity *= friction;
+      currentIndex += velocity * 0.5;
+      
+      // 边界弹性回弹
+      if (currentIndex < 0) {
+        currentIndex = currentIndex * 0.8;
+        velocity *= 0.5;
+      } else if (currentIndex > totalItems - 1) {
+        currentIndex = totalItems - 1 + (currentIndex - totalItems + 1) * 0.8;
+        velocity *= 0.5;
+      }
+      
+      renderWheel(currentIndex);
+      
+      if (Math.abs(velocity) > minVelocity || currentIndex < 0 || currentIndex > totalItems - 1) {
+        animationId = requestAnimationFrame(animate);
+      } else {
+        snapToIndex();
+      }
+    }
+    
+    animate();
+  }
+  
+  function snapToIndex() {
+    const targetIndex = Math.round(Math.max(0, Math.min(totalItems - 1, currentIndex)));
+    
+    // Haptic反馈
+    if (Math.round(currentIndex) !== targetIndex || currentIndex !== targetIndex) {
+      triggerHaptic();
+    }
+    
+    const startIdx = currentIndex;
+    const duration = 300;
+    const startTime = Date.now();
+    
+    function animate() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // 弹性缓动
+      const eased = 1 - Math.pow(1 - progress, 3);
+      currentIndex = startIdx + (targetIndex - startIdx) * eased;
+      
+      renderWheel(currentIndex);
+      
+      if (progress < 1) {
+        animationId = requestAnimationFrame(animate);
+      } else {
+        currentIndex = targetIndex;
+        renderWheel(currentIndex);
+        updateSelectedClass(targetIndex);
+      }
+    }
+    
+    animate();
+  }
+  
+  function cancelAnimation() {
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+  }
+  
+  function renderWheel(index) {
+    items.forEach((item, i) => {
+      const offset = i - index;
+      const angle = offset * 20; // 每项旋转角度
+      const translateY = Math.sin(angle * Math.PI / 180) * WHEEL_RADIUS;
+      const translateZ = Math.cos(angle * Math.PI / 180) * WHEEL_RADIUS - WHEEL_RADIUS;
+      const opacity = Math.max(0.2, 1 - Math.abs(offset) * 0.25);
+      const scale = Math.max(0.7, 1 - Math.abs(offset) * 0.1);
+      
+      item.style.transform = `translateY(${80 + translateY}px) translateZ(${translateZ}px) scale(${scale})`;
+      item.style.opacity = opacity;
+      item.classList.toggle('active', Math.abs(offset) < 0.5);
+    });
+  }
+  
+  function updateSelectedClass(index) {
+    items.forEach((item, i) => {
+      item.classList.toggle('selected', i === index);
+    });
+  }
+  
+  function triggerHaptic() {
+    if (navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+    // iOS Safari Haptic (需要用户手势触发)
+    if (window.Taptic) {
+      window.Taptic.notification('success');
+    }
+  }
 }
 
 function getSelectedTime(elementId) {
@@ -2089,14 +2238,12 @@ function getSelectedTime(elementId) {
     };
   }
   
-  // 备用：从scroll位置计算
-  const itemHeight = 44;
-  const index = Math.round(wheel.scrollTop / itemHeight);
-  const children = wheel.children;
-  if (children[index]) {
+  // 备用：从active项获取
+  const active = wheel.querySelector('.ios-wheel-item.active');
+  if (active) {
     return {
-      hour: parseInt(children[index].dataset.hour),
-      min: parseInt(children[index].dataset.min)
+      hour: parseInt(active.dataset.hour),
+      min: parseInt(active.dataset.min)
     };
   }
   
