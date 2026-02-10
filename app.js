@@ -325,6 +325,9 @@ async function initApp() {
   } else {
     logger.log('📦 使用本地存储模式');
   }
+
+  // 本地/无数据时，预填引导模板
+  ensureGuidedScheduleIfEmpty();
   
   // 数据加载完成后初始化日历
   initCalendar();
@@ -380,31 +383,17 @@ async function loadFromSupabase() {
         id: s.id,
         event_title: s.event_title,
         event_icon: s.event_icon || '📌',
-        startHour: s.start_hour,
-        startMin: s.start_minute,
-        endHour: s.end_hour,
-        endMin: s.end_minute,
+        startHour: s.startHour,
+        startMin: s.startMin,
+        endHour: s.endHour,
+        endMin: s.endMin,
         color: s.color || '#F4D03F',
         status: s.status || 'pending'
       }));
       setTodaySchedule(todayEvents);
     } else {
       // 如果没有今日日程，预填引导模板
-      const guidedEvents = GUIDED_DAY_TEMPLATE.map((item, idx) => {
-        const [sh, sm] = item.start.split(':').map(n => parseInt(n, 10));
-        const [eh, em] = item.end.split(':').map(n => parseInt(n, 10));
-        return {
-          id: Date.now() + idx,
-          event_title: item.title,
-          event_icon: item.icon,
-          startHour: sh,
-          startMin: sm,
-          endHour: eh,
-          endMin: em,
-          status: 'pending',
-          color: '#F4D03F'
-        };
-      });
+      const guidedEvents = buildGuidedEvents();
       setTodaySchedule(guidedEvents);
       // 同步到 Supabase
       if (useSupabase) {
@@ -1934,6 +1923,32 @@ const GUIDED_DAY_TEMPLATE = [
   { title: '运动与拉伸', start: '17:00', end: '17:30', icon: '🏃' },
   { title: '复盘总结', start: '20:00', end: '20:20', icon: '📝' }
 ];
+
+function buildGuidedEvents() {
+  return GUIDED_DAY_TEMPLATE.map((item, idx) => {
+    const [sh, sm] = item.start.split(':').map(n => parseInt(n, 10));
+    const [eh, em] = item.end.split(':').map(n => parseInt(n, 10));
+    return {
+      id: Date.now() + idx,
+      event_title: item.title,
+      event_icon: item.icon,
+      startHour: sh,
+      startMin: sm,
+      endHour: eh,
+      endMin: em,
+      status: 'pending',
+      color: '#F4D03F'
+    };
+  });
+}
+
+function ensureGuidedScheduleIfEmpty() {
+  if (getTodaySchedule().length === 0) {
+    const guidedEvents = buildGuidedEvents();
+    setTodaySchedule(guidedEvents);
+    ScheduleStore.save();
+  }
+}
 
 function renderAvatarGrid() {
   const grid = document.getElementById('avatarGrid');
