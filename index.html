@@ -437,29 +437,6 @@
     });
     </script>
 
-    <!-- ====== Debug Overlay ====== -->
-    <div id="debugOverlay" style="position:fixed; bottom:8px; left:8px; right:8px; max-height:40vh; overflow:auto; background:rgba(0,0,0,0.75); color:#0f0; font-size:12px; font-family:monospace; padding:8px; border-radius:8px; z-index:9999; display:none;">
-      <div style="font-weight:bold; margin-bottom:6px;">Debug Log</div>
-      <div id="debugLog"></div>
-    </div>
-    <script>
-      window.__debugLog = function(...args) {
-        const overlay = document.getElementById('debugOverlay');
-        const logEl = document.getElementById('debugLog');
-        if (!overlay || !logEl) return;
-        overlay.style.display = 'block';
-        const line = document.createElement('div');
-        line.textContent = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
-        logEl.appendChild(line);
-      };
-      window.addEventListener('error', (e) => {
-        window.__debugLog('❌ JS Error:', e.message);
-      });
-      window.addEventListener('unhandledrejection', (e) => {
-        window.__debugLog('❌ Promise Rejection:', e.reason?.message || e.reason);
-      });
-    </script>
-
     <script type="module" src="app.js"></script>
 </body>
 </html>
