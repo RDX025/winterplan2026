@@ -22,7 +22,12 @@ const isValidUrl = (value) => {
 };
 
 const supabaseUrl = isValidUrl(rawSupabaseUrl) ? rawSupabaseUrl : '';
-const supabaseKey = rawSupabaseKey && rawSupabaseKey.startsWith('eyJ')
+const supabaseKey = rawSupabaseKey && (
+  rawSupabaseKey.startsWith('eyJ') ||
+  rawSupabaseKey.startsWith('sb_') ||
+  rawSupabaseKey.startsWith('sbp_') ||
+  rawSupabaseKey.startsWith('sb_publishable_')
+)
   ? rawSupabaseKey
   : '';
 
