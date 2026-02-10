@@ -41,6 +41,7 @@ import {
   addEventToSchedule,
   showEventDetail
 } from './components/CityEvents.js';
+import './components/calendar.js';
 
 // 配置：是否使用Supabase（优先环境变量，fallback到内置配置）
 let useSupabase = SupabaseClient.SUPABASE_ENABLED;
