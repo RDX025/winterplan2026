@@ -6,61 +6,117 @@
   <title>环境变量调试</title>
   <style>
     body {
-      font-family: monospace;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       padding: 20px;
       background: #1a1a1a;
-      color: #0f0;
+      color: #fff;
+      font-size: 14px;
     }
     .status {
       margin: 10px 0;
       padding: 10px;
       background: #2a2a2a;
-      border-left: 4px solid #0f0;
+      border-radius: 8px;
+      border-left: 4px solid #4CAF50;
     }
-    .error { border-color: #f00; color: #f00; }
+    .error { border-color: #f44336; background: #2a1a1a; }
+    .warn { border-color: #ff9800; background: #2a2a1a; }
+    .section { margin-bottom: 20px; }
+    .section-title { font-weight: bold; margin-bottom: 10px; color: #888; }
+    pre { background: #0a0a0a; padding: 10px; border-radius: 4px; overflow-x: auto; }
   </style>
 </head>
 <body>
-  <h1>🔧 Supabase 环境变量检查</h1>
+  <h1>🔧 环境变量调试</h1>
+  
   <div id="output"></div>
   
-  <script type="module">
+  <script>
     const output = document.getElementById('output');
     
-    function log(msg, isError = false) {
+    function log(msg, level = 'info') {
       const div = document.createElement('div');
-      div.className = 'status' + (isError ? ' error' : '');
+      div.className = 'status ' + level;
       div.textContent = msg;
       output.appendChild(div);
     }
     
-    log('=== 环境变量检查 ===');
-    log(`VITE_SUPABASE_URL: ${import.meta.env.VITE_SUPABASE_URL || '❌ 未配置'}`);
-    log(`VITE_SUPABASE_ANON_KEY: ${import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ 已配置 (长度: ' + import.meta.env.VITE_SUPABASE_ANON_KEY.length + ')' : '❌ 未配置'}`);
-    log(`MODE: ${import.meta.env.MODE}`);
-    log(`BASE_URL: ${import.meta.env.BASE_URL}`);
-    log(`DEV: ${import.meta.env.DEV}`);
-    log(`PROD: ${import.meta.env.PROD}`);
-    
-    log('\\n=== 尝试连接 Supabase ===');
-    
-    import { testConnection, SUPABASE_ENABLED } from '../supabase-client.js';
-    
-    log(`SUPABASE_ENABLED: ${SUPABASE_ENABLED ? '✅ 启用' : '❌ 禁用'}`);
-    
-    if (SUPABASE_ENABLED) {
-      testConnection().then(success => {
-        if (success) {
-          log('✅ Supabase 连接测试成功！');
-        } else {
-          log('❌ Supabase 连接测试失败', true);
-        }
-      }).catch(err => {
-        log(`❌ 连接异常: ${err.message}`, true);
-      });
-    } else {
-      log('❌ Supabase 未启用，请检查环境变量配置', true);
+    function section(title) {
+      const div = document.createElement('div');
+      div.className = 'section';
+      div.innerHTML = '<div class="section-title">' + title + '</div>';
+      output.appendChild(div);
+      return div;
     }
+    
+    // 检查环境变量
+    section('📦 Vite 环境变量');
+    
+    const url = import.meta.env?.VITE_SUPABASE_URL || 'undefined';
+    const key = import.meta.env?.VITE_SUPABASE_ANON_KEY || 'undefined';
+    
+    log('VITE_SUPABASE_URL: ' + (url ? (url.substring(0, 50) + '...') : '❌ 未配置'));
+    log('VITE_SUPABASE_ANON_KEY: ' + (key !== 'undefined' ? '✅ 已配置 (长度: ' + key.length + ')' : '❌ 未配置'));
+    log('MODE: ' + (import.meta.env?.MODE || 'unknown'));
+    log('BASE_URL: ' + (import.meta.env?.BASE_URL || 'unknown'));
+    
+    // 尝试创建 Supabase 客户端（内联，不依赖导入）
+    section('🔌 Supabase 连接测试');
+    
+    if (url && url.startsWith('http') && key && key.startsWith('eyJ')) {
+      log('✅ 环境变量有效，尝试连接...');
+      
+      // 动态加载 supabase-js
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      script.onload = async () => {
+        try {
+          const supabase = window.supabase.createClient(url, key);
+          const { data, error } = await supabase.from('students').select('id').limit(1);
+          
+          if (error) {
+            log('❌ 连接失败: ' + error.message, 'error');
+            log('可能原因: RLS策略阻止访问 或 表不存在', 'warn');
+          } else {
+            log('✅ Supabase 连接成功！', 'info');
+          }
+          
+          // 检查 schedule_items 表
+          section('📅 schedule_items 表检查');
+          const { data: scheduleData, error: scheduleError } = await supabase
+            .from('schedule_items')
+            .select('count', { count: 'exact', head: true });
+            
+          if (scheduleError) {
+            log('❌ schedule_items 表访问失败: ' + scheduleError.message, 'error');
+            log('提示: 确保 RLS 策略允许 anon key 读取数据', 'warn');
+          } else {
+            log('✅ schedule_items 表可访问', 'info');
+            log('记录数: ' + (scheduleData?.[0]?.count || 0), 'info');
+          }
+          
+        } catch (e) {
+          log('❌ 异常: ' + e.message, 'error');
+        }
+      };
+      script.onerror = () => log('❌ 无法加载 Supabase SDK', 'error');
+      document.head.appendChild(script);
+      
+    } else {
+      log('❌ 环境变量无效，无法连接 Supabase', 'error');
+      if (!url || !url.startsWith('http')) {
+        log('⚠️ VITE_SUPABASE_URL 未配置或格式错误', 'warn');
+      }
+      if (!key || !key.startsWith('eyJ')) {
+        log('⚠️ VITE_SUPABASE_ANON_KEY 未配置或格式错误', 'warn');
+      }
+    }
+    
+    // 检查 window 对象
+    section('🪟 Window 对象检查');
+    log('window.supabase: ' + (window.supabase ? '✅ 存在' : '❌ 不存在'));
+    log('window.scheduleStore: ' + (window.scheduleStore ? '✅ 存在' : '❌ 不存在'));
+    log('window.Calendar: ' + (window.Calendar ? '✅ 存在' : '❌ 不存在'));
   </script>
 </body>
 </html>
