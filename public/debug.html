@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>环境变量调试</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #0f0;
+    }
+    .status {
+      margin: 10px 0;
+      padding: 10px;
+      background: #2a2a2a;
+      border-left: 4px solid #0f0;
+    }
+    .error { border-color: #f00; color: #f00; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Supabase 环境变量检查</h1>
+  <div id="output"></div>
+  
+  <script type="module">
+    const output = document.getElementById('output');
+    
+    function log(msg, isError = false) {
+      const div = document.createElement('div');
+      div.className = 'status' + (isError ? ' error' : '');
+      div.textContent = msg;
+      output.appendChild(div);
+    }
+    
+    log('=== 环境变量检查 ===');
+    log(`VITE_SUPABASE_URL: ${import.meta.env.VITE_SUPABASE_URL || '❌ 未配置'}`);
+    log(`VITE_SUPABASE_ANON_KEY: ${import.meta.env.VITE_SUPABASE_ANON_KEY ? '✅ 已配置 (长度: ' + import.meta.env.VITE_SUPABASE_ANON_KEY.length + ')' : '❌ 未配置'}`);
+    log(`MODE: ${import.meta.env.MODE}`);
+    log(`BASE_URL: ${import.meta.env.BASE_URL}`);
+    log(`DEV: ${import.meta.env.DEV}`);
+    log(`PROD: ${import.meta.env.PROD}`);
+    
+    log('\\n=== 尝试连接 Supabase ===');
+    
+    import { testConnection, SUPABASE_ENABLED } from '../supabase-client.js';
+    
+    log(`SUPABASE_ENABLED: ${SUPABASE_ENABLED ? '✅ 启用' : '❌ 禁用'}`);
+    
+    if (SUPABASE_ENABLED) {
+      testConnection().then(success => {
+        if (success) {
+          log('✅ Supabase 连接测试成功！');
+        } else {
+          log('❌ Supabase 连接测试失败', true);
+        }
+      }).catch(err => {
+        log(`❌ 连接异常: ${err.message}`, true);
+      });
+    } else {
+      log('❌ Supabase 未启用，请检查环境变量配置', true);
+    }
+  </script>
+</body>
+</html>
