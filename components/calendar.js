@@ -26,6 +26,13 @@ const Calendar = {
   
   init() {
     this.render();
+
+    // 订阅 ScheduleStore 变更，实时刷新周/月视图
+    if (window.scheduleStore && typeof window.scheduleStore.subscribe === 'function') {
+      window.scheduleStore.subscribe(() => {
+        this.refresh();
+      });
+    }
   },
   
   // 切换视图
@@ -307,8 +314,8 @@ const Calendar = {
       }
     }
     
-    // 返回模拟数据用于演示
-    return this.getMockDayData(dateKey);
+    // 无数据时返回空数组（不使用模拟数据）
+    return [];
   },
   
   // 模拟日数据
