@@ -1369,7 +1369,8 @@ h1, h2, h3 {
     will-change: transform, opacity;
 }
 
-.ios-wheel-item.active {
+.ios-wheel-item.active,
+.ios-wheel-item.selected {
     color: #fff;
     font-size: 1.4rem;
     font-weight: 600;

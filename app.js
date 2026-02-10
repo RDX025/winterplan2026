@@ -1148,7 +1148,9 @@ function initIOSWheel(elementId, defaultIndex) {
       item.style.transform = `translateY(${50 + translateY}px) translateZ(${translateZ}px) scale(${scale})`;
       item.style.opacity = opacity;
       item.style.pointerEvents = absOffset < 1 ? 'auto' : 'none';
-      item.classList.toggle('active', absOffset < 0.5);
+      const isActive = absOffset < 0.5;
+      item.classList.toggle('active', isActive);
+      item.classList.toggle('selected', isActive);
     });
   }
   
