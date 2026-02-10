@@ -8,6 +8,12 @@ import { logger } from './utils/logger.js';
 const rawSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const rawSupabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+// 本地日期（避免 UTC 导致跨日）
+const getLocalDateKey = (d = new Date()) => {
+  const offsetMs = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offsetMs).toISOString().split('T')[0];
+};
+
 logger.log('🔧 Supabase配置检查:');
 logger.log('  URL:', rawSupabaseUrl ? '✅ 已配置' : '❌ 未配置');
 logger.log('  Key:', rawSupabaseKey ? '✅ 已配置' : '❌ 未配置');
@@ -138,7 +144,7 @@ export async function deleteUserPhoto(photoId, studentId = DEFAULT_STUDENT_ID) {
 // ========== 每日进度 ==========
 
 export async function getTodayProgress(studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   
   const { data, error } = await supabase
     .from('daily_progress')
@@ -157,7 +163,7 @@ export async function getTodayProgress(studentId = DEFAULT_STUDENT_ID) {
 }
 
 async function createTodayProgress(studentId) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   
   const { data, error } = await supabase
     .from('daily_progress')
@@ -176,7 +182,7 @@ async function createTodayProgress(studentId) {
 }
 
 export async function updateProgress(type, value, studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   const field = `${type}_progress`; // 'math_progress', 'english_progress', 'habits_progress'
   
   const { data, error } = await supabase
@@ -194,7 +200,7 @@ export async function updateProgress(type, value, studentId = DEFAULT_STUDENT_ID
 // ========== 习惯打卡 ==========
 
 export async function getTodayHabits(studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   
   const { data, error } = await supabase
     .from('habit_checks')
@@ -207,7 +213,7 @@ export async function getTodayHabits(studentId = DEFAULT_STUDENT_ID) {
 }
 
 export async function toggleHabit(habitType, studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   
   // 先检查是否存在
   const { data: existing } = await supabase
@@ -327,7 +333,7 @@ export async function updateInterest(interestType, increment, studentId = DEFAUL
 // ========== 每日选择 ==========
 
 export async function getTodayChoice(studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   const { data, error } = await supabase
     .from('daily_choices')
     .select('*')
@@ -341,7 +347,7 @@ export async function getTodayChoice(studentId = DEFAULT_STUDENT_ID) {
 }
 
 export async function recordChoice(choiceType, choiceTitle, studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
 
   await supabase
     .from('daily_choices')
@@ -367,7 +373,7 @@ export async function recordChoice(choiceType, choiceTitle, studentId = DEFAULT_
 // ========== 课程时间线 ==========
 
 export async function getTodayTimeline(studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   
   const { data, error } = await supabase
     .from('course_timeline')
@@ -381,7 +387,7 @@ export async function getTodayTimeline(studentId = DEFAULT_STUDENT_ID) {
 }
 
 export async function createTodayTimeline(studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   const base = [
     { time: '08:00', event_title: '英语课', event_subtitle: '2小时', event_icon: '📖', duration_hours: 2 },
     { time: '10:00', event_title: '自由探索时间', event_subtitle: '选择你的冒险', event_icon: '🎯', duration_hours: 1 },
@@ -554,7 +560,7 @@ export async function getTodaySchedule(studentId = DEFAULT_STUDENT_ID) {
   localStorage.setItem('jkxx_schedule', JSON.stringify(byDate));
   
   // 返回分组数据
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   return {
     today: byDate[today] || [],
     byDate: byDate
@@ -562,7 +568,7 @@ export async function getTodaySchedule(studentId = DEFAULT_STUDENT_ID) {
 }
 
 export async function saveScheduleItem(item, studentId = DEFAULT_STUDENT_ID) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateKey();
   
   const payload = {
     student_id: studentId,
