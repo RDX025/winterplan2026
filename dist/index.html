@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script type="module" crossorigin src="/winterplan2026/assets/index-BdkRxztl.js"></script>
+  <script type="module" crossorigin src="/winterplan2026/assets/index-CvyIru0h.js"></script>
   <link rel="stylesheet" crossorigin href="/winterplan2026/assets/index-CMqSgzak.css">
 </head>
 <body>
@@ -392,6 +392,50 @@
             </div>
         </div>
     </div>
+
+    <!-- ====== 调试面板 ====== -->
+    <div id="debugPanel" style="position: fixed; bottom: 80px; right: 10px; background: rgba(0,0,0,0.9); color: #0f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; z-index: 9999; max-width: 300px; display: none;">
+        <div style="font-weight: bold; margin-bottom: 10px;">🔧 调试信息</div>
+        <div id="debugSupabase">检查中...</div>
+        <div id="debugSchedule">检查中...</div>
+        <div id="debugToday">检查中...</div>
+        <button onclick="window.debugRefresh()" style="margin-top: 10px; padding: 5px 10px; background: #2ecc71; border: none; border-radius: 4px; cursor: pointer;">刷新</button>
+    </div>
+    <script>
+    // 调试面板逻辑（等待 app.js 加载完成后更新）
+    window.debugRefresh = function() {
+      const panel = document.getElementById('debugPanel');
+      if (!panel) return;
+
+      // Supabase 状态
+      const supEl = document.getElementById('debugSupabase');
+      if (typeof SUPABASE_ENABLED !== 'undefined') {
+        supEl.textContent = `Supabase: ${SUPABASE_ENABLED ? '✅ 启用' : '❌ 禁用'}`;
+      } else {
+        supEl.textContent = 'Supabase: 模块未加载';
+      }
+
+      // ScheduleStore 状态
+      const scheduleEl = document.getElementById('debugSchedule');
+      const todayEl = document.getElementById('debugToday');
+      if (window.scheduleStore && window.scheduleStore._data) {
+        const today = window.scheduleStore.getToday ? window.scheduleStore.getToday() : [];
+        scheduleEl.textContent = `ScheduleStore: ✅ 正常`;
+        todayEl.textContent = `今日日程: ${today.length} 条`;
+        console.log('=== 调试数据 ===');
+        console.log('ScheduleStore._data:', window.scheduleStore._data);
+        console.log('今日日程:', today);
+      } else {
+        scheduleEl.textContent = 'ScheduleStore: ❌ 未初始化';
+        todayEl.textContent = '今日日程: 无法获取';
+      }
+    };
+
+    // 延迟更新调试面板
+    window.addEventListener('load', () => {
+      setTimeout(window.debugRefresh, 2000);
+    });
+    </script>
 
 </body>
 </html>

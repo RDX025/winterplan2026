@@ -3,120 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>环境变量调试</title>
+  <title>调试说明 - 剑客游学</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       padding: 20px;
-      background: #1a1a1a;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: #fff;
-      font-size: 14px;
+      min-height: 100vh;
     }
-    .status {
-      margin: 10px 0;
-      padding: 10px;
-      background: #2a2a2a;
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #4CAF50;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      margin-top: 0;
+      color: #ff9800;
+    }
+    code {
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .success { color: #4CAF50; }
+    .error { color: #f44336; }
+    button {
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
       border-radius: 8px;
-      border-left: 4px solid #4CAF50;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 5px;
     }
-    .error { border-color: #f44336; background: #2a1a1a; }
-    .warn { border-color: #ff9800; background: #2a2a1a; }
-    .section { margin-bottom: 20px; }
-    .section-title { font-weight: bold; margin-bottom: 10px; color: #888; }
-    pre { background: #0a0a0a; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    button:hover { background: #45a049; }
+    .log-panel {
+      background: #0a0a0a;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
-  <h1>🔧 环境变量调试</h1>
-  
-  <div id="output"></div>
-  
-  <script>
-    const output = document.getElementById('output');
+  <div class="container">
+    <h1>⚔️ 剑客游学 - 调试工具</h1>
     
-    function log(msg, level = 'info') {
-      const div = document.createElement('div');
-      div.className = 'status ' + level;
-      div.textContent = msg;
-      output.appendChild(div);
-    }
-    
-    function section(title) {
-      const div = document.createElement('div');
-      div.className = 'section';
-      div.innerHTML = '<div class="section-title">' + title + '</div>';
-      output.appendChild(div);
-      return div;
-    }
-    
-    // 检查环境变量
-    section('📦 Vite 环境变量');
-    
-    const url = import.meta.env?.VITE_SUPABASE_URL || 'undefined';
-    const key = import.meta.env?.VITE_SUPABASE_ANON_KEY || 'undefined';
-    
-    log('VITE_SUPABASE_URL: ' + (url ? (url.substring(0, 50) + '...') : '❌ 未配置'));
-    log('VITE_SUPABASE_ANON_KEY: ' + (key !== 'undefined' ? '✅ 已配置 (长度: ' + key.length + ')' : '❌ 未配置'));
-    log('MODE: ' + (import.meta.env?.MODE || 'unknown'));
-    log('BASE_URL: ' + (import.meta.env?.BASE_URL || 'unknown'));
-    
-    // 尝试创建 Supabase 客户端（内联，不依赖导入）
-    section('🔌 Supabase 连接测试');
-    
-    if (url && url.startsWith('http') && key && key.startsWith('eyJ')) {
-      log('✅ 环境变量有效，尝试连接...');
+    <div class="card">
+      <h2>📋 测试步骤</h2>
+      <p>请按顺序执行以下步骤来诊断问题：</p>
       
-      // 动态加载 supabase-js
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-      script.onload = async () => {
-        try {
-          const supabase = window.supabase.createClient(url, key);
-          const { data, error } = await supabase.from('students').select('id').limit(1);
-          
-          if (error) {
-            log('❌ 连接失败: ' + error.message, 'error');
-            log('可能原因: RLS策略阻止访问 或 表不存在', 'warn');
+      <ol>
+        <li><strong>打开主页面</strong> → <a href="/" style="color:#4CAF50">https://rdx025.github.io/winterplan2026/</a></li>
+        <li><strong>按 F12</strong> 打开开发者工具</li>
+        <li><strong>点击 Console(控制台) 标签</strong></li>
+        <li><strong>截图给我看</strong> 所有的日志输出</li>
+      </ol>
+    </div>
+    
+    <div class="card">
+      <h2>🧪 快速测试</h2>
+      <p>在控制台中运行以下代码：</p>
+      <code>supabase.from('schedule_items').select('*').limit(1)</code>
+      <p><small>如果返回数据 = Supabase 连接正常</small></p>
+      <p><small>如果返回错误 = 需要检查 RLS 策略</small></p>
+    </div>
+    
+    <div class="card">
+      <h2>📦 检查环境变量</h2>
+      <p>在控制台运行：</p>
+      <code>import.meta.env</code>
+      <p>应该看到 <code>VITE_SUPABASE_URL</code> 和 <code>VITE_SUPABASE_ANON_KEY</code></p>
+    </div>
+    
+    <div class="card">
+      <h2>🔧 常见问题</h2>
+      <p class="error">❌ Supabase 连接失败</p>
+      <ul>
+        <li>检查 GitHub Secrets 中的 anon key 是否正确</li>
+        <li>检查 Supabase 的 RLS 策略是否允许 anon 读取</li>
+      </ul>
+      
+      <p class="success">✅ 调试面板（右下角）应该显示：</p>
+      <ul>
+        <li>Supabase: 启用/禁用</li>
+        <li>ScheduleStore: 正常/空数据</li>
+        <li>今日日程: X 条</li>
+      </ul>
+    </div>
+    
+    <div class="card">
+      <h2>📊 Supabase 状态</h2>
+      <p>项目 URL: <code id="supabaseUrl">加载中...</code></p>
+      <p id="supabaseStatus">检查中...</p>
+    </div>
+  </div>
+  
+  <script type="module">
+    // 尝试动态获取环境变量
+    async function checkSupabase() {
+      const urlEl = document.getElementById('supabaseUrl');
+      const statusEl = document.getElementById('supabaseStatus');
+      
+      try {
+        // 从构建的 JS 文件中提取 URL
+        const response = await fetch('./assets/index-*.js'.replace('*', 'D6JL5qu-'));
+        if (response.ok) {
+          const text = await response.text();
+          const urlMatch = text.match(/https:\/\/[a-z0-9]+\.supabase\.co/);
+          if (urlMatch) {
+            urlEl.textContent = urlMatch[0];
+            statusEl.innerHTML = '✅ <strong>URL 已注入到前端</strong><br>如果仍无法连接，请检查 API Key 和 RLS 策略';
           } else {
-            log('✅ Supabase 连接成功！', 'info');
+            urlEl.textContent = '未找到';
+            statusEl.innerHTML = '❌ <strong>环境变量未注入</strong>';
           }
-          
-          // 检查 schedule_items 表
-          section('📅 schedule_items 表检查');
-          const { data: scheduleData, error: scheduleError } = await supabase
-            .from('schedule_items')
-            .select('count', { count: 'exact', head: true });
-            
-          if (scheduleError) {
-            log('❌ schedule_items 表访问失败: ' + scheduleError.message, 'error');
-            log('提示: 确保 RLS 策略允许 anon key 读取数据', 'warn');
-          } else {
-            log('✅ schedule_items 表可访问', 'info');
-            log('记录数: ' + (scheduleData?.[0]?.count || 0), 'info');
-          }
-          
-        } catch (e) {
-          log('❌ 异常: ' + e.message, 'error');
         }
-      };
-      script.onerror = () => log('❌ 无法加载 Supabase SDK', 'error');
-      document.head.appendChild(script);
-      
-    } else {
-      log('❌ 环境变量无效，无法连接 Supabase', 'error');
-      if (!url || !url.startsWith('http')) {
-        log('⚠️ VITE_SUPABASE_URL 未配置或格式错误', 'warn');
-      }
-      if (!key || !key.startsWith('eyJ')) {
-        log('⚠️ VITE_SUPABASE_ANON_KEY 未配置或格式错误', 'warn');
+      } catch (e) {
+        urlEl.textContent = '获取失败';
+        statusEl.innerHTML = '❌ ' + e.message;
       }
     }
     
-    // 检查 window 对象
-    section('🪟 Window 对象检查');
-    log('window.supabase: ' + (window.supabase ? '✅ 存在' : '❌ 不存在'));
-    log('window.scheduleStore: ' + (window.scheduleStore ? '✅ 存在' : '❌ 不存在'));
-    log('window.Calendar: ' + (window.Calendar ? '✅ 存在' : '❌ 不存在'));
+    checkSupabase();
   </script>
 </body>
 </html>
