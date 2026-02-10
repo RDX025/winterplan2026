@@ -56,7 +56,7 @@ export function renderCalendarTimeline() {
         <div class="calendar-event ${item.status}" 
              data-id="${item.id}"
              style="height: 100%; background: ${item.color}20; border-left: 4px solid ${item.color};">
-          <div class="event-content" onclick="openEditEventModal(${item.id})">
+          <div class="event-content" onclick="openEditEventModal('${item.id}')">
             <span class="event-icon">${item.event_icon}</span>
             <div class="event-text">
               <span class="event-title">${item.event_title}</span>

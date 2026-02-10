@@ -105,7 +105,11 @@ const MOCKUP_PROGRESS = {
 
 // 今日日程（通过 ScheduleStore 统一管理）
 const getTodaySchedule = () => ScheduleStore.getToday();
-const getTodayKey = () => new Date().toISOString().split('T')[0];
+const getTodayKey = () => {
+  const d = new Date();
+  const offsetMs = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offsetMs).toISOString().split('T')[0];
+};
 const setTodaySchedule = (events) => ScheduleStore.setByDate(getTodayKey(), events);
 const addTodayEvent = (event) => ScheduleStore.addEvent(getTodayKey(), event);
 const updateTodayEvent = (eventId, updates) => ScheduleStore.updateEvent(getTodayKey(), eventId, updates);
