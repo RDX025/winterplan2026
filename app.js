@@ -58,6 +58,7 @@ window.saveHabitEdit = saveHabitEdit;
 window.selectCity = selectCity;
 window.addEventToSchedule = addEventToSchedule;
 window.showEventDetail = showEventDetail;
+window.scheduleStore = ScheduleStore; // 暴露给 calendar.js 使用
 
 
 const CHOICE_TITLE_MAP = {
