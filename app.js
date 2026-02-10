@@ -318,7 +318,12 @@ async function initApp() {
     const connected = await SupabaseClient.testConnection();
     if (connected) {
       logger.log('✅ Supabase连接成功，开始同步数据...');
-      await loadFromSupabase();
+      try {
+        await loadFromSupabase();
+      } catch (err) {
+        logger.warn('⚠️ Supabase同步失败，降级到本地存储模式:', err?.message || err);
+        useSupabase = false;
+      }
     } else {
       logger.warn('⚠️ Supabase连接失败，降级到本地存储模式');
       useSupabase = false;
