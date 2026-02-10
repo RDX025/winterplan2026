@@ -13,7 +13,11 @@ const ScheduleStore = {
       const today = this._getTodayKey();
       normalized[today] = data;
     } else if (data && typeof data === 'object') {
-      normalized = { ...data };
+      // 规范化所有日期 key 到 yyyy-mm-dd
+      Object.entries(data).forEach(([key, val]) => {
+        const nk = this._normalizeKey(key);
+        normalized[nk] = Array.isArray(val) ? val : [];
+      });
     }
 
     this._data = normalized;
@@ -22,7 +26,8 @@ const ScheduleStore = {
 
   // 获取指定日期的日程
   getByDate(dateKey) {
-    return this._data[dateKey] || [];
+    const nk = this._normalizeKey(dateKey);
+    return this._data[nk] || [];
   },
 
   // 获取今日日程
@@ -32,7 +37,8 @@ const ScheduleStore = {
 
   // 设置指定日期日程
   setByDate(dateKey, events) {
-    this._data[dateKey] = Array.isArray(events) ? events : [];
+    const nk = this._normalizeKey(dateKey);
+    this._data[nk] = Array.isArray(events) ? events : [];
     this._notify();
     this.save();
   },
@@ -101,12 +107,34 @@ const ScheduleStore = {
   },
 
   _ensureDate(dateKey) {
-    if (!this._data[dateKey]) this._data[dateKey] = [];
-    return this._data[dateKey];
+    const nk = this._normalizeKey(dateKey);
+    if (!this._data[nk]) this._data[nk] = [];
+    return this._data[nk];
+  },
+
+  _normalizeKey(key) {
+    // 支持 yyyy-m-d / yyyy-mm-dd / Date
+    if (key instanceof Date) return this._formatKey(key);
+    if (typeof key !== 'string') return this._formatKey(new Date());
+    const parts = key.split('-').map(p => p.trim());
+    if (parts.length === 3) {
+      const [y, m, d] = parts;
+      const mm = m.padStart(2, '0');
+      const dd = d.padStart(2, '0');
+      return `${y}-${mm}-${dd}`;
+    }
+    return this._formatKey(new Date(key));
+  },
+
+  _formatKey(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   },
 
   _getTodayKey() {
-    return new Date().toISOString().split('T')[0];
+    return this._formatKey(new Date());
   }
 };
 

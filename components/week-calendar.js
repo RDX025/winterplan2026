@@ -42,7 +42,8 @@ const WeekCalendar = {
       date.setDate(date.getDate() + i);
       
       const isToday = date.getDate() === today.getDate() && 
-                      date.getMonth() === today.getMonth();
+                      date.getMonth() === today.getMonth() &&
+                      date.getFullYear() === today.getFullYear();
       const isFuture = date > today;
       const weekDayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
       
@@ -84,10 +85,10 @@ const WeekCalendar = {
   },
   
   getDayEvents(date) {
-    if (!window.todaySchedule) return [];
-    
-    // 简化：显示所有事件（实际应该根据日期筛选）
-    return window.todaySchedule.map(e => ({
+    if (!window.scheduleStore) return [];
+    const key = this.formatDate(date);
+    const list = window.scheduleStore.getByDate(key) || [];
+    return list.map(e => ({
       title: e.event_title,
       color: e.color || '#F4D03F'
     }));
@@ -103,6 +104,13 @@ const WeekCalendar = {
     this.render();
   },
   
+  formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  },
+
   selectDay(year, month, date) {
     logger.log('选择日期:', year, month, date);
     // 跳转到指定日期的时间轴

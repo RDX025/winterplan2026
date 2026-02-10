@@ -24,7 +24,7 @@ const MonthCalendar = {
     const startDayOfWeek = firstDay.getDay(); // 0=周日
     
     const today = new Date();
-    const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+    const todayKey = this.formatDate(today);
     
     // 月份标题
     const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
@@ -50,14 +50,15 @@ const MonthCalendar = {
     const prevMonthDays = prevMonth.getDate();
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
       const day = prevMonthDays - i;
-      html += `<div class="month-day other-month" data-date="${year}-${month}-${day}">${day}</div>`;
+      html += `<div class="month-day other-month" data-date="${this.formatDate(new Date(year, month - 1, day))}">${day}</div>`;
     }
     
     // 当月日期
     for (let day = 1; day <= lastDay.getDate(); day++) {
-      const dateKey = `${year}-${month}-${day}`;
+      const dateObj = new Date(year, month, day);
+      const dateKey = this.formatDate(dateObj);
       const isToday = dateKey === todayKey;
-      const isFuture = new Date(year, month, day) > today;
+      const isFuture = dateObj > today;
       const dayEvents = this.getEventsForDate(dateKey);
       
       let dayClass = 'month-day';
@@ -77,7 +78,7 @@ const MonthCalendar = {
     const totalCells = startDayOfWeek + lastDay.getDate();
     const nextMonthDays = 42 - totalCells;
     for (let day = 1; day <= nextMonthDays; day++) {
-      html += `<div class="month-day other-month" data-date="${year}-${month + 1}-${day}">${day}</div>`;
+      html += `<div class="month-day other-month" data-date="${this.formatDate(new Date(year, month + 1, day))}">${day}</div>`;
     }
     
     html += `
@@ -91,14 +92,8 @@ const MonthCalendar = {
   },
   
   getEventsForDate(dateKey) {
-    // 从 todaySchedule 获取指定日期的事件
-    // 格式: dateKey = "2026-2-9"
-    if (!window.todaySchedule) return [];
-    
-    return window.todaySchedule.filter(item => {
-      // 这里需要根据实际数据结构调整
-      return true;
-    });
+    if (!window.scheduleStore) return [];
+    return window.scheduleStore.getByDate(dateKey) || [];
   },
   
   renderMonthStats() {
@@ -112,11 +107,13 @@ const MonthCalendar = {
   },
   
   getStudyDays() {
-    return window.todaySchedule?.length || 0;
+    const todayKey = this.formatDate(new Date());
+    return window.scheduleStore?.getByDate(todayKey)?.length || 0;
   },
   
   getCompletedDays() {
-    return window.todaySchedule?.filter(e => e.status === 'completed').length || 0;
+    const todayKey = this.formatDate(new Date());
+    return window.scheduleStore?.getByDate(todayKey)?.filter(e => e.status === 'completed').length || 0;
   },
   
   prevMonth() {
@@ -135,6 +132,13 @@ const MonthCalendar = {
       1
     );
     this.render();
+  },
+
+  formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   },
   
   selectDate(dateKey) {

@@ -229,8 +229,8 @@ const Calendar = {
     
     // 当月日期
     for (let day = 1; day <= lastDay.getDate(); day++) {
-      const dateKey = `${year}-${month + 1}-${day}`;
       const date = new Date(year, month, day);
+      const dateKey = this.formatDate(date);
       const isToday = this.isSameDay(date, this.today);
       const isFuture = date > this.today;
       const dayEvents = this.getRealEventsForDate(dateKey);
@@ -392,7 +392,7 @@ const Calendar = {
     let total = 0;
     
     for (let day = 1; day <= lastDay; day++) {
-      const dateKey = `${year}-${month + 1}-${day}`;
+      const dateKey = this.formatDate(new Date(year, month, day));
       const events = this.getRealEventsForDate(dateKey);
       if (events.length > 0) activeDays++;
       total += events.length;
@@ -424,7 +424,10 @@ const Calendar = {
   },
   
   formatDate(date) {
-    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   },
   
   // 导航操作
