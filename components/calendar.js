@@ -117,6 +117,7 @@ const Calendar = {
     this._debug('weekView.events', { totalEvents });
     const stats = this.calculateWeekStats(days);
     const weekDayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const weekDebug = days.map(d => `${d.dateKey}:${d.events.length}`).join(' | ');
     
     // 考试倒计时
     const upcomingExam = this.getUpcomingExam();
@@ -134,6 +135,9 @@ const Calendar = {
           <button class="week-nav-btn" onclick="Calendar.prevWeek()">‹</button>
           <span class="week-title">${title}</span>
           <button class="week-nav-btn" onclick="Calendar.nextWeek()">›</button>
+        </div>
+        <div class="week-debug" style="font-size:12px;color:#7CFF7C;margin:4px 0 8px;word-break:break-all;">
+          debug: ${weekDebug}
         </div>
         <div class="week-grid">
     `;
@@ -222,6 +226,9 @@ const Calendar = {
     const title = `${year}年 ${monthNames[month]}`;
     
     const stats = this.calculateMonthStats(year, month);
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
+    const monthKeys = window.scheduleStore ? Object.keys(window.scheduleStore._data || {}).filter(k => k.startsWith(monthPrefix)) : [];
+    const monthDebugKeys = monthKeys.map(k => `${k}:${(window.scheduleStore._data[k]||[]).length}`).join(' | ');
     
     let html = `
       <div class="month-calendar">
@@ -233,6 +240,9 @@ const Calendar = {
         <div class="weekday-header">
           <span>日</span><span>一</span><span>二</span><span>三</span>
           <span>四</span><span>五</span><span>六</span>
+        </div>
+        <div class="month-debug" style="font-size:12px;color:#7CFF7C;margin:4px 0 8px;word-break:break-all;">
+          debug: ${monthDebugKeys || 'no keys'}
         </div>
         <div class="month-days">
     `;
