@@ -25,11 +25,14 @@ const Calendar = {
   },
   
   init() {
+    this._ensureDebugPanel();
+    this._debug('Calendar.init');
     this.render();
 
     // 订阅 ScheduleStore 变更，实时刷新周/月视图
     if (window.scheduleStore && typeof window.scheduleStore.subscribe === 'function') {
       window.scheduleStore.subscribe(() => {
+        this._debug('ScheduleStore.update', { keys: Object.keys(window.scheduleStore._data || {}).length });
         this.refresh();
       });
     }
@@ -75,6 +78,7 @@ const Calendar = {
   renderWeekView() {
     const container = document.getElementById('weekCalendarContainer');
     if (!container) return;
+    this._debug('renderWeekView', { date: this.formatDate(this.currentDate) });
     
     const weekStart = this.getWeekStart(this.currentDate);
     const weekEnd = new Date(weekStart);
@@ -197,6 +201,7 @@ const Calendar = {
   renderMonthView() {
     const container = document.getElementById('monthCalendarContainer');
     if (!container) return;
+    this._debug('renderMonthView', { date: this.formatDate(this.currentDate) });
     
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
@@ -463,7 +468,27 @@ const Calendar = {
   },
   
   refresh() {
+    this._debug('Calendar.refresh', { view: this.currentView });
     this.render();
+  },
+
+  _ensureDebugPanel() {
+    const section = document.getElementById('calendarSection');
+    if (!section) return;
+    if (section.querySelector('#calendarDebug')) return;
+    const el = document.createElement('div');
+    el.id = 'calendarDebug';
+    el.style.cssText = 'margin-top:8px;padding:6px 8px;background:rgba(0,0,0,0.35);color:#7CFF7C;font-size:12px;border-radius:6px;font-family:monospace;';
+    el.textContent = 'calendar debug ready';
+    section.appendChild(el);
+  },
+
+  _debug(message, data) {
+    const el = document.getElementById('calendarDebug');
+    if (!el) return;
+    const ts = new Date().toLocaleTimeString();
+    const payload = data ? ' ' + JSON.stringify(data) : '';
+    el.textContent = `[${ts}] ${message}${payload}`;
   }
 };
 
