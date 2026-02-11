@@ -8,21 +8,7 @@ const Calendar = {
   currentDate: new Date(),
   today: new Date(),
   
-  // 模拟数据 - 初中生创新功能备用
-  mockData: {
-    exams: [
-      { name: '月考', date: '2026-02-20', daysLeft: 11 },
-      { name: '开学考', date: '2026-03-03', daysLeft: 22 }
-    ],
-    homework: [
-      { subject: '数学', title: 'P28-30练习', dueDate: '2026-02-12', color: '#F4D03F' },
-      { subject: '英语', title: 'Unit 3背书', dueDate: '2026-02-13', color: '#3498db' }
-    ],
-    achievements: [
-      { name: '连续7天完成', icon: '🏆', date: '2026-02-15' },
-      { name: '数学之星', icon: '⭐', date: '2026-02-10' }
-    ]
-  },
+  // mockData removed
   
   init() {
     this._ensureDebugPanel();
@@ -109,8 +95,8 @@ const Calendar = {
         isFuture: date > this.today,
         events,
         stats,
-        homework: this.getHomeworkForDate(dateKey),
-        achievement: this.getAchievementForDate(dateKey)
+        homework: null,
+        achievement: null
       });
     }
 
@@ -119,18 +105,8 @@ const Calendar = {
     const weekDayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     const weekDebug = days.map(d => `${d.dateKey}:${d.events.length}`).join(' | ');
     
-    // 考试倒计时
-    const upcomingExam = this.getUpcomingExam();
-    
     let html = `
       <div class="week-calendar">
-        ${upcomingExam ? `
-          <div class="exam-countdown">
-            <span class="exam-icon">🎯</span>
-            <span class="exam-name">${upcomingExam.name}</span>
-            <span class="exam-days">${upcomingExam.daysLeft}天后</span>
-          </div>
-        ` : ''}
         <div class="week-header">
           <button class="week-nav-btn" onclick="Calendar.prevWeek()">‹</button>
           <span class="week-title">${title}</span>
@@ -264,8 +240,8 @@ const Calendar = {
       const isToday = this.isSameDay(date, this.today);
       const isFuture = date > this.today;
       const dayEvents = this.getRealEventsForDate(dateKey);
-      monthEvents += dayEvents.length;      monthEvents += dayEvents.length;      const homework = this.getHomeworkForDate(dateKey);
-      const exam = this.getExamForDate(dateKey);
+      monthEvents += dayEvents.length;      monthEvents += dayEvents.length;      const homework = null;
+      const exam = null;
       
       let dayClass = 'month-day';
       if (isToday) dayClass += ' today';
@@ -382,22 +358,22 @@ const Calendar = {
   
   // 获取作业
   getHomeworkForDate(dateKey) {
-    return this.mockData.homework.find(h => h.dueDate === dateKey);
+    return null;
   },
   
   // 获取考试
   getExamForDate(dateKey) {
-    return this.mockData.exams.find(e => e.date === dateKey);
+    return null;
   },
   
   // 获取成就
   getAchievementForDate(dateKey) {
-    return this.mockData.achievements.find(a => a.date === dateKey);
+    return null;
   },
   
   // 获取即将到来的考试
   getUpcomingExam() {
-    return this.mockData.exams[0];
+    return null;
   },
   
   // 计算周统计
@@ -432,10 +408,7 @@ const Calendar = {
       completed += events.filter(e => e.status === 'completed').length;
     }
     
-    const examCount = this.mockData.exams.filter(e => {
-      const [, m] = e.date.split('-').map(Number);
-      return m === month + 1;
-    }).length;
+    const examCount = 0;
     
     const completedRate = total > 0 ? Math.round(completed / total * 100) : 0;
     
