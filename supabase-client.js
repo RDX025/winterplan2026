@@ -151,11 +151,16 @@ export async function getTodayProgress(studentId = DEFAULT_STUDENT_ID) {
     .select('*')
     .eq('student_id', studentId)
     .eq('date', today)
-    .single();
+    .limit(1);
   
-  if (error && error.code === 'PGRST116') {
+  if (!error && Array.isArray(data) && data.length === 0) {
     // 记录不存在，创建新记录
     return await createTodayProgress(studentId);
+  }
+  
+  if (error && error.status === 404) {
+    // 表不存在或无权限，降级
+    return null;
   }
   
   if (error) throw error;
@@ -339,11 +344,12 @@ export async function getTodayChoice(studentId = DEFAULT_STUDENT_ID) {
     .select('*')
     .eq('student_id', studentId)
     .eq('date', today)
-    .single();
+    .limit(1);
 
-  if (error && error.code === 'PGRST116') return null;
+  if (!error && Array.isArray(data) && data.length === 0) return null;
+  if (error && error.status === 404) return null;
   if (error) throw error;
-  return data;
+  return data[0] || null;
 }
 
 export async function recordChoice(choiceType, choiceTitle, studentId = DEFAULT_STUDENT_ID) {
