@@ -112,8 +112,8 @@ const getTodayKey = () => {
 };
 const setTodaySchedule = (events) => ScheduleStore.setByDate(getTodayKey(), events);
 const addTodayEvent = (event) => ScheduleStore.addEvent(getTodayKey(), event);
-const updateTodayEvent = (eventId, updates) => ScheduleStore.updateEvent(getTodayKey(), eventId, updates);
-const removeTodayEvent = (eventId) => ScheduleStore.removeEvent(getTodayKey(), eventId);
+const updateTodayEvent = (eventId, updates, dateKey) => ScheduleStore.updateEvent(dateKey || getTodayKey(), eventId, updates);
+const removeTodayEvent = (eventId, dateKey) => ScheduleStore.removeEvent(dateKey || getTodayKey(), eventId);
 
 // 拖拽状态已迁移到 components/Timeline.js
 
@@ -1218,6 +1218,7 @@ window.submitNewEvent = async function() {
   
   const newEvent = {
     id: Date.now(),
+    date: getTodayKey(),
     startHour: startHour,
     startMin: 0,
     endHour: endHour,
@@ -1405,7 +1406,7 @@ window.submitEditEvent = async function(id) {
     color: color
   };
 
-  const updatedItem = updateTodayEvent(id, updates) || { ...item, ...updates };
+  const updatedItem = updateTodayEvent(id, updates, item.date || getTodayKey()) || { ...item, ...updates };
 
   const modal = document.getElementById('notifyModal');
   modal.classList.remove('show');
@@ -1429,7 +1430,7 @@ window.submitEditEvent = async function(id) {
 window.deleteEvent = async function(event, id) {
   if (event) event.stopPropagation();
   
-  const item = removeTodayEvent(id);
+  const item = removeTodayEvent(id, null);
   if (item) {
     showToast('🗑️ 已删除');
     renderCalendarTimeline();
@@ -1456,7 +1457,7 @@ window.toggleEventStatus = async function(id) {
   }
   
   const newStatus = item.status === 'completed' ? 'pending' : 'completed';
-  updateTodayEvent(id, { status: newStatus });
+  updateTodayEvent(id, { status: newStatus }, item.date || getTodayKey());
   if (newStatus === 'completed') {
     showSuccessAnimation('✅ 任务完成！');
   } else {
@@ -1523,8 +1524,9 @@ window.handleTimelineClick = function handleTimelineClick(id) {
   if (!item) return;
   
   const newStatus = item.status === 'completed' ? 'pending' : 'completed';
-  updateTodayEvent(id, { status: newStatus });
+  updateTodayEvent(id, { status: newStatus }, item.date || getTodayKey());
   renderCalendarTimeline();
+  if (window.Calendar && typeof window.Calendar.refresh === 'function') window.Calendar.refresh();
   showToast(newStatus === 'completed' ? '✅ 已完成' : '已取消完成');
 };
 
