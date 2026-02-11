@@ -265,6 +265,13 @@
   border-radius: 50%;
 }
 
+.day-events {
+  display: flex;
+  gap: 3px;
+  margin-top: 6px;
+  justify-content: center;
+}
+
 /* ====== 周统计 ====== */
 .week-stats {
   display: flex;

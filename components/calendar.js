@@ -142,7 +142,7 @@ const Calendar = {
       
       // 事件小圆点
       const eventDots = events.slice(0, 3).map(e => 
-        `<span class="week-event-dot" style="background:${e.color || '#F4D03F'}" title="${e.title}"></span>`
+        `<span class="event-dot" style="background:${e.color || '#F4D03F'}" title="${e.title}"></span>`
       ).join('');
       
       html += `
@@ -151,7 +151,7 @@ const Calendar = {
           <span class="week-day-num">${date.getDate()}</span>
           ${badgeHtml}
           ${homeworkHtml}
-          ${events.length > 0 ? `<div class="week-day-events">${eventDots}</div>` : ''}
+          ${events.length > 0 ? `<div class="week-events">${eventDots}</div>` : ''}
           ${barHtml}
         </div>
       `;
@@ -257,7 +257,7 @@ const Calendar = {
       
       // 事件点
       const eventDots = dayEvents.slice(0, 2).map(e => 
-        `<div class="day-event-dot" style="background:${e.color || '#F4D03F'}"></div>`
+        `<div class="event-dot" style="background:${e.color || '#F4D03F'}"></div>`
       ).join('');
       
       html += `
