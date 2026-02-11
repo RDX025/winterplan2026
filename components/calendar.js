@@ -35,6 +35,8 @@ const Calendar = {
         this._debug('ScheduleStore.update', { keys: Object.keys(window.scheduleStore._data || {}).length });
         this.refresh();
       });
+    } else {
+      this._debug('ScheduleStore.subscribe missing');
     }
   },
   
@@ -88,6 +90,7 @@ const Calendar = {
     
     // 获取7天数据 - 使用真实数据
     const days = [];
+    let totalEvents = 0;
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart);
       date.setDate(date.getDate() + i);
@@ -97,7 +100,9 @@ const Calendar = {
       const events = this.getRealEventsForDate(dateKey);
       const stats = this.calculateDayStats(events);
       
-      days.push({
+      totalEvents += events.length;
+
+    days.push({
         date,
         dateKey,
         isToday: this.isSameDay(date, this.today),
@@ -108,7 +113,8 @@ const Calendar = {
         achievement: this.getAchievementForDate(dateKey)
       });
     }
-    
+
+    this._debug('weekView.events', { totalEvents });
     const stats = this.calculateWeekStats(days);
     const weekDayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     
@@ -239,6 +245,8 @@ const Calendar = {
       html += `<div class="month-day other-month">${day}</div>`;
     }
     
+    let monthEvents = 0;
+    let monthEvents = 0;
     // 当月日期
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const date = new Date(year, month, day);
@@ -246,7 +254,7 @@ const Calendar = {
       const isToday = this.isSameDay(date, this.today);
       const isFuture = date > this.today;
       const dayEvents = this.getRealEventsForDate(dateKey);
-      const homework = this.getHomeworkForDate(dateKey);
+      monthEvents += dayEvents.length;      monthEvents += dayEvents.length;      const homework = this.getHomeworkForDate(dateKey);
       const exam = this.getExamForDate(dateKey);
       
       let dayClass = 'month-day';
@@ -300,6 +308,7 @@ const Calendar = {
       </div>
     `;
     
+    this._debug('monthView.events', { monthEvents });
     container.innerHTML = html;
   },
   
@@ -317,6 +326,8 @@ const Calendar = {
           status: e.status
         }));
       }
+    } else {
+      this._debug('no scheduleStore');
     }
     
     // 无数据时返回空数组（不使用模拟数据）
@@ -488,7 +499,11 @@ const Calendar = {
     if (!el) return;
     const ts = new Date().toLocaleTimeString();
     const payload = data ? ' ' + JSON.stringify(data) : '';
-    el.textContent = `[${ts}] ${message}${payload}`;
+    const line = `[${ts}] ${message}${payload}`;
+    const lines = (el.dataset.lines ? el.dataset.lines.split('\n') : []).slice(-7);
+    lines.push(line);
+    el.dataset.lines = lines.join('\n');
+    el.textContent = lines.join('\n');
   }
 };
 

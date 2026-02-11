@@ -1244,6 +1244,7 @@ window.submitNewEvent = async function() {
   showSuccessAnimation('🎉 日程已添加！');
   
   renderCalendarTimeline();
+  if (window.Calendar && typeof window.Calendar.refresh === 'function') window.Calendar.refresh();
   saveAllLocalData();
   
   // 同步到 Supabase
@@ -1411,6 +1412,7 @@ window.submitEditEvent = async function(id) {
 
   showSuccessAnimation('✨ 日程已更新');
   renderCalendarTimeline();
+  if (window.Calendar && typeof window.Calendar.refresh === 'function') window.Calendar.refresh();
   saveAllLocalData();
   
   // 同步到 Supabase
@@ -1431,6 +1433,7 @@ window.deleteEvent = async function(event, id) {
   if (item) {
     showToast('🗑️ 已删除');
     renderCalendarTimeline();
+    if (window.Calendar && typeof window.Calendar.refresh === 'function') window.Calendar.refresh();
     saveAllLocalData();
     
     // 同步到 Supabase
@@ -1460,6 +1463,7 @@ window.toggleEventStatus = async function(id) {
     showToast('已取消完成');
   }
   renderCalendarTimeline();
+  if (window.Calendar && typeof window.Calendar.refresh === 'function') window.Calendar.refresh();
   saveAllLocalData();
   
   // 同步到 Supabase
