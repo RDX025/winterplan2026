@@ -196,8 +196,6 @@ const Calendar = {
   },
   
   // 月视图：月历网格
-  renderMonthView() {
-    const container = document.getElementById('monthCalendarContainer');
   // 月视图：竖向布局
   renderMonthView() {
     const container = document.getElementById('monthCalendarContainer');
@@ -282,8 +280,6 @@ const Calendar = {
       </div>
     `;
     
-    container.innerHTML = html;
-  },
     container.innerHTML = html;
   },
   
