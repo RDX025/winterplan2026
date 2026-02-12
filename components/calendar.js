@@ -141,6 +141,7 @@ const Calendar = {
         <div class="${dayClass}" onclick="Calendar.selectDay(${date.getFullYear()}, ${date.getMonth()}, ${date.getDate()})">
           <div class="week-day-cell-label">
             <span class="week-day-num-small">${date.getDate()}</span>
+            <span class="week-day-name-small">${weekDayNames[i]}</span>
           </div>
           <div class="week-events-row">
             ${eventItems || '<span class="no-events">-</span>'}
@@ -228,6 +229,7 @@ const Calendar = {
         <div class="${dayClass}" onclick="Calendar.selectDay(${year}, ${month}, ${day})">
           <div class="month-day-cell-label">
             <span class="month-day-num-small">${day}</span>
+            <span class="month-day-name-small">${weekNames[dayOfWeek]}</span>
           </div>
           <div class="month-events-row">
             ${eventTags || '<span class="no-events">-</span>'}
