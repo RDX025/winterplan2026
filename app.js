@@ -107,8 +107,10 @@ const MOCKUP_PROGRESS = {
 const getTodaySchedule = () => ScheduleStore.getToday();
 const getTodayKey = () => {
   const d = new Date();
-  const offsetMs = d.getTimezoneOffset() * 60000;
-  return new Date(d.getTime() - offsetMs).toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 };
 const setTodaySchedule = (events) => ScheduleStore.setByDate(getTodayKey(), events);
 const addTodayEvent = (event) => ScheduleStore.addEvent(getTodayKey(), event);
