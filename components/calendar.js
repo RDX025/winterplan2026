@@ -198,18 +198,18 @@ const Calendar = {
   // 月视图：月历网格
   renderMonthView() {
     const container = document.getElementById('monthCalendarContainer');
+  // 月视图：竖向布局
+  renderMonthView() {
+    const container = document.getElementById('monthCalendarContainer');
     if (!container) return;
     this._debug('renderMonthView', { date: this.formatDate(this.currentDate) });
     
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
-    
-    const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startDayOfWeek = firstDay.getDay();
-    
     const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
                         '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    const weekNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     
     const title = `${year}年 ${monthNames[month]}`;
     
@@ -225,70 +225,46 @@ const Calendar = {
           <span class="month-title">${title}</span>
           <button class="month-nav-btn" onclick="Calendar.nextMonth()">›</button>
         </div>
-        <div class="weekday-header">
-          <span>日</span><span>一</span><span>二</span><span>三</span>
-          <span>四</span><span>五</span><span>六</span>
-        </div>
         <div class="month-debug" style="font-size:12px;color:#7CFF7C;margin:4px 0 8px;word-break:break-all;">
           debug: ${monthDebugKeys || 'no keys'}
         </div>
-        <div class="month-days">
+        <div class="month-days-vertical">
     `;
     
-    // 上月填充
-    const prevMonth = new Date(year, month, 0);
-    const prevMonthDays = prevMonth.getDate();
-    for (let i = startDayOfWeek - 1; i >= 0; i--) {
-      const day = prevMonthDays - i;
-      html += `<div class="month-day other-month">${day}</div>`;
-    }
-    
-    let monthEvents = 0;
-    // 当月日期
+    // 当月所有日期（竖向列表）
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const date = new Date(year, month, day);
       const dateKey = this.formatDate(date);
       const isToday = this.isSameDay(date, this.today);
       const isFuture = date > this.today;
       const dayEvents = this.getRealEventsForDate(dateKey);
-      monthEvents += dayEvents.length;
-      const homework = null;
-      const exam = null;
+      const dayOfWeek = date.getDay();
       
-      let dayClass = 'month-day';
+      let dayClass = 'month-day-row';
       if (isToday) dayClass += ' today';
       if (isFuture) dayClass += ' future';
-      if (dayEvents.length > 0) dayClass += ' has-event';
-      if (homework) dayClass += ' has-homework';
-      if (exam) dayClass += ' has-exam';
       
-      // 指示器
-      let indicators = '';
-      if (exam) indicators += `<span class="day-indicator exam">📅</span>`;
-      if (homework) indicators += `<span class="day-indicator homework" style="background:${homework.color}"></span>`;
-      
-      // 事件点
-      const eventDots = dayEvents.slice(0, 2).map(e => 
-        `<div class="event-dot" style="background:${e.color || '#F4D03F'}"></div>`
+      const eventTags = dayEvents.map(e => 
+        `<span class="month-event-tag" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
+          ${e.event_title || e.title || '未命名'}
+        </span>`
       ).join('');
       
       html += `
         <div class="${dayClass}" onclick="Calendar.selectDay(${year}, ${month}, ${day})">
-          <span class="day-number">${day}</span>
-          ${indicators || (dayEvents.length > 0 ? `<div class="day-events">${eventDots}</div>` : '')}
+          <div class="month-day-cell-label">
+            <span class="month-day-num-small">${day}</span>
+            <span class="month-day-name-small">${weekNames[dayOfWeek]}</span>
+          </div>
+          <div class="month-events-row">
+            ${eventTags || '<span class="no-events">-</span>'}
+          </div>
         </div>
       `;
     }
-    
-    // 下月填充
-    const totalCells = startDayOfWeek + lastDay.getDate();
-    const nextMonthDays = 42 - totalCells;
-    for (let day = 1; day <= nextMonthDays; day++) {
-      html += `<div class="month-day other-month">${day}</div>`;
-    }
+    html += `</div>`;
     
     html += `
-        </div>
         <div class="month-stats">
           <div class="month-stat-item">
             <div class="month-stat-value">${stats.activeDays}</div>
@@ -306,7 +282,8 @@ const Calendar = {
       </div>
     `;
     
-    this._debug('monthView.events', { monthEvents });
+    container.innerHTML = html;
+  },
     container.innerHTML = html;
   },
   

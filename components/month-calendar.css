@@ -607,3 +607,68 @@
     opacity: 0.8;
   }
 }
+
+/* 月视图：竖向布局 */
+.month-days-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.month-day-row {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.month-day-row.today {
+  background: rgba(52, 199, 89, 0.15);
+  border: 1px solid rgba(52, 199, 89, 0.3);
+}
+
+.month-day-row:active {
+  transform: scale(0.98);
+}
+
+.month-day-cell-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+  margin-right: 8px;
+}
+
+.month-day-num-small {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.month-day-row.today .month-day-num-small {
+  color: #34c759;
+}
+
+.month-day-name-small {
+  font-size: 12px;
+  color: #8e8e93;
+}
+
+.month-events-row {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.month-event-tag {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+  color: #000;
+  font-weight: 500;
+}
