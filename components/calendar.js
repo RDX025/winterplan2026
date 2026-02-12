@@ -116,8 +116,6 @@ const Calendar = {
         <div class="week-grid">
     `;
     
-    // 第一行：星期标题
-    html += '<div class="week-day-header">';
     html += '<div class="week-days-vertical">';
     days.forEach((day, i) => {
       const { date, isToday, isFuture, events } = day;
