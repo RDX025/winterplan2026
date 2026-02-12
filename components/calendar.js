@@ -66,7 +66,22 @@ const Calendar = {
   renderWeekView() {
     const container = document.getElementById('weekCalendarContainer');
     if (!container) return;
-    this._debug('renderWeekView', { date: this.formatDate(this.currentDate) });
+    
+    // 详细调试：打印 ScheduleStore 状态
+    const ss = window.scheduleStore;
+    const ssData = ss ? (ss._data || {}) : {};
+    const ssKeys = Object.keys(ssData);
+    const ssToday = ss ? ss.getToday() : [];
+    const todayKey = this.formatDate(new Date());
+    
+    this._debug('renderWeekView START', { 
+      currentDate: this.formatDate(this.currentDate),
+      todayKey: todayKey,
+      scheduleStoreExists: !!ss,
+      scheduleStoreKeys: ssKeys.length,
+      todayEventsCount: ssToday.length,
+      todayEvents: JSON.stringify(ssToday.map(e => e.event_title))
+    });
     
     const weekStart = this.getWeekStart(this.currentDate);
     const weekEnd = new Date(weekStart);
@@ -84,6 +99,7 @@ const Calendar = {
       
       // 从真实数据获取
       const events = this.getRealEventsForDate(dateKey);
+      this._debug('getRealEventsForDate', { dateKey, eventsCount: events.length });
       const stats = this.calculateDayStats(events);
       
       totalEvents += events.length;
