@@ -333,6 +333,17 @@
   overflow-y: auto;
 }
 
+.week-events-col .week-event-item {
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #000;
+  font-weight: 500;
+}
+
 .no-events {
   font-size: 10px;
   color: #48484a;
@@ -340,26 +351,20 @@
   margin-top: 8px;
 }
 
-.week-event-row {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+.no-events {
+  font-size: 10px;
+  color: #48484a;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.week-event-item {
   padding: 2px 4px;
   border-radius: 4px;
-  font-size: 9px;
+  font-size: 10px;
   color: #000;
   font-weight: 500;
   white-space: nowrap;
-  overflow: hidden;
-}
-
-.week-event-time {
-  flex-shrink: 0;
-  font-weight: 600;
-  opacity: 0.8;
-}
-
-.week-event-title {
   overflow: hidden;
   text-overflow: ellipsis;
 }

@@ -148,20 +148,12 @@ const Calendar = {
       if (isToday) dayClass += ' today';
       if (isFuture) dayClass += ' future';
       
-      // 事件垂直列表
-      const eventRows = events.map((e, idx) => {
-        // 调试：打印每个事件的所有字段
-        if (idx === 0) {
-          this._debug('firstEventFields', { 
-            keys: Object.keys(e),
-            allFields: JSON.stringify(e).substring(0, 200)
-          });
-        }
-        return `<div class="week-event-row" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
-          <span class="week-event-time">${String(e.startHour || 8).padStart(2, '0')}:${String(e.startMin || 0).padStart(2, '0')}</span>
-          <span class="week-event-title">${e.event_title || e.title || '未命名'}</span>
-        </div>`;
-      }).join('');
+      // 事件垂直列表（只显示标题，不需要时间）
+      const eventRows = events.map(e => 
+        `<div class="week-event-item" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
+          ${e.event_title || e.title || '未命名'}
+        </div>`
+      ).join('');
       
       html += `
         <div class="${dayClass}" onclick="Calendar.selectDay(${date.getFullYear()}, ${date.getMonth()}, ${date.getDate()})">
