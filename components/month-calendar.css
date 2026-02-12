@@ -252,13 +252,6 @@
 }
 
 /* 事件点 */
-.week-events {
-  display: flex;
-  gap: 3px;
-  margin-top: 6px;
-  justify-content: center;
-}
-
 .event-dot {
   width: 6px;
   height: 6px;
@@ -272,17 +265,103 @@
   justify-content: center;
 }
 
-/* 周视图事件标题 */
-.week-event-item {
+/* 周视图：日历式垂直布局 */
+.week-day-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.week-day-header span {
+  text-align: center;
+  font-size: 12px;
+  color: #8e8e93;
+  font-weight: 500;
+}
+
+.week-days-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.week-day-cell {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  min-height: 80px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.week-day-cell.today {
+  background: rgba(52, 199, 89, 0.15);
+  border: 1px solid rgba(52, 199, 89, 0.3);
+}
+
+.week-day-cell.future {
+  opacity: 0.6;
+}
+
+.week-day-cell:active {
+  transform: scale(0.98);
+}
+
+.week-day-header-row {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.week-day-num {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.week-day-cell.today .week-day-num {
+  color: #34c759;
+}
+
+.week-events-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.no-events {
   font-size: 10px;
+  color: #48484a;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.week-event-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   padding: 2px 4px;
   border-radius: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+  font-size: 9px;
   color: #000;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.week-event-time {
+  flex-shrink: 0;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.week-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ====== 周统计 ====== */

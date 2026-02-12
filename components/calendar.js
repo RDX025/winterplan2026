@@ -134,44 +134,40 @@ const Calendar = {
         <div class="week-grid">
     `;
     
+    // 第一行：星期标题
+    html += '<div class="week-day-header">';
+    weekDayNames.forEach(name => html += `<span>${name}</span>`);
+    html += '</div>';
+    
+    // 第二行开始：7天日期 + 事件垂直排列
+    html += '<div class="week-days-row">';
     days.forEach((day, i) => {
-      const { date, isToday, isFuture, events, stats: dayStats, homework, achievement } = day;
+      const { date, isToday, isFuture, events } = day;
       
-      let dayClass = 'week-day';
+      let dayClass = 'week-day-cell';
       if (isToday) dayClass += ' today';
       if (isFuture) dayClass += ' future';
       
-      // 成就徽章
-      const badgeHtml = achievement 
-        ? `<div class="week-badge" title="${achievement.name}">${achievement.icon}</div>` 
-        : '';
-      
-      // 作业标签
-      const homeworkHtml = homework 
-        ? `<div class="homework-tag" style="border-color:${homework.color}">${homework.subject}</div>`
-        : '';
-      
-      // 学习时长柱状图
-      const barHtml = dayStats 
-        ? `<div class="study-bar"><div class="study-bar-fill" style="width:${Math.min(dayStats.hours * 20, 100)}%"></div></div>`
-        : '';
-      
-      // 事件标题列表（显示具体事件）
-      const eventList = events.slice(0, 4).map(e => 
-        `<div class="week-event-item" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.4 : 1}">${e.title || e.event_title}</div>`
+      // 事件垂直列表
+      const eventRows = events.map(e => 
+        `<div class="week-event-row" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
+          <span class="week-event-time">${String(e.startHour).padStart(2, '0')}:${String(e.startMin || 0).padStart(2, '0')}</span>
+          <span class="week-event-title">${e.event_title}</span>
+        </div>`
       ).join('');
       
       html += `
         <div class="${dayClass}" onclick="Calendar.selectDay(${date.getFullYear()}, ${date.getMonth()}, ${date.getDate()})">
-          <span class="week-day-name">${weekDayNames[i]}</span>
-          <span class="week-day-num">${date.getDate()}</span>
-          ${badgeHtml}
-          ${homeworkHtml}
-          ${events.length > 0 ? `<div class="week-events">${eventList}</div>` : ''}
-          ${barHtml}
+          <div class="week-day-header-row">
+            <span class="week-day-num">${date.getDate()}</span>
+          </div>
+          <div class="week-events-col">
+            ${eventRows || '<span class="no-events">-</span>'}
+          </div>
         </div>
       `;
     });
+    html += '</div>';
     
     html += `
         </div>
