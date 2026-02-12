@@ -157,7 +157,7 @@ const Calendar = {
       
       html += `
         <div class="${dayClass}" onclick="Calendar.selectDay(${date.getFullYear()}, ${date.getMonth()}, ${date.getDate()})">
-          <div class="week-day-label">
+          <div class="week-day-cell-label">
             <span class="week-day-num-small">${date.getDate()}</span>
             <span class="week-day-name-small">${weekDayNames[i]}</span>
           </div>
