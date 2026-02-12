@@ -156,9 +156,9 @@ const Calendar = {
         ? `<div class="study-bar"><div class="study-bar-fill" style="width:${Math.min(dayStats.hours * 20, 100)}%"></div></div>`
         : '';
       
-      // 事件小圆点
-      const eventDots = events.slice(0, 3).map(e => 
-        `<span class="event-dot" style="background:${e.color || '#F4D03F'}" title="${e.title}"></span>`
+      // 事件标题列表（显示具体事件）
+      const eventList = events.slice(0, 4).map(e => 
+        `<div class="week-event-item" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.4 : 1}">${e.title || e.event_title}</div>`
       ).join('');
       
       html += `
@@ -167,7 +167,7 @@ const Calendar = {
           <span class="week-day-num">${date.getDate()}</span>
           ${badgeHtml}
           ${homeworkHtml}
-          ${events.length > 0 ? `<div class="week-events">${eventDots}</div>` : ''}
+          ${events.length > 0 ? `<div class="week-events">${eventList}</div>` : ''}
           ${barHtml}
         </div>
       `;

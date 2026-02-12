@@ -272,6 +272,19 @@
   justify-content: center;
 }
 
+/* 周视图事件标题 */
+.week-event-item {
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  color: #000;
+  font-weight: 500;
+}
+
 /* ====== 周统计 ====== */
 .week-stats {
   display: flex;
