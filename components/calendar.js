@@ -11,18 +11,14 @@ const Calendar = {
   // mockData removed
   
   init() {
-    this._ensureDebugPanel();
-    this._debug('Calendar.init');
     this.render();
 
     // 订阅 ScheduleStore 变更，实时刷新周/月视图
     if (window.scheduleStore && typeof window.scheduleStore.subscribe === 'function') {
       window.scheduleStore.subscribe(() => {
-        this._debug('ScheduleStore.update', { keys: Object.keys(window.scheduleStore._data || {}).length });
         this.refresh();
       });
     } else {
-      this._debug('ScheduleStore.subscribe missing');
     }
   },
   
@@ -74,14 +70,6 @@ const Calendar = {
     const ssToday = ss ? ss.getToday() : [];
     const todayKey = this.formatDate(new Date());
     
-    this._debug('renderWeekView START', { 
-      currentDate: this.formatDate(this.currentDate),
-      todayKey: todayKey,
-      scheduleStoreExists: !!ss,
-      scheduleStoreKeys: ssKeys.length,
-      todayEventsCount: ssToday.length,
-      todayEvents: JSON.stringify(ssToday.map(e => e.event_title))
-    });
     
     const weekStart = this.getWeekStart(this.currentDate);
     const weekEnd = new Date(weekStart);
@@ -99,7 +87,6 @@ const Calendar = {
       
       // 从真实数据获取
       const events = this.getRealEventsForDate(dateKey);
-      this._debug('getRealEventsForDate', { dateKey, eventsCount: events.length });
       const stats = this.calculateDayStats(events);
       
       totalEvents += events.length;
@@ -116,10 +103,8 @@ const Calendar = {
       });
     }
 
-    this._debug('weekView.events', { totalEvents });
     const stats = this.calculateWeekStats(days);
     const weekDayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    const weekDebug = days.map(d => `${d.dateKey}:${d.events.length}`).join(' | ');
     
     let html = `
       <div class="week-calendar">
@@ -127,9 +112,6 @@ const Calendar = {
           <button class="week-nav-btn" onclick="Calendar.prevWeek()">‹</button>
           <span class="week-title">${title}</span>
           <button class="week-nav-btn" onclick="Calendar.nextWeek()">›</button>
-        </div>
-        <div class="week-debug" style="font-size:12px;color:#7CFF7C;margin:4px 0 8px;word-break:break-all;">
-          debug: ${weekDebug}
         </div>
         <div class="week-grid">
     `;
@@ -200,7 +182,6 @@ const Calendar = {
   renderMonthView() {
     const container = document.getElementById('monthCalendarContainer');
     if (!container) return;
-    this._debug('renderMonthView', { date: this.formatDate(this.currentDate) });
     
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
@@ -214,7 +195,6 @@ const Calendar = {
     const stats = this.calculateMonthStats(year, month);
     const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}-`;
     const monthKeys = window.scheduleStore ? Object.keys(window.scheduleStore._data || {}).filter(k => k.startsWith(monthPrefix)) : [];
-    const monthDebugKeys = monthKeys.map(k => `${k}:${(window.scheduleStore._data[k]||[]).length}`).join(' | ');
     
     let html = `
       <div class="month-calendar">
@@ -222,9 +202,6 @@ const Calendar = {
           <button class="month-nav-btn" onclick="Calendar.prevMonth()">‹</button>
           <span class="month-title">${title}</span>
           <button class="month-nav-btn" onclick="Calendar.nextMonth()">›</button>
-        </div>
-        <div class="month-debug" style="font-size:12px;color:#7CFF7C;margin:4px 0 8px;word-break:break-all;">
-          debug: ${monthDebugKeys || 'no keys'}
         </div>
         <div class="month-days-vertical">
     `;
@@ -298,7 +275,6 @@ const Calendar = {
         }));
       }
     } else {
-      this._debug('no scheduleStore');
     }
     
     // 无数据时返回空数组（不使用模拟数据）

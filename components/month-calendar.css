@@ -566,47 +566,6 @@
   border-top: 1px solid var(--ios-border);
 }
 
-/* ====== 响应式 ====== */
-@media (max-width: 400px) {
-  .calendar-tab {
-    padding: 8px 12px;
-    font-size: 0.8rem;
-  }
-  
-  .week-day {
-    padding: 6px 2px;
-    min-height: 52px;
-  }
-  
-  .week-day-name {
-    font-size: 0.6rem;
-  }
-  
-  .week-day-num {
-    font-size: 0.9rem;
-  }
-  
-  .month-goal {
-    padding: 10px 12px;
-  }
-  
-  .goal-ring {
-    width: 40px;
-    height: 40px;
-  }
-}
-
-/* ====== 触摸反馈动画 ====== */
-@media (hover: none) {
-  .week-day:active,
-  .month-day:active,
-  .calendar-tab:active,
-  .week-nav-btn:active,
-  .month-nav-btn:active {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-}
 
 /* 月视图：竖向布局 */
 .month-days-vertical {
