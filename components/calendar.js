@@ -118,10 +118,6 @@ const Calendar = {
     
     // 第一行：星期标题
     html += '<div class="week-day-header">';
-    weekDayNames.forEach(name => html += `<span>${name}</span>`);
-    html += '</div>';
-    
-    // 竖向布局：每天一行
     html += '<div class="week-days-vertical">';
     days.forEach((day, i) => {
       const { date, isToday, isFuture, events } = day;
