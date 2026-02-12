@@ -248,7 +248,6 @@ const Calendar = {
     }
     
     let monthEvents = 0;
-    let monthEvents = 0;
     // 当月日期
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const date = new Date(year, month, day);
@@ -256,7 +255,8 @@ const Calendar = {
       const isToday = this.isSameDay(date, this.today);
       const isFuture = date > this.today;
       const dayEvents = this.getRealEventsForDate(dateKey);
-      monthEvents += dayEvents.length;      monthEvents += dayEvents.length;      const homework = null;
+      monthEvents += dayEvents.length;
+      const homework = null;
       const exam = null;
       
       let dayClass = 'month-day';
