@@ -265,90 +265,90 @@
   justify-content: center;
 }
 
-/* 周视图：完整7天显示 */
+/* 周视图：竖向布局（手机友好） */
 .week-day-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .week-day-header span {
   text-align: center;
-  font-size: 11px;
+  font-size: 10px;
   color: #8e8e93;
   font-weight: 500;
 }
 
-.week-days-row {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
-
-.week-day-cell {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  min-height: 60px;
-  padding: 3px;
+.week-days-vertical {
   display: flex;
   flex-direction: column;
+  gap: 4px;
+}
+
+.week-day-row {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 6px 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.week-day-cell.today {
+.week-day-row.today {
   background: rgba(52, 199, 89, 0.15);
   border: 1px solid rgba(52, 199, 89, 0.3);
 }
 
-.week-day-cell.future {
-  opacity: 0.6;
-}
-
-.week-day-cell:active {
+.week-day-row:active {
   transform: scale(0.98);
 }
 
-.week-day-header-row {
-  text-align: center;
-  margin-bottom: 2px;
+.week-day-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 36px;
+  margin-right: 8px;
 }
 
-.week-day-num {
-  font-size: 12px;
-  font-weight: 600;
+.week-day-num-small {
+  font-size: 16px;
+  font-weight: 700;
   color: #fff;
+  line-height: 1;
 }
 
-.week-day-cell.today .week-day-num {
+.week-day-row.today .week-day-num-small {
   color: #34c759;
 }
 
-.week-events-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  overflow-y: auto;
+.week-day-name-small {
+  font-size: 10px;
+  color: #8e8e93;
+  margin-top: 2px;
 }
 
-.week-events-col .week-event-item {
-  font-size: 9px;
-  padding: 1px 3px;
-  border-radius: 3px;
+.week-events-row {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.week-event-tag {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   color: #000;
   font-weight: 500;
 }
 
 .no-events {
-  font-size: 9px;
+  font-size: 12px;
   color: #48484a;
-  text-align: center;
-  margin-top: 4px;
 }
 
 .no-events {

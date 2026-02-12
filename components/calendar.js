@@ -139,29 +139,30 @@ const Calendar = {
     weekDayNames.forEach(name => html += `<span>${name}</span>`);
     html += '</div>';
     
-    // 第二行开始：7天日期 + 事件垂直排列
-    html += '<div class="week-days-row">';
+    // 竖向布局：每天一行
+    html += '<div class="week-days-vertical">';
     days.forEach((day, i) => {
       const { date, isToday, isFuture, events } = day;
       
-      let dayClass = 'week-day-cell';
+      let dayClass = 'week-day-row';
       if (isToday) dayClass += ' today';
       if (isFuture) dayClass += ' future';
       
-      // 事件垂直列表（只显示标题，不需要时间）
-      const eventRows = events.map(e => 
-        `<div class="week-event-item" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
+      // 事件列表
+      const eventItems = events.map(e => 
+        `<span class="week-event-tag" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
           ${e.event_title || e.title || '未命名'}
-        </div>`
+        </span>`
       ).join('');
       
       html += `
         <div class="${dayClass}" onclick="Calendar.selectDay(${date.getFullYear()}, ${date.getMonth()}, ${date.getDate()})">
-          <div class="week-day-header-row">
-            <span class="week-day-num">${date.getDate()}</span>
+          <div class="week-day-label">
+            <span class="week-day-num-small">${date.getDate()}</span>
+            <span class="week-day-name-small">${weekDayNames[i]}</span>
           </div>
-          <div class="week-events-col">
-            ${eventRows || '<span class="no-events">-</span>'}
+          <div class="week-events-row">
+            ${eventItems || '<span class="no-events">-</span>'}
           </div>
         </div>
       `;
