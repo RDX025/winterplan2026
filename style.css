@@ -3377,6 +3377,8 @@ h1, h2, h3 {
 /* ====== 周视图 ====== */
 .week-calendar {
     padding: var(--spacing-md);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .week-header {
@@ -3437,6 +3439,8 @@ h1, h2, h3 {
     overflow: hidden;
     min-height: auto;
     height: auto;
+    width: 100%;
+    box-sizing: border-box;
     cursor: pointer;
     transition: background 0.2s;
 }
