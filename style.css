@@ -3429,7 +3429,8 @@ h1, h2, h3 {
     background: rgba(255,255,255,0.06);
     border-radius: 12px;
     overflow: hidden;
-    min-height: 56px;
+    min-height: auto;
+    height: auto;
     cursor: pointer;
     transition: background 0.2s;
 }
@@ -3475,9 +3476,10 @@ h1, h2, h3 {
     flex: 1;
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-content: flex-start;
     gap: 6px;
     padding: var(--spacing-sm) var(--spacing-md);
+    min-height: 40px;
 }
 
 .week-event-tag {
@@ -3488,6 +3490,7 @@ h1, h2, h3 {
     color: #1a1a1a;
     font-weight: 500;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .week-event-tag[style*="opacity: 0.3"] {
