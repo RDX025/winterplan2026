@@ -3387,6 +3387,8 @@ h1, h2, h3 {
     background: rgba(255,255,255,0.08);
     border-radius: 12px;
     margin-bottom: var(--spacing-md);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .week-title {
@@ -3415,12 +3417,16 @@ h1, h2, h3 {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .week-days-vertical {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .week-day-row {
