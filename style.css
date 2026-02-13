@@ -3391,6 +3391,7 @@ h1, h2, h3 {
     margin-bottom: var(--spacing-md);
     width: 100%;
     box-sizing: border-box;
+    align-self: stretch;
 }
 
 .week-title {
@@ -3421,6 +3422,7 @@ h1, h2, h3 {
     gap: var(--spacing-sm);
     width: 100%;
     box-sizing: border-box;
+    align-items: stretch;
 }
 
 .week-days-vertical {
@@ -3429,6 +3431,7 @@ h1, h2, h3 {
     gap: var(--spacing-sm);
     width: 100%;
     box-sizing: border-box;
+    align-items: stretch;
 }
 
 .week-day-row {
@@ -3441,6 +3444,7 @@ h1, h2, h3 {
     height: auto;
     width: 100%;
     box-sizing: border-box;
+    align-self: stretch;
     cursor: pointer;
     transition: background 0.2s;
 }
