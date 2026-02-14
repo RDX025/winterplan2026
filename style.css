@@ -2992,10 +2992,116 @@ h1, h2, h3 {
     .calendar-section {
         padding-left: 0 !important;
         padding-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     .calendar-view {
         padding: var(--spacing-xs) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* 周视图撑满 */
+    #weekCalendarContainer,
+    .week-calendar {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        box-sizing: border-box;
+    }
+
+    .week-calendar {
+        padding: var(--spacing-xs) !important;
+    }
+
+    .week-header {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .week-grid {
+        width: 100% !important;
+        padding: var(--spacing-xs) !important;
+        box-sizing: border-box;
+    }
+
+    .week-days-vertical {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .week-day-row {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .week-events-row {
+        flex: 1 !important;
+        min-width: 0 !important;
+        overflow: hidden;
+    }
+
+    .week-event-tag {
+        font-size: 0.7rem;
+        padding: 3px 6px;
+    }
+
+    .week-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-xs);
+    }
+
+    /* 月视图撑满 */
+    #monthCalendarContainer,
+    .month-calendar {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        box-sizing: border-box;
+    }
+
+    .month-calendar {
+        padding: var(--spacing-xs) !important;
+    }
+
+    .month-header {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .month-days-vertical {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .month-day-row {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    .month-events-row {
+        flex: 1 !important;
+        min-width: 0 !important;
+        overflow: hidden;
+    }
+
+    .month-event-tag {
+        font-size: 0.65rem;
+        padding: 2px 5px;
+    }
+
+    .month-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-xs);
+    }
+
+    /* 日视图时间轴撑满 */
+    #timelineContainer,
+    .timeline {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
     }
 
     /* 时间轴事件卡片 */
