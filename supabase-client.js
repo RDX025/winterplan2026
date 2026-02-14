@@ -43,7 +43,7 @@ export const supabase = SUPABASE_ENABLED
   : createClient('http://localhost', 'public-anon-key');
 
 // 默认学生 ID（演示用，生产环境应该从认证系统获取）
-const DEFAULT_STUDENT_ID = '11111111-1111-1111-1111-111111111111';
+export const DEFAULT_STUDENT_ID = '11111111-1111-1111-1111-111111111111';
 
 // Supabase连接测试
 export async function testConnection() {
@@ -59,6 +59,20 @@ export async function testConnection() {
     logger.error('❌ Supabase异常:', e.message);
     return false;
   }
+}
+
+// ========== 统计 ==========
+export async function getWeekStats(weekStart, weekEnd, studentId = DEFAULT_STUDENT_ID) {
+  if (!SUPABASE_ENABLED) return null;
+  if (!weekStart || !weekEnd) return null;
+  const { data, error } = await supabase.rpc('week_stats', {
+    p_student_id: studentId,
+    p_week_start: weekStart,
+    p_week_end: weekEnd
+  });
+  if (error) throw error;
+  if (Array.isArray(data)) return data[0] || null;
+  return data || null;
 }
 
 // ========== 学生信息 ==========
