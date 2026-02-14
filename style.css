@@ -2908,7 +2908,126 @@ h1, h2, h3 {
     box-shadow: var(--shadow-gold);
 }
 
-/* ====== 响应式 ====== */
+/* ====== 响应式 - 手机端 ====== */
+@media (max-width: 600px) {
+    .app-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .dashboard {
+        padding: var(--spacing-sm);
+        gap: var(--spacing-md);
+    }
+
+    .header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    /* 日程时间轴头部 - 自动换行 */
+    .calendar-timeline-header {
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm);
+    }
+
+    .timeline-date-controls {
+        flex-wrap: wrap;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .timeline-date-label {
+        width: 100%;
+        text-align: center;
+        font-size: 0.85rem;
+    }
+
+    .day-nav-btn,
+    .day-today-btn,
+    .day-quick-btn {
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+        padding: 6px 4px;
+        font-size: 0.75rem;
+    }
+
+    .day-date-input {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.75rem;
+        padding: 6px 4px;
+    }
+
+    .add-event-btn {
+        width: 100%;
+        text-align: center;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    /* 日期头部 */
+    .date-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .countdown-card {
+        padding: var(--spacing-sm);
+    }
+
+    /* 底部导航撑满 */
+    .bottom-nav {
+        max-width: 100%;
+        left: 0;
+        right: 0;
+    }
+
+    /* 日历卡片撑满 */
+    .calendar-section {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .calendar-view {
+        padding: var(--spacing-xs) !important;
+    }
+
+    /* 时间轴事件卡片 */
+    .calendar-event .event-title {
+        font-size: 0.8rem;
+    }
+
+    .calendar-event .event-time {
+        font-size: 0.65rem;
+    }
+
+    /* 成就/奖励网格 */
+    .achievements-grid,
+    .rewards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    /* 选择卡片 */
+    .choice-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    /* 弹窗 */
+    .modal-content,
+    .glass-modal {
+        width: 95% !important;
+        max-width: 95% !important;
+    }
+}
+
 @media (max-width: 400px) {
     .habits-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -2920,6 +3039,17 @@ h1, h2, h3 {
     
     .photo-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .timeline-date-label {
+        font-size: 0.8rem;
+    }
+
+    .day-nav-btn,
+    .day-today-btn,
+    .day-quick-btn {
+        font-size: 0.7rem;
+        padding: 5px 3px;
     }
 }
 
