@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger.js';
+import { getWeekStats } from '../supabase-client.js';
 
 // ====== 统一日历模块 (日/周/月三视图) ======
 // 支持真实数据同步 from Supabase + LocalStorage
@@ -169,6 +170,9 @@ const Calendar = {
     `;
     
     container.innerHTML = html;
+
+    // 异步拉取真实周统计并更新
+    this.loadWeekStats(weekStart, weekEnd);
   },
   
   // 月视图：月历网格
@@ -347,6 +351,26 @@ const Calendar = {
     
     return { totalEvents, completed, completionRate, studyHours: Math.round(studyHours * 10) / 10 };
   },
+
+  // 拉取周统计（RPC）并更新 UI
+  async loadWeekStats(weekStart, weekEnd) {
+    try {
+      const start = this.formatDate(weekStart);
+      const end = this.formatDate(weekEnd);
+      const stats = await getWeekStats(start, end);
+      if (!stats) return;
+
+      const values = document.querySelectorAll('.week-stats .week-stat-value');
+      if (!values || values.length < 4) return;
+
+      values[0].textContent = stats.total_count ?? 0;
+      values[1].textContent = stats.done_count ?? 0;
+      values[2].textContent = `${stats.completion_rate ?? 0}%`;
+      values[3].textContent = `${stats.total_hours ?? 0}h`;
+    } catch (e) {
+      logger.warn('周统计 RPC 失败，继续使用前端统计', e?.message || e);
+    }
+  },
   
   // 计算月统计
   calculateMonthStats(year, month) {
@@ -414,6 +438,46 @@ const Calendar = {
   
   selectDay(year, month, day) {
     logger.log('选择日期:', year, month + 1, day);
+    this.currentDate = new Date(year, month, day);
+    this.switchView('day');
+  },
+
+  prevDay() {
+    this.currentDate.setDate(this.currentDate.getDate() - 1);
+    this.switchView('day');
+  },
+
+  nextDay() {
+    this.currentDate.setDate(this.currentDate.getDate() + 1);
+    this.switchView('day');
+  },
+
+  goToday() {
+    this.currentDate = new Date();
+    this.switchView('day');
+  },
+
+  goTomorrow() {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    this.currentDate = d;
+    this.switchView('day');
+  },
+
+  goAfterTomorrow() {
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    this.currentDate = d;
+    this.switchView('day');
+  },
+
+  setDateFromInput(value) {
+    if (!value) return;
+    const parts = value.split('-').map(n => parseInt(n, 10));
+    if (parts.length !== 3 || parts.some(n => !Number.isFinite(n))) return;
+    const [y, m, d] = parts;
+    this.currentDate = new Date(y, m - 1, d);
+    this.switchView('day');
   },
   
   refresh() {

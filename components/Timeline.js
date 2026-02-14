@@ -19,7 +19,8 @@ export function renderCalendarTimeline() {
   const container = document.getElementById('timelineContainer');
   if (!container) return;
 
-  const todaySchedule = deps.getTodaySchedule ? deps.getTodaySchedule() : [];
+  const selectedDateKey = deps.getSelectedDateKey ? deps.getSelectedDateKey() : null;
+  const schedule = deps.getScheduleForDate ? deps.getScheduleForDate(selectedDateKey) : (deps.getTodaySchedule ? deps.getTodaySchedule() : []);
 
   let hoursHtml = '';
   for (let h = TIMELINE_START_HOUR; h <= TIMELINE_END_HOUR; h++) {
@@ -35,15 +36,26 @@ export function renderCalendarTimeline() {
   const now = new Date();
   const currentHour = now.getHours();
   const currentMin = now.getMinutes();
+
+  let isToday = true;
+  if (selectedDateKey) {
+    const parts = selectedDateKey.split('-').map(n => parseInt(n, 10));
+    if (parts.length === 3 && parts.every(n => Number.isFinite(n))) {
+      const [y, m, d] = parts;
+      const sel = new Date(y, m - 1, d);
+      isToday = sel.getFullYear() === now.getFullYear() && sel.getMonth() === now.getMonth() && sel.getDate() === now.getDate();
+    }
+  }
+
   const nowPosition = (currentHour - TIMELINE_START_HOUR + currentMin / 60) * HOUR_HEIGHT;
-  const nowLineHtml = (currentHour >= TIMELINE_START_HOUR && currentHour <= TIMELINE_END_HOUR) ? `
+  const nowLineHtml = (isToday && currentHour >= TIMELINE_START_HOUR && currentHour <= TIMELINE_END_HOUR) ? `
     <div class="now-indicator" style="top: ${nowPosition}px;">
       <span class="now-time">${currentHour}:${currentMin < 10 ? '0' + currentMin : currentMin}</span>
       <div class="now-line"></div>
     </div>
   ` : '';
 
-  let eventsHtml = todaySchedule.map(item => {
+  let eventsHtml = schedule.map(item => {
     const startPos = (item.startHour - TIMELINE_START_HOUR + item.startMin / 60) * HOUR_HEIGHT;
     const duration = (item.endHour - item.startHour + (item.endMin - item.startMin) / 60) * HOUR_HEIGHT;
     const height = Math.max(duration, 40);
@@ -69,13 +81,33 @@ export function renderCalendarTimeline() {
     `;
   }).join('');
 
-  const emptyHtml = todaySchedule.length === 0 
+  const emptyHtml = schedule.length === 0 
     ? '<div class="empty-schedule">📭 暂无日程<br><small>点击右上角"添加日程"开始规划</small></div>'
     : '';
 
+  let dateLabel = '今日日程';
+  if (selectedDateKey) {
+    const parts = selectedDateKey.split('-').map(n => parseInt(n, 10));
+    if (parts.length === 3 && parts.every(n => Number.isFinite(n))) {
+      const [y, m, d] = parts;
+      const weekday = ['日','一','二','三','四','五','六'][new Date(y, m - 1, d).getDay()];
+      dateLabel = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')} 周${weekday}`;
+    }
+  }
+
+  const dateInputValue = selectedDateKey || '';
+
   container.innerHTML = `
     <div class="calendar-timeline-header">
-      <span>📅 今日日程</span>
+      <div class="timeline-date-controls">
+        <button class="day-nav-btn" onclick="Calendar.prevDay()">‹</button>
+        <span class="timeline-date-label">📅 ${dateLabel}</span>
+        <button class="day-nav-btn" onclick="Calendar.nextDay()">›</button>
+        <button class="day-today-btn" onclick="Calendar.goToday()">今天</button>
+        <button class="day-quick-btn" onclick="Calendar.goTomorrow()">明天</button>
+        <button class="day-quick-btn" onclick="Calendar.goAfterTomorrow()">后天</button>
+        <input type="date" class="day-date-input" value="${dateInputValue}" onchange="Calendar.setDateFromInput(this.value)">
+      </div>
       <button class="add-event-btn" onclick="showAddEventModal()">+ 添加日程</button>
     </div>
     <div class="calendar-timeline" id="calendarTimeline">

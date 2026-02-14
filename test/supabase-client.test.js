@@ -30,11 +30,13 @@ function createChain(result) {
     eq: vi.fn(() => createChain(result)),
     gte: vi.fn(() => createChain(result)),
     order: vi.fn(() => createChain(result)),
+    limit: vi.fn(() => createChain(result)),
     single: vi.fn(() => Promise.resolve(result)),
     insert: vi.fn(() => createChain(result)),
     update: vi.fn(() => createChain(result)),
     delete: vi.fn(() => createChain(result)),
-    upsert: vi.fn(() => createChain(result))
+    upsert: vi.fn(() => createChain(result)),
+    then: (resolve, reject) => Promise.resolve(result).then(resolve, reject)
   };
 }
 

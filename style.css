@@ -2423,6 +2423,44 @@ h1, h2, h3 {
     color: var(--gold);
 }
 
+.timeline-date-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timeline-date-label {
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.day-nav-btn,
+.day-today-btn,
+.day-quick-btn {
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--mist);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.day-nav-btn:hover,
+.day-today-btn:hover,
+.day-quick-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.day-date-input {
+    padding: 4px 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--mist);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.8rem;
+}
+
 .add-event-btn {
     padding: 6px 12px;
     background: var(--gradient-gold);
@@ -3423,6 +3461,7 @@ h1, h2, h3 {
     width: 100%;
     box-sizing: border-box;
     align-items: stretch;
+    padding: var(--spacing-md);
 }
 
 .week-days-vertical {

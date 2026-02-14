@@ -104,7 +104,6 @@ const MOCKUP_PROGRESS = {
 // 时间轴配置已迁移到 components/Timeline.js
 
 // 今日日程（通过 ScheduleStore 统一管理）
-const getTodaySchedule = () => ScheduleStore.getToday();
 const getTodayKey = () => {
   const d = new Date();
   const y = d.getFullYear();
@@ -112,10 +111,19 @@ const getTodayKey = () => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 };
-const setTodaySchedule = (events) => ScheduleStore.setByDate(getTodayKey(), events);
-const addTodayEvent = (event) => ScheduleStore.addEvent(getTodayKey(), event);
-const updateTodayEvent = (eventId, updates, dateKey) => ScheduleStore.updateEvent(dateKey || getTodayKey(), eventId, updates);
-const removeTodayEvent = (eventId, dateKey) => ScheduleStore.removeEvent(dateKey || getTodayKey(), eventId);
+
+const getSelectedDateKey = () => {
+  if (window.Calendar && window.Calendar.currentDate && typeof window.Calendar.formatDate === 'function') {
+    return window.Calendar.formatDate(window.Calendar.currentDate);
+  }
+  return getTodayKey();
+};
+
+const getTodaySchedule = () => ScheduleStore.getByDate(getSelectedDateKey());
+const setTodaySchedule = (events) => ScheduleStore.setByDate(getSelectedDateKey(), events);
+const addTodayEvent = (event) => ScheduleStore.addEvent(getSelectedDateKey(), event);
+const updateTodayEvent = (eventId, updates, dateKey) => ScheduleStore.updateEvent(dateKey || getSelectedDateKey(), eventId, updates);
+const removeTodayEvent = (eventId, dateKey) => ScheduleStore.removeEvent(dateKey || getSelectedDateKey(), eventId);
 
 // 拖拽状态已迁移到 components/Timeline.js
 
@@ -291,6 +299,8 @@ async function initApp() {
 
   configureTimeline({
     getTodaySchedule,
+    getSelectedDateKey,
+    getScheduleForDate: (dateKey) => ScheduleStore.getByDate(dateKey || getSelectedDateKey()),
     saveAllLocalData,
     showToast,
     openEditEventModal: window.openEditEventModal,
@@ -1220,7 +1230,7 @@ window.submitNewEvent = async function() {
   
   const newEvent = {
     id: Date.now(),
-    date: getTodayKey(),
+    date: getSelectedDateKey(),
     startHour: startHour,
     startMin: 0,
     endHour: endHour,
