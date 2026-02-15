@@ -2,6 +2,20 @@ import { logger } from '../utils/logger.js';
 
 let deps = {};
 
+// 获取最新本地习惯数据的辅助函数
+function getLocalHabits() {
+  // 优先使用 deps 中的引用
+  if (deps.localHabits && typeof deps.localHabits === 'object') {
+    return deps.localHabits;
+  }
+  // 回退到 window 上的引用
+  if (typeof window.localHabits !== 'undefined') {
+    return window.localHabits;
+  }
+  // 最后回退到默认值
+  return {};
+}
+
 export const HABIT_KEYS = ['wake', 'piano', 'exercise', 'read', 'spine', 'math', 'sleep'];
 
 export const MOCKUP_HABITS = {
@@ -31,10 +45,11 @@ export function configureHabitTracker(options = {}) {
 }
 
 export function initHabits() {
+  const habits = getLocalHabits();
   HABIT_KEYS.forEach(habitType => {
     const card = document.getElementById(`habit-${habitType}`);
-    if (card && deps.localHabits) {
-      const habit = deps.localHabits[habitType];
+    if (card && habits) {
+      const habit = habits[habitType];
       // 支持新旧两种数据结构
       const isChecked = typeof habit === 'boolean' ? habit : (habit?.completed || false);
       card.classList.toggle('checked', isChecked);
@@ -149,11 +164,12 @@ export function initHabitEditor() {
 }
 
 export async function toggleHabit(habitType) {
-  if (!deps.localHabits) return;
+  const habits = getLocalHabits();
+  if (!habits) return;
   
   // 确保 habitType 是对象结构
-  if (typeof deps.localHabits[habitType] !== 'object') {
-    deps.localHabits[habitType] = { completedDates: [] };
+  if (typeof habits[habitType] !== 'object') {
+    habits[habitType] = { completedDates: [] };
   }
   
   // 获取今天的日期
@@ -163,7 +179,7 @@ export async function toggleHabit(habitType) {
   const d = String(today.getDate()).padStart(2, '0');
   const todayKey = `${y}-${m}-${d}`;
   
-  const habit = deps.localHabits[habitType];
+  const habit = habits[habitType];
   const isCompleted = !habit.completed;
   
   // 切换完成状态
@@ -202,12 +218,13 @@ export async function toggleHabit(habitType) {
 }
 
 export async function recalculateHabitsProgress() {
-  if (!deps.localHabits || !deps.localProgress) return;
+  const habits = getLocalHabits();
+  if (!habits || !deps.localProgress) return;
   
   // 支持新旧两种数据结构
   let completed = 0;
   for (const key of HABIT_KEYS) {
-    const habit = deps.localHabits[key];
+    const habit = habits[key];
     if (typeof habit === 'boolean' && habit) {
       completed++;
     } else if (typeof habit === 'object' && habit && habit.completed) {
