@@ -1097,8 +1097,8 @@ function initLandingPage() {
 
 // ====== 仪表盘 ======
 function initDashboard() {
-  // 使用真实统计数据（最近7天）
-  const stats = StatsCalculator.calculate({ days: 7 });
+  // 使用真实统计数据（跟随统计面板周期）
+  const stats = StatsCalculator.calculate({ days: window.currentStatsPeriod || 7 });
   renderProgressBars(stats);
   renderDateAndCountdown();
 }
@@ -1192,7 +1192,8 @@ function renderProgressBars(stats) {
 // ====== 统计数据刷新 ======
 function refreshStats() {
   if (typeof StatsCalculator !== 'undefined') {
-    const stats = StatsCalculator.calculate({ days: 7 });
+    const days = window.currentStatsPeriod || 7;
+    const stats = StatsCalculator.calculate({ days: days });
     renderProgressBars(stats);
     updateStatsPanel(stats);
     logger.log('📊 统计数据已刷新:', stats);
