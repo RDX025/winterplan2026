@@ -127,9 +127,9 @@ const Calendar = {
       
       // 事件列表
       const eventItems = events.map(e => 
-        `<span class="week-event-tag" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
-          ${e.event_title || e.title || '未命名'}
-        </span>`
+        `<div class="week-event-tag" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
+          <span class="event-tag-text">${e.event_title || e.title || '未命名'}</span>
+        </div>`
       ).join('');
       
       html += `
@@ -218,9 +218,9 @@ const Calendar = {
       if (isFuture) dayClass += ' future';
       
       const eventTags = dayEvents.map(e => 
-        `<span class="month-event-tag" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
-          ${e.event_title || e.title || '未命名'}
-        </span>`
+        `<div class="month-event-tag" style="background:${e.color || '#F4D03F'};opacity:${e.status === 'completed' ? 0.3 : 1}">
+          <span class="event-tag-text">${e.event_title || e.title || '未命名'}</span>
+        </div>`
       ).join('');
       
       html += `

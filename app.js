@@ -906,6 +906,10 @@ function showAddEventModalWithTime(hour, min) {
   
   if (!modal || !titleEl || !bodyEl) return;
   
+  // 分钟选项映射
+  const minOptions = ['00', '15', '30', '45'];
+  const minIdx = minOptions.findIndex(m => parseInt(m) === min);
+  
   titleEl.textContent = '📅 添加新日程';
   bodyEl.innerHTML = `
     <div class="add-event-form">
@@ -914,15 +918,23 @@ function showAddEventModalWithTime(hour, min) {
         <select id="newEventStartHour" class="form-select">
           ${Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => {
             const h = TIMELINE_START_HOUR + i;
-            return `<option value="${h}" ${h === hour ? 'selected' : ''}>${h < 10 ? '0' + h : h}:00</option>`;
+            return `<option value="${h}" ${h === hour ? 'selected' : ''}>${h < 10 ? '0' + h : h}</option>`;
           }).join('')}
         </select>
-        <span>→</span>
+        <span>:</span>
+        <select id="newEventStartMin" class="form-select" style="width: 60px;">
+          ${minOptions.map((m, i) => `<option value="${m}" ${i === minIdx ? 'selected' : ''}>${m}</option>`).join('')}
+        </select>
+        <span style="margin: 0 8px;">→</span>
         <select id="newEventEndHour" class="form-select">
           ${Array.from({length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1}, (_, i) => {
             const h = TIMELINE_START_HOUR + i;
-            return `<option value="${h}" ${h === hour + 1 ? 'selected' : ''}>${h < 10 ? '0' + h : h}:00</option>`;
+            return `<option value="${h}" ${h === hour + 1 ? 'selected' : ''}>${h < 10 ? '0' + h : h}</option>`;
           }).join('')}
+        </select>
+        <span>:</span>
+        <select id="newEventEndMin" class="form-select" style="width: 60px;">
+          ${minOptions.map(m => `<option value="${m}">${m}</option>`).join('')}
         </select>
       </div>
       <div class="icon-picker">
@@ -1217,7 +1229,9 @@ window.getSelectedTime = function(elementId) {
 window.submitNewEvent = async function() {
   const title = document.getElementById('newEventTitle').value.trim();
   const startHour = parseInt(document.getElementById('newEventStartHour').value);
+  const startMin = parseInt(document.getElementById('newEventStartMin').value);
   const endHour = parseInt(document.getElementById('newEventEndHour').value);
+  const endMin = parseInt(document.getElementById('newEventEndMin').value);
   const icon = document.getElementById('newEventIcon').value;
   const color = document.getElementById('newEventColor').value;
   
@@ -1226,7 +1240,10 @@ window.submitNewEvent = async function() {
     return;
   }
   
-  if (endHour <= startHour) {
+  // 计算总分钟数比较
+  const startMins = startHour * 60 + startMin;
+  const endMins = endHour * 60 + endMin;
+  if (endMins <= startMins) {
     showToast('结束时间需大于开始时间');
     return;
   }
@@ -1236,9 +1253,9 @@ window.submitNewEvent = async function() {
     id: Date.now(),
     date: selectedDate,
     startHour: startHour,
-    startMin: 0,
+    startMin: startMin,
     endHour: endHour,
-    endMin: 0,
+    endMin: endMin,
     event_title: title,
     event_subtitle: '',
     event_icon: icon,
@@ -1314,10 +1331,10 @@ window.openEditEventModal = function(id) {
   const closeBtn = document.getElementById('modalClose');
   if (!modal || !titleEl || !bodyEl) return;
 
-  // 生成时间选项（15分钟间隔）
+  // 生成时间选项（5分钟间隔，更精细）
   const timeOptions = [];
   for (let h = TIMELINE_START_HOUR; h <= TIMELINE_END_HOUR; h++) {
-    for (let m = 0; m < 60; m += 15) {
+    for (let m = 0; m < 60; m += 5) {
       timeOptions.push({ hour: h, min: m, label: `${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}` });
     }
   }

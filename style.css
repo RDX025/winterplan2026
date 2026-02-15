@@ -3772,14 +3772,24 @@ h1, h2, h3 {
 }
 
 .week-event-tag {
-    display: inline-block;
+    display: inline-flex;
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 0.8rem;
     color: #1a1a1a;
     font-weight: 500;
+    white-space: normal;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.week-event-tag .event-tag-text {
     white-space: nowrap;
-    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .week-event-tag[style*="opacity: 0.3"] {
@@ -3919,13 +3929,24 @@ h1, h2, h3 {
 }
 
 .month-event-tag {
-    display: inline-block;
+    display: inline-flex;
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 0.7rem;
     color: #1a1a1a;
     font-weight: 500;
+    white-space: normal;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px;
+    overflow: hidden;
+}
+
+.month-event-tag .event-tag-text {
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .month-event-tag[style*="opacity: 0.3"] {
