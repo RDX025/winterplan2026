@@ -243,9 +243,11 @@ export async function toggleHabit(habitType, studentId = DEFAULT_STUDENT_ID) {
     .eq('habit_type', habitType)
     .single();
   
+  let newStatus;
+  
   if (existing) {
     // 已存在，切换状态
-    const newStatus = !existing.is_completed;
+    newStatus = !existing.is_completed;
     const { data, error } = await supabase
       .from('habit_checks')
       .update({
@@ -257,9 +259,9 @@ export async function toggleHabit(habitType, studentId = DEFAULT_STUDENT_ID) {
       .single();
     
     if (error) throw error;
-    return data;
   } else {
     // 不存在，创建新记录
+    newStatus = true;
     const { data, error } = await supabase
       .from('habit_checks')
       .insert([{
@@ -273,7 +275,72 @@ export async function toggleHabit(habitType, studentId = DEFAULT_STUDENT_ID) {
       .single();
     
     if (error) throw error;
-    return data;
+  }
+  
+  // 同步更新 daily_progress 表的 habits_progress
+  await syncHabitsProgress(studentId, today);
+  
+  return { habit_type: habitType, is_completed: newStatus };
+}
+
+/**
+ * 同步 habits_progress 到 daily_progress 表
+ */
+async function syncHabitsProgress(studentId, date, totalHabits = 7) {
+  try {
+    // 统计当天已完成习惯数
+    const { count, error } = await supabase
+      .from('habit_checks')
+      .select('id', { count: 'exact', head: true })
+      .eq('student_id', studentId)
+      .eq('date', date)
+      .eq('is_completed', true);
+    
+    if (error) {
+      logger.warn('统计习惯完成数失败:', error);
+      return;
+    }
+    
+    const completedCount = count || 0;
+    const progress = Math.round((completedCount / totalHabits) * 100);
+    
+    // 更新 daily_progress
+    await updateProgress('habits', progress, studentId, date);
+    
+    logger.log(`✅ habits_progress 已同步: ${progress}% (${completedCount}/${totalHabits})`);
+  } catch (e) {
+    logger.warn('同步 habits_progress 失败:', e);
+  }
+}
+
+/**
+ * 更新 daily_progress 的辅助函数
+ */
+async function updateProgress(type, value, studentId, date) {
+  const table = 'daily_progress';
+  const field = `${type}_progress`;
+  
+  // 先检查是否存在
+  const { data: existing } = await supabase
+    .from(table)
+    .select('id')
+    .eq('student_id', studentId)
+    .eq('date', date)
+    .single();
+  
+  if (existing) {
+    await supabase
+      .from(table)
+      .update({ [field]: value, updated_at: new Date().toISOString() })
+      .eq('id', existing.id);
+  } else {
+    await supabase
+      .from(table)
+      .insert([{
+        student_id: studentId,
+        date: date,
+        [field]: value
+      }]);
   }
 }
 

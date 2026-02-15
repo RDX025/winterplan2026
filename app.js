@@ -26,7 +26,8 @@ import {
   toggleHabit,
   editHabit,
   closeEditHabitModal,
-  saveHabitEdit
+  saveHabitEdit,
+  renderHabits
 } from './components/HabitTracker.js';
 import {
   REWARDS,
@@ -48,6 +49,7 @@ let useSupabase = SupabaseClient.SUPABASE_ENABLED;
 
 // ====== 模块方法挂载到 window (供 inline handlers 使用) ======
 window.renderCalendarTimeline = renderCalendarTimeline;
+window.renderHabits = renderHabits;
 window.eventTouchStart = eventTouchStart;
 window.eventTouchMove = eventTouchMove;
 window.eventTouchEnd = eventTouchEnd;
@@ -762,11 +764,51 @@ async function loadFromSupabase() {
     
     // 加载今日习惯
     const habits = await SupabaseClient.getTodayHabits();
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    const todayKey = `${y}-${m}-${d}`;
+    
     habits.forEach(h => {
-      if (h.is_completed) {
-        localHabits[h.habit_type] = true;
+      // 初始化为对象结构
+      if (typeof localHabits[h.habit_type] !== 'object') {
+        localHabits[h.habit_type] = { completed: false, completedDates: [] };
+      }
+      // 设置完成状态
+      localHabits[h.habit_type].completed = h.is_completed;
+      // 如果已完成，添加日期
+      if (h.is_completed && !localHabits[h.habit_type].completedDates.includes(todayKey)) {
+        localHabits[h.habit_type].completedDates.push(todayKey);
       }
     });
+    
+    // 刷新习惯UI
+    if (typeof window.renderHabits === 'function') {
+      window.renderHabits();
+    }
+    
+    // 从 Supabase 加载今日进度，汇总到主页统计
+    try {
+      const todayProgress = await SupabaseClient.getTodayProgress();
+      if (todayProgress) {
+        // 更新本地进度数据
+        if (todayProgress.habits_progress !== undefined) {
+          localProgress.habits_progress = todayProgress.habits_progress;
+        }
+        if (todayProgress.math_progress !== undefined) {
+          localProgress.math_progress = todayProgress.math_progress;
+        }
+        if (todayProgress.english_progress !== undefined) {
+          localProgress.english_progress = todayProgress.english_progress;
+        }
+        // 立即刷新主页进度条
+        renderProgressBars(localProgress);
+        logger.log('✅ 已从Supabase加载今日进度:', localProgress);
+      }
+    } catch (e) {
+      logger.warn('加载今日进度失败:', e.message);
+    }
     
     // 加载兴趣分数
     const interests = await SupabaseClient.getInterests();
