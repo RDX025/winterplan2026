@@ -34,7 +34,10 @@ export function initHabits() {
   HABIT_KEYS.forEach(habitType => {
     const card = document.getElementById(`habit-${habitType}`);
     if (card && deps.localHabits) {
-      card.classList.toggle('checked', deps.localHabits[habitType]);
+      const habit = deps.localHabits[habitType];
+      // 支持新旧两种数据结构
+      const isChecked = typeof habit === 'boolean' ? habit : (habit?.completed || false);
+      card.classList.toggle('checked', isChecked);
     }
   });
 }
@@ -147,15 +150,40 @@ export function initHabitEditor() {
 
 export async function toggleHabit(habitType) {
   if (!deps.localHabits) return;
-  deps.localHabits[habitType] = !deps.localHabits[habitType];
-
+  
+  // 确保 habitType 是对象结构
+  if (typeof deps.localHabits[habitType] !== 'object') {
+    deps.localHabits[habitType] = { completedDates: [] };
+  }
+  
+  // 获取今天的日期
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  const todayKey = `${y}-${m}-${d}`;
+  
+  const habit = deps.localHabits[habitType];
+  const isCompleted = !habit.completed;
+  
+  // 切换完成状态
+  habit.completed = isCompleted;
+  
+  // 更新已完成日期列表
+  if (isCompleted) {
+    if (!habit.completedDates) habit.completedDates = [];
+    if (!habit.completedDates.includes(todayKey)) {
+      habit.completedDates.push(todayKey);
+    }
+  }
+  
   const card = document.getElementById(`habit-${habitType}`);
   if (card) {
-    card.classList.toggle('checked', deps.localHabits[habitType]);
+    card.classList.toggle('checked', isCompleted);
   }
 
   recalculateHabitsProgress();
-  if (deps.showToast) deps.showToast(deps.localHabits[habitType] ? '✅ 已打卡' : '已取消打卡');
+  if (deps.showToast) deps.showToast(isCompleted ? '✅ 已打卡' : '已取消打卡');
   
   // 同步刷新全局统计数据
   if (typeof window.refreshStats === 'function') {
@@ -164,7 +192,7 @@ export async function toggleHabit(habitType) {
 
   if (deps.useSupabase && deps.SupabaseClient) {
     try {
-      logger.log('📤 同步习惯到Supabase:', habitType, deps.localHabits[habitType]);
+      logger.log('📤 同步习惯到Supabase:', habitType, isCompleted);
       await deps.SupabaseClient.toggleHabit(habitType);
       logger.log('✅ Supabase习惯同步成功');
     } catch (err) {
@@ -175,7 +203,18 @@ export async function toggleHabit(habitType) {
 
 export async function recalculateHabitsProgress() {
   if (!deps.localHabits || !deps.localProgress) return;
-  const completed = HABIT_KEYS.filter(k => deps.localHabits[k]).length;
+  
+  // 支持新旧两种数据结构
+  let completed = 0;
+  for (const key of HABIT_KEYS) {
+    const habit = deps.localHabits[key];
+    if (typeof habit === 'boolean' && habit) {
+      completed++;
+    } else if (typeof habit === 'object' && habit && habit.completed) {
+      completed++;
+    }
+  }
+  
   deps.localProgress.habits_progress = Math.round((completed / HABIT_KEYS.length) * 100);
   if (deps.renderProgressBars) deps.renderProgressBars(deps.localProgress);
   if (deps.saveAllLocalData) deps.saveAllLocalData();

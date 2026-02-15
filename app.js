@@ -487,6 +487,9 @@ function loadAllLocalData() {
     Object.assign(localHabits, savedHabits);
   }
   
+  // 迁移旧版习惯数据到新版结构
+  migrateHabitsToNewStructure();
+  
   // 加载进度
   const savedProgress = loadFromLocal(STORAGE_KEYS.progress, null);
   if (savedProgress) {
@@ -513,6 +516,35 @@ function loadAllLocalData() {
   
   logger.log('✅ 本地数据已加载');
 }
+
+// 迁移旧版习惯数据到新版结构
+function migrateHabitsToNewStructure() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  const todayKey = `${y}-${m}-${d}`;
+  
+  let migrated = false;
+  for (const key of HABIT_KEYS) {
+    const habit = localHabits[key];
+    // 如果是布尔值（旧结构），迁移到新结构
+    if (typeof habit === 'boolean') {
+      localHabits[key] = {
+        completed: habit,
+        completedDates: habit ? [todayKey] : []
+      };
+      migrated = true;
+    }
+  }
+  
+  if (migrated) {
+    logger.log('✅ 习惯数据已迁移到新结构');
+    saveToLocal(STORAGE_KEYS.habits, localHabits);
+  }
+}
+
+
 
 function saveAllLocalData() {
   saveToLocal(STORAGE_KEYS.habits, localHabits);
@@ -1162,9 +1194,106 @@ function refreshStats() {
   if (typeof StatsCalculator !== 'undefined') {
     const stats = StatsCalculator.calculate({ days: 7 });
     renderProgressBars(stats);
+    updateStatsPanel(stats);
     logger.log('📊 统计数据已刷新:', stats);
   }
 }
+
+// ====== 统计详情面板 ======
+let currentStatsPeriod = 7;
+
+function toggleStatsDetail() {
+  const panel = document.getElementById('statsDetailPanel');
+  if (!panel) return;
+  
+  const isHidden = panel.style.display === 'none' || !panel.style.display;
+  panel.style.display = isHidden ? 'block' : 'none';
+  
+  // 切换箭头方向
+  const arrow = document.querySelector('.stats-arrow');
+  if (arrow) {
+    arrow.style.transform = isHidden ? 'rotate(90deg)' : '';
+  }
+  
+  // 如果打开面板，刷新数据
+  if (isHidden) {
+    switchStatsPeriod(currentStatsPeriod);
+  }
+}
+
+function switchStatsPeriod(days) {
+  currentStatsPeriod = days;
+  
+  // 更新按钮状态
+  document.querySelectorAll('.stats-period').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.period) === days);
+  });
+  
+  // 计算并显示统计数据
+  if (typeof StatsCalculator !== 'undefined') {
+    const stats = StatsCalculator.calculate({ days: days });
+    updateStatsPanel(stats, days);
+  }
+}
+
+function updateStatsPanel(stats, period = 7) {
+  // 更新统计卡片数值
+  const mathVal = document.getElementById('statsMathValue');
+  const engVal = document.getElementById('statsEnglishValue');
+  const habitsVal = document.getElementById('statsHabitsValue');
+  
+  if (mathVal) mathVal.textContent = (stats.math || 0) + '%';
+  if (engVal) engVal.textContent = (stats.english || 0) + '%';
+  if (habitsVal) habitsVal.textContent = (stats.habits || 0) + '%';
+  
+  // 更新详情文字 - 获取更详细的统计
+  const detailedStats = StatsCalculator.calculate({ days: period });
+  
+  // 计算各分类的事件数量
+  let mathCount = 0, engCount = 0, habitsDays = 0;
+  
+  if (window.scheduleStore && window.scheduleStore._data) {
+    const allData = window.scheduleStore._data;
+    for (const events of Object.values(allData)) {
+      for (const e of events) {
+        if (e.status === 'completed') {
+          if (StatsCalculator._isMathEvent(e)) mathCount++;
+          if (StatsCalculator._isEnglishEvent(e)) engCount++;
+        }
+      }
+    }
+  }
+  
+  // 计算习惯完成天数
+  if (localHabits) {
+    for (const habit of Object.values(localHabits)) {
+      if (habit && habit.completedDates) {
+        habitsDays += habit.completedDates.length;
+      }
+    }
+  }
+  
+  const mathDetail = document.getElementById('statsMathDetail');
+  const engDetail = document.getElementById('statsEnglishDetail');
+  const habitsDetail = document.getElementById('statsHabitsDetail');
+  
+  if (mathDetail) mathDetail.textContent = `${mathCount} 个任务完成`;
+  if (engDetail) engDetail.textContent = `${engCount} 个任务完成`;
+  if (habitsDetail) habitsDetail.textContent = `${habitsDays} 天打卡`;
+  
+  // 更新分类统计
+  const breakdownMath = document.getElementById('breakdownMath');
+  const breakdownEnglish = document.getElementById('breakdownEnglish');
+  const breakdownHabits = document.getElementById('breakdownHabits');
+  
+  if (breakdownMath) breakdownMath.textContent = `${mathCount} 个`;
+  if (breakdownEnglish) breakdownEnglish.textContent = `${engCount} 个`;
+  if (breakdownHabits) breakdownHabits.textContent = `${habitsDays} 天`;
+}
+
+// 挂载到 window
+window.toggleStatsDetail = toggleStatsDetail;
+window.switchStatsPeriod = switchStatsPeriod;
 
 // ====== 本周精彩表现 ======
 function initWeeklyHighlights() {

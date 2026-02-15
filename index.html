@@ -80,6 +80,65 @@
                             <span class="stat-value">40%</span>
                         </div>
                     </div>
+                    <!-- 统计详情按钮 -->
+                    <div class="stats-detail-toggle" onclick="toggleStatsDetail()">
+                        <span>📊 详细统计</span>
+                        <span class="stats-arrow">▶</span>
+                    </div>
+                </section>
+
+                <!-- 统计详情面板 -->
+                <section class="stats-detail-panel" id="statsDetailPanel" style="display: none;">
+                    <div class="stats-detail-header">
+                        <h3>📈 学习数据统计</h3>
+                        <button class="close-stats" onclick="toggleStatsDetail()">×</button>
+                    </div>
+                    <div class="stats-period-tabs">
+                        <button class="stats-period active" data-period="7" onclick="switchStatsPeriod(7)">最近7天</button>
+                        <button class="stats-period" data-period="14" onclick="switchStatsPeriod(14)">最近14天</button>
+                        <button class="stats-period" data-period="27" onclick="switchStatsPeriod(27)">整个假期</button>
+                    </div>
+                    <div class="stats-cards">
+                        <div class="stats-card math">
+                            <div class="stats-card-icon">🔥</div>
+                            <div class="stats-card-content">
+                                <div class="stats-card-title">内功 (数学)</div>
+                                <div class="stats-card-value" id="statsMathValue">0%</div>
+                                <div class="stats-card-detail" id="statsMathDetail">0/0 任务完成</div>
+                            </div>
+                        </div>
+                        <div class="stats-card english">
+                            <div class="stats-card-icon">💬</div>
+                            <div class="stats-card-content">
+                                <div class="stats-card-title">暗语 (英语)</div>
+                                <div class="stats-card-value" id="statsEnglishValue">0%</div>
+                                <div class="stats-card-detail" id="statsEnglishDetail">0/0 任务完成</div>
+                            </div>
+                        </div>
+                        <div class="stats-card habits">
+                            <div class="stats-card-icon">🎭</div>
+                            <div class="stats-card-content">
+                                <div class="stats-card-title">武德 (习惯)</div>
+                                <div class="stats-card-value" id="statsHabitsValue">0%</div>
+                                <div class="stats-card-detail" id="statsHabitsDetail">0/0 天完成</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-breakdown" id="statsBreakdown">
+                        <h4>📋 详细分类</h4>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">数学相关日程</span>
+                            <span class="breakdown-value" id="breakdownMath">0 个</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">英语相关日程</span>
+                            <span class="breakdown-value" id="breakdownEnglish">0 个</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">习惯打卡天数</span>
+                            <span class="breakdown-value" id="breakdownHabits">0 天</span>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- 本周精彩表现 -->
