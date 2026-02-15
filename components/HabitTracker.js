@@ -80,6 +80,20 @@ export function renderHabits() {
 
   grid.innerHTML = '';
 
+  // 获取今天的日期显示
+  const today = new Date();
+  const months = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
+  const month = months[today.getMonth()];
+  const day = today.getDate();
+  const weekday = ['日', '一', '二', '三', '四', '五', '六'][today.getDay()];
+  const todayLabel = `${month.replace('十', '')}月${day}日 周${weekday}`;
+  
+  // 获取今天的 key
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  const todayKey = `${y}-${m}-${d}`;
+
   Object.keys(habitsData).forEach(id => {
     const h = habitsData[id];
     // 使用 getLocalHabits 获取最新数据
@@ -87,21 +101,46 @@ export function renderHabits() {
     const habit = habits[id];
     // 支持新旧两种数据结构
     const isChecked = typeof habit === 'boolean' ? habit : (habit?.completed || false);
+    
+    // 获取最近打卡日期
+    let lastDate = '';
+    if (habit && habit.completedDates && habit.completedDates.length > 0) {
+      const dates = habit.completedDates.sort().reverse();
+      lastDate = dates[0];
+    }
 
     const card = document.createElement('div');
     card.className = `habit-card${isChecked ? ' checked' : ''}`;
     card.id = `habit-${id}`;
     card.onclick = () => toggleHabit(id);
 
+    // 生成日期徽章内容
+    let dateBadgeContent = '今日未打卡';
+    let dateBadgeClass = 'habit-date-badge';
+    
+    if (isChecked) {
+      if (lastDate === todayKey) {
+        dateBadgeContent = '✓ 今日已完成';
+        dateBadgeClass += ' completed';
+      } else {
+        // 显示上次打卡日期
+        if (lastDate) {
+          const [y, m, d] = lastDate.split('-');
+          dateBadgeContent = `✓ ${parseInt(m)}/${parseInt(d)} 已完成`;
+        } else {
+          dateBadgeContent = '✓ 已完成';
+        }
+      }
+    }
+
     card.innerHTML = `
       <span class="habit-icon">${h.icon}</span>
       <div class="habit-content">
         <span class="habit-name">${h.name}</span>
         <span class="habit-subtitle">${h.subtitle}</span>
-        <span class="habit-goal">${h.goal || ''}</span>
+        <span class="${dateBadgeClass}" id="habit-date-${id}">${dateBadgeContent}</span>
       </div>
       <div class="habit-check"></div>
-      <button class="habit-edit-btn" onclick="editHabit(event, '${id}')">✏️</button>
     `;
 
     grid.appendChild(card);
