@@ -1257,6 +1257,13 @@ h1, h2, h3 {
     margin-top: 2px;
 }
 
+.habit-goal {
+    font-size: 0.65rem;
+    color: var(--gold);
+    margin-top: 2px;
+    font-style: italic;
+}
+
 .habit-check {
     width: 24px;
     height: 24px;

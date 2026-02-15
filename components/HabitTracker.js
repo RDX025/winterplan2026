@@ -16,25 +16,26 @@ function getLocalHabits() {
   return {};
 }
 
-export const HABIT_KEYS = ['wake', 'piano', 'exercise', 'read', 'spine', 'math', 'sleep'];
+export const HABIT_KEYS = ['wake', 'sleep', 'spine', 'exercise', 'math', 'english', 'piano'];
 
 export const MOCKUP_HABITS = {
   wake: false,
-  piano: false,
-  exercise: true,
-  read: false,
   sleep: false,
-  math: true
+  spine: false,
+  exercise: false,
+  math: false,
+  english: false,
+  piano: false
 };
 
 let habitsData = {
-  wake: { name: '早起', subtitle: '7:30前起床', icon: '🌅' },
-  piano: { name: '练琴', subtitle: '30分钟', icon: '🎹' },
-  exercise: { name: '运动', subtitle: '30分钟', icon: '🏃' },
-  read: { name: '阅读', subtitle: '30分钟', icon: '📖' },
-  spine: { name: '李医生脊椎操', subtitle: '睡前五套动作', icon: '🧘' },
-  math: { name: '数学复习', subtitle: '费曼笔记法', icon: '📝' },
-  sleep: { name: '早睡', subtitle: '22:00前', icon: '🌙' }
+  wake: { name: '🌅 早起', subtitle: '7:30前起床', icon: '🌅', goal: '养成自律作息' },
+  sleep: { name: '🌙 早睡', subtitle: '22:00前睡觉', icon: '🌙', goal: '保证8小时睡眠' },
+  spine: { name: '🧘 脊椎操', subtitle: '睡前五套动作', icon: '🧘', goal: '矫正脊椎侧弯' },
+  exercise: { name: '🏃 运动', subtitle: '30分钟', icon: '🏃', goal: '增强体质' },
+  math: { name: '📐 数学', subtitle: '费曼学习法', icon: '📐', goal: '巩固薄弱环节' },
+  english: { name: '📖 英语', subtitle: '20个单词', icon: '📖', goal: '积累词汇量' },
+  piano: { name: '🎹 钢琴', subtitle: '30分钟', icon: '🎹', goal: '提升音乐素养' }
 };
 
 let currentEditHabitId = null;
@@ -81,7 +82,11 @@ export function renderHabits() {
 
   Object.keys(habitsData).forEach(id => {
     const h = habitsData[id];
-    const isChecked = deps.localHabits ? deps.localHabits[id] : false;
+    // 使用 getLocalHabits 获取最新数据
+    const habits = getLocalHabits();
+    const habit = habits[id];
+    // 支持新旧两种数据结构
+    const isChecked = typeof habit === 'boolean' ? habit : (habit?.completed || false);
 
     const card = document.createElement('div');
     card.className = `habit-card${isChecked ? ' checked' : ''}`;
@@ -93,6 +98,7 @@ export function renderHabits() {
       <div class="habit-content">
         <span class="habit-name">${h.name}</span>
         <span class="habit-subtitle">${h.subtitle}</span>
+        <span class="habit-goal">${h.goal || ''}</span>
       </div>
       <div class="habit-check"></div>
       <button class="habit-edit-btn" onclick="editHabit(event, '${id}')">✏️</button>

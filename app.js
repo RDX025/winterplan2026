@@ -304,6 +304,62 @@ const StatsCalculator = {
   },
   
   /**
+   * 判断是否为英语相关习惯
+   */
+  _isEnglishHabit(habitType) {
+    const englishHabits = ['english', '单词', '背单词', '英语'];
+    return englishHabits.some(h => 
+      habitType.toLowerCase().includes(h.toLowerCase())
+    );
+  },
+  
+  /**
+   * 判断是否为数学相关习惯
+   */
+  _isMathHabit(habitType) {
+    const mathHabits = ['math', '数学', '费曼'];
+    return mathHabits.some(h => 
+      habitType.toLowerCase().includes(h.toLowerCase())
+    );
+  },
+  
+  /**
+   * 计算习惯分类统计
+   */
+  calculateHabitsBreakdown() {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    const todayKey = `${y}-${m}-${d}`;
+    
+    let mathHabitsDays = 0;
+    let englishHabitsDays = 0;
+    let otherHabitsDays = 0;
+    
+    if (localHabits) {
+      for (const [habitType, habit] of Object.entries(localHabits)) {
+        if (!habit || !habit.completedDates) continue;
+        
+        if (this._isMathHabit(habitType)) {
+          mathHabitsDays += habit.completedDates.length;
+        } else if (this._isEnglishHabit(habitType)) {
+          englishHabitsDays += habit.completedDates.length;
+        } else {
+          otherHabitsDays += habit.completedDates.length;
+        }
+      }
+    }
+    
+    return {
+      math: mathHabitsDays,
+      english: englishHabitsDays,
+      other: otherHabitsDays,
+      total: mathHabitsDays + englishHabitsDays + otherHabitsDays
+    };
+  },
+  
+  /**
    * 获取默认进度（平滑处理无数据情况）
    */
   _getDefaultProgress(type) {
@@ -1266,13 +1322,7 @@ function updateStatsPanel(stats, period = 7) {
   }
   
   // 计算习惯完成天数
-  if (localHabits) {
-    for (const habit of Object.values(localHabits)) {
-      if (habit && habit.completedDates) {
-        habitsDays += habit.completedDates.length;
-      }
-    }
-  }
+  const habitsBreakdown = StatsCalculator.calculateHabitsBreakdown();
   
   const mathDetail = document.getElementById('statsMathDetail');
   const engDetail = document.getElementById('statsEnglishDetail');
@@ -1280,7 +1330,7 @@ function updateStatsPanel(stats, period = 7) {
   
   if (mathDetail) mathDetail.textContent = `${mathCount} 个任务完成`;
   if (engDetail) engDetail.textContent = `${engCount} 个任务完成`;
-  if (habitsDetail) habitsDetail.textContent = `${habitsDays} 天打卡`;
+  if (habitsDetail) habitsDetail.textContent = `${habitsBreakdown.total} 天打卡`;
   
   // 更新分类统计
   const breakdownMath = document.getElementById('breakdownMath');
@@ -1289,7 +1339,9 @@ function updateStatsPanel(stats, period = 7) {
   
   if (breakdownMath) breakdownMath.textContent = `${mathCount} 个`;
   if (breakdownEnglish) breakdownEnglish.textContent = `${engCount} 个`;
-  if (breakdownHabits) breakdownHabits.textContent = `${habitsDays} 天`;
+  if (breakdownHabits) {
+    breakdownHabits.textContent = `${habitsBreakdown.math} 天数学 + ${habitsBreakdown.english} 天英语 + ${habitsBreakdown.other} 天其他`;
+  }
 }
 
 // 挂载到 window
