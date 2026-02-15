@@ -101,6 +101,297 @@ const MOCKUP_PROGRESS = {
   habits_progress: 60
 };
 
+// ====== 真实统计数据计算系统 ======
+const StatsCalculator = {
+  // 数学关键词
+  MATH_KEYWORDS: ['数学', '计算', '解题', '几何', '代数', '算术', '数学思维', '费曼'],
+  
+  // 英语关键词
+  ENGLISH_KEYWORDS: ['英语', '英文', '背单词', '听力', '口语', '阅读', '写作', '语法'],
+  
+  // 习惯关键词映射
+  HABIT_CATEGORIES: {
+    math: ['数学', '费曼', '计算', '解题'],
+    english: ['英语', '英文', '单词', '听力', '口语', '阅读'],
+    habits: ['早起', '练琴', '运动', '阅读', '睡觉', '脊椎', '武德']
+  },
+  
+  /**
+   * 计算真实进度
+   * @param {Object} options - 计算选项
+   * @param {number} options.days - 计算最近 N 天，默认 7 天
+   * @param {boolean} options.includeToday - 是否包含今天
+   * @returns {Object} { math, english, habits } 进度值 0-100
+   */
+  calculate(options = {}) {
+    const { days = 7, includeToday = true } = options;
+    
+    const now = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days + (includeToday ? 0 : 1));
+    
+    const startKey = this._formatDateKey(startDate);
+    const todayKey = this._formatDateKey(now);
+    
+    // 收集最近 N 天的数据
+    const recentData = this._collectRecentData(startDate, todayKey);
+    
+    // 计算各维度进度
+    const mathProgress = this._calculateMathProgress(recentData, todayKey);
+    const englishProgress = this._calculateEnglishProgress(recentData, todayKey);
+    const habitsProgress = this._calculateHabitsProgress(recentData, days);
+    
+    return {
+      math: mathProgress,
+      english: englishProgress,
+      habits: habitsProgress,
+      lastUpdated: now.toISOString(),
+      period: { start: startKey, end: todayKey, days }
+    };
+  },
+  
+  /**
+   * 格式化日期 key
+   */
+  _formatDateKey(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  },
+  
+  /**
+   * 收集最近 N 天的所有数据
+   */
+  _collectRecentData(startDate, todayKey) {
+    const data = {
+      schedules: {},  // { '2026-02-15': [events] }
+      habits: {},     // { '2026-02-15': { wake: true, piano: false... } }
+      completedDays: []
+    };
+    
+    // 从 ScheduleStore 收集日程数据
+    if (window.scheduleStore && window.scheduleStore._data) {
+      const allSchedules = window.scheduleStore._data;
+      for (const [dateKey, events] of Object.entries(allSchedules)) {
+        if (dateKey >= startDate.toISOString().split('T')[0] && dateKey <= todayKey) {
+          data.schedules[dateKey] = events || [];
+        }
+      }
+    }
+    
+    // 从 localHabits 收集习惯数据
+    if (localHabits) {
+      // localHabits 结构: { wake: { completedDates: ['2026-02-15', ...] } }
+      for (const [habitType, habitData] of Object.entries(localHabits)) {
+        if (habitData && habitData.completedDates) {
+          const completedDates = habitData.completedDates.filter(d => d >= startDate.toISOString().split('T')[0]);
+          data.completedDays.push(...completedDates);
+        }
+      }
+    }
+    
+    return data;
+  },
+  
+  /**
+   * 计算数学进度
+   */
+  _calculateMathProgress(recentData, todayKey) {
+    let totalMathEvents = 0;
+    let completedMathEvents = 0;
+    
+    for (const [dateKey, events] of Object.entries(recentData.schedules)) {
+      for (const event of events) {
+        if (this._isMathEvent(event)) {
+          totalMathEvents++;
+          if (event.status === 'completed') {
+            completedMathEvents++;
+          }
+        }
+      }
+    }
+    
+    // 如果没有数学事件，返回默认进度或最近一次记录
+    if (totalMathEvents === 0) {
+      return this._getDefaultProgress('math');
+    }
+    
+    return Math.round((completedMathEvents / totalMathEvents) * 100);
+  },
+  
+  /**
+   * 计算英语进度
+   */
+  _calculateEnglishProgress(recentData, todayKey) {
+    let totalEnglishEvents = 0;
+    let completedEnglishEvents = 0;
+    
+    for (const [dateKey, events] of Object.entries(recentData.schedules)) {
+      for (const event of events) {
+        if (this._isEnglishEvent(event)) {
+          totalEnglishEvents++;
+          if (event.status === 'completed') {
+            completedEnglishEvents++;
+          }
+        }
+      }
+    }
+    
+    if (totalEnglishEvents === 0) {
+      return this._getDefaultProgress('english');
+    }
+    
+    return Math.round((completedEnglishEvents / totalEnglishEvents) * 100);
+  },
+  
+  /**
+   * 计算武德（习惯）进度
+   */
+  _calculateHabitsProgress(recentData, days) {
+    // 计算最近 N 天的习惯完成率
+    const habitTypes = Object.keys(localHabits).filter(k => 
+      typeof localHabits[k] === 'object' && localHabits[k] !== null
+    );
+    
+    if (habitTypes.length === 0) {
+      return this._getDefaultProgress('habits');
+    }
+    
+    let totalExpected = 0;
+    let totalCompleted = 0;
+    
+    for (const habitType of habitTypes) {
+      const habit = localHabits[habitType];
+      const completedDates = habit?.completedDates || [];
+      
+      // 计算应该完成的天数（到今天为止）
+      const expectedDays = Math.min(days, completedDates.length + 1);
+      totalExpected += expectedDays;
+      totalCompleted += completedDates.length;
+    }
+    
+    if (totalExpected === 0) {
+      return this._getDefaultProgress('habits');
+    }
+    
+    // 加上今天已完成的部分
+    const todayKey = this._formatDateKey(new Date());
+    for (const habitType of habitTypes) {
+      const habit = localHabits[habitType];
+      if (habit?.completedDates?.includes(todayKey)) {
+        totalCompleted++;
+      }
+    }
+    
+    return Math.round((totalCompleted / totalExpected) * 100);
+  },
+  
+  /**
+   * 判断是否为数学相关事件
+   */
+  _isMathEvent(event) {
+    const title = (event.event_title || '').toLowerCase();
+    return this.MATH_KEYWORDS.some(kw => title.includes(kw.toLowerCase()));
+  },
+  
+  /**
+   * 判断是否为英语相关事件
+   */
+  _isEnglishEvent(event) {
+    const title = (event.event_title || '').toLowerCase();
+    return this.ENGLISH_KEYWORDS.some(kw => title.includes(kw.toLowerCase()));
+  },
+  
+  /**
+   * 获取默认进度（平滑处理无数据情况）
+   */
+  _getDefaultProgress(type) {
+    // 返回基于历史数据的平滑值，避免从 0 突变
+    const cached = this._getCachedProgress(type);
+    if (cached !== null) return cached;
+    
+    // 默认值
+    const defaults = { math: 30, english: 25, habits: 40 };
+    return defaults[type] || 50;
+  },
+  
+  /**
+   * 缓存进度到 localStorage
+   */
+  _cacheProgress(type, value) {
+    try {
+      const cache = JSON.parse(localStorage.getItem('jkxx_stats_cache') || '{}');
+      cache[type] = { value, timestamp: Date.now() };
+      localStorage.setItem('jkxx_stats_cache', JSON.stringify(cache));
+    } catch (e) {
+      logger.warn('进度缓存失败:', e);
+    }
+  },
+  
+  /**
+   * 获取缓存进度
+   */
+  _getCachedProgress(type) {
+    try {
+      const cache = JSON.parse(localStorage.getItem('jkxx_stats_cache') || '{}');
+      const cached = cache[type];
+      if (cached && Date.now() - cached.timestamp < 24 * 60 * 60 * 1000) {
+        return cached.value;
+      }
+    } catch (e) {}
+    return null;
+  },
+  
+  /**
+   * 快速计算今日统计（用于仪表盘实时更新）
+   */
+  calculateToday() {
+    const todayKey = this._formatDateKey(new Date());
+    
+    // 今日日程统计
+    const todayEvents = window.scheduleStore 
+      ? window.scheduleStore.getByDate(todayKey) 
+      : [];
+    
+    const total = todayEvents.length;
+    const completed = todayEvents.filter(e => e.status === 'completed').length;
+    
+    // 今日习惯统计
+    const habitTypes = Object.keys(localHabits).filter(k => 
+      typeof localHabits[k] === 'object' && localHabits[k] !== null
+    );
+    const habitsCompleted = habitTypes.filter(h => 
+      localHabits[h]?.completedDates?.includes(todayKey)
+    ).length;
+    
+    return {
+      date: todayKey,
+      events: { total, completed, rate: total > 0 ? Math.round(completed / total * 100) : 100 },
+      habits: { total: habitTypes.length, completed: habitsCompleted, rate: habitTypes.length > 0 ? Math.round(habitsCompleted / habitTypes.length * 100) : 100 }
+    };
+  },
+  
+  /**
+   * 获取详细统计报告
+   */
+  getDetailedReport() {
+    const todayStats = this.calculateToday();
+    const weekStats = this.calculate({ days: 7 });
+    const fullStats = this.calculate({ days: 27 }); // 整个假期
+    
+    return {
+      today: todayStats,
+      week: weekStats,
+      full: fullStats,
+      generatedAt: new Date().toISOString()
+    };
+  }
+};
+
+// 暴露到全局
+window.StatsCalculator = StatsCalculator;
+
 // 时间轴配置已迁移到 components/Timeline.js
 
 // 今日日程（通过 ScheduleStore 统一管理）
@@ -774,7 +1065,9 @@ function initLandingPage() {
 
 // ====== 仪表盘 ======
 function initDashboard() {
-  renderProgressBars(localProgress);
+  // 使用真实统计数据（最近7天）
+  const stats = StatsCalculator.calculate({ days: 7 });
+  renderProgressBars(stats);
   renderDateAndCountdown();
 }
 
@@ -844,15 +1137,33 @@ function renderDateAndCountdown() {
   }
 }
 
-function renderProgressBars(progress) {
-  document.getElementById('mathProgress').style.width = progress.math_progress + '%';
-  document.getElementById('engProgress').style.width = progress.english_progress + '%';
-  document.getElementById('habitsProgress').style.width = progress.habits_progress + '%';
+function renderProgressBars(stats) {
+  // 支持两种格式：stats={math, english, habits} 或 legacy progress object
+  const math = stats.math || stats.math_progress || 0;
+  const english = stats.english || stats.english_progress || 0;
+  const habits = stats.habits || stats.habits_progress || 0;
+  
+  const mathBar = document.getElementById('mathProgress');
+  const engBar = document.getElementById('engProgress');
+  const habitsBar = document.getElementById('habitsProgress');
+  
+  if (mathBar) mathBar.style.width = math + '%';
+  if (engBar) engBar.style.width = english + '%';
+  if (habitsBar) habitsBar.style.width = habits + '%';
 
   const statValues = document.querySelectorAll('.stat-value');
-  statValues[0].textContent = progress.math_progress + '%';
-  statValues[1].textContent = progress.english_progress + '%';
-  statValues[2].textContent = progress.habits_progress + '%';
+  if (statValues[0]) statValues[0].textContent = math + '%';
+  if (statValues[1]) statValues[1].textContent = english + '%';
+  if (statValues[2]) statValues[2].textContent = habits + '%';
+}
+
+// ====== 统计数据刷新 ======
+function refreshStats() {
+  if (typeof StatsCalculator !== 'undefined') {
+    const stats = StatsCalculator.calculate({ days: 7 });
+    renderProgressBars(stats);
+    logger.log('📊 统计数据已刷新:', stats);
+  }
 }
 
 // ====== 本周精彩表现 ======
@@ -1281,6 +1592,7 @@ window.submitNewEvent = async function() {
   renderCalendarTimeline();
   if (window.Calendar && typeof window.Calendar.refresh === 'function') window.Calendar.refresh();
   saveAllLocalData();
+  refreshStats();
   
   // 同步到 Supabase
   if (useSupabase) {

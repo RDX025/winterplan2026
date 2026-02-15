@@ -156,6 +156,11 @@ export async function toggleHabit(habitType) {
 
   recalculateHabitsProgress();
   if (deps.showToast) deps.showToast(deps.localHabits[habitType] ? '✅ 已打卡' : '已取消打卡');
+  
+  // 同步刷新全局统计数据
+  if (typeof window.refreshStats === 'function') {
+    window.refreshStats();
+  }
 
   if (deps.useSupabase && deps.SupabaseClient) {
     try {
