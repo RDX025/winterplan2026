@@ -588,11 +588,12 @@ export async function getTodaySchedule(studentId = DEFAULT_STUDENT_ID) {
 }
 
 export async function saveScheduleItem(item, studentId = DEFAULT_STUDENT_ID) {
-  const today = getLocalDateKey();
+  // 使用事件自身的 date 字段；仅当缺失时才降级为今天
+  const itemDate = item.date || getLocalDateKey();
   
   const payload = {
     student_id: studentId,
-    date: today,
+    date: itemDate,
     event_title: item.event_title,
     event_icon: item.event_icon || '📌',
     start_hour: item.startHour,

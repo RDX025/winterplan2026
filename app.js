@@ -402,8 +402,10 @@ async function loadFromSupabase() {
     ScheduleStore.init(scheduleResult.byDate || {});
     
     if (scheduleResult.today && scheduleResult.today.length > 0) {
+      const todayKey = getTodayKey();
       const todayEvents = scheduleResult.today.map(s => ({
         id: s.id,
+        date: s.date || todayKey,
         event_title: s.event_title,
         event_icon: s.event_icon || '📌',
         startHour: s.startHour,
@@ -413,11 +415,12 @@ async function loadFromSupabase() {
         color: s.color || '#F4D03F',
         status: s.status || 'pending'
       }));
-      setTodaySchedule(todayEvents);
+      ScheduleStore.setByDate(todayKey, todayEvents);
     } else {
       // 如果没有今日日程，预填引导模板
-      const guidedEvents = buildGuidedEvents();
-      setTodaySchedule(guidedEvents);
+      const todayKey = getTodayKey();
+      const guidedEvents = buildGuidedEvents(todayKey);
+      ScheduleStore.setByDate(todayKey, guidedEvents);
       // 同步到 Supabase
       if (useSupabase) {
         for (const item of guidedEvents) {
@@ -1228,9 +1231,10 @@ window.submitNewEvent = async function() {
     return;
   }
   
+  const selectedDate = getSelectedDateKey();
   const newEvent = {
     id: Date.now(),
-    date: getSelectedDateKey(),
+    date: selectedDate,
     startHour: startHour,
     startMin: 0,
     endHour: endHour,
@@ -1244,7 +1248,8 @@ window.submitNewEvent = async function() {
     subtasks: []
   };
   
-  addTodayEvent(newEvent);
+  // 添加到选中日期（而非始终"今天"）
+  ScheduleStore.addEvent(selectedDate, newEvent);
   
   // 更新 scheduleByDate 和 localStorage
   updateScheduleByDate();
@@ -1281,7 +1286,23 @@ window.openEditEventModal = function(id) {
   // 强制重置拖拽状态
   resetTimelineDragState();
   
-  const item = getTodaySchedule().find(e => e.id == id);
+  // 在选中日期查找事件，找不到则搜索所有日期
+  const selectedKey = getSelectedDateKey();
+  let item = getTodaySchedule().find(e => e.id == id);
+  let itemDateKey = selectedKey;
+  
+  if (!item) {
+    const allData = ScheduleStore._data;
+    for (const dk of Object.keys(allData)) {
+      const found = ScheduleStore.getByDate(dk).find(e => e.id == id);
+      if (found) {
+        item = found;
+        itemDateKey = dk;
+        break;
+      }
+    }
+  }
+  
   if (!item) {
     logger.warn('找不到日程:', id);
     return;
@@ -1344,7 +1365,7 @@ window.openEditEventModal = function(id) {
       </div>
       <input type="hidden" id="newEventColor" value="${item.color}">
       
-      <button class="submit-btn" style="margin-top: 20px;" onclick="submitEditEvent('${id}')">✅ 保存修改</button>
+      <button class="submit-btn" style="margin-top: 20px;" onclick="submitEditEvent('${id}', '${itemDateKey}')">✅ 保存修改</button>
     </div>
   `;
 
@@ -1378,8 +1399,10 @@ window.selectWheelHour = function(type, event) {
   });
 };
 
-window.submitEditEvent = async function(id) {
-  const item = getTodaySchedule().find(e => e.id == id);
+window.submitEditEvent = async function(id, dateKey) {
+  const targetDateKey = dateKey || getSelectedDateKey();
+  let item = ScheduleStore.getByDate(targetDateKey).find(e => e.id == id);
+  
   if (!item) {
     logger.error('找不到日程项:', id);
     showToast('日程不存在');
@@ -1392,7 +1415,7 @@ window.submitEditEvent = async function(id) {
   const icon = document.getElementById('newEventIcon').value;
   const color = document.getElementById('newEventColor').value;
 
-  logger.log('📝 保存编辑:', { title, start, end, icon, color });
+  logger.log('📝 保存编辑:', { title, start, end, icon, color, date: targetDateKey });
 
   if (!title) {
     showToast('请输入日程标题');
@@ -1415,10 +1438,12 @@ window.submitEditEvent = async function(id) {
     endHour: end.hour,
     endMin: end.min,
     event_icon: icon,
-    color: color
+    color: color,
+    date: targetDateKey  // 保持日期不变
   };
 
-  const updatedItem = updateTodayEvent(id, updates, item.date || getTodayKey()) || { ...item, ...updates };
+  const updatedItem = ScheduleStore.updateEvent(targetDateKey, id, updates);
+  const finalItem = updatedItem || { ...item, ...updates };
 
   const modal = document.getElementById('notifyModal');
   modal.classList.remove('show');
@@ -1431,7 +1456,7 @@ window.submitEditEvent = async function(id) {
   // 同步到 Supabase
   if (useSupabase) {
     try {
-      await SupabaseClient.saveScheduleItem(updatedItem);
+      await SupabaseClient.saveScheduleItem(finalItem);
     } catch (err) {
       logger.error('日程更新同步失败:', err);
     }
@@ -1442,7 +1467,19 @@ window.submitEditEvent = async function(id) {
 window.deleteEvent = async function(event, id) {
   if (event) event.stopPropagation();
   
-  const item = removeTodayEvent(id, null);
+  // 先在选中日期查找，再在所有日期中查找
+  const selectedKey = getSelectedDateKey();
+  let item = ScheduleStore.removeEvent(selectedKey, id);
+  
+  if (!item) {
+    // 在所有日期中搜索
+    const allData = ScheduleStore._data;
+    for (const dateKey of Object.keys(allData)) {
+      item = ScheduleStore.removeEvent(dateKey, id);
+      if (item) break;
+    }
+  }
+  
   if (item) {
     showToast('🗑️ 已删除');
     renderCalendarTimeline();
@@ -1462,14 +1499,30 @@ window.deleteEvent = async function(event, id) {
 
 // 切换完成状态
 window.toggleEventStatus = async function(id) {
-  const item = getTodaySchedule().find(ev => ev.id == id);
+  const selectedKey = getSelectedDateKey();
+  let item = ScheduleStore.getByDate(selectedKey).find(ev => ev.id == id);
+  let dateKey = selectedKey;
+  
+  // 如果选中日期找不到，搜索所有日期
+  if (!item) {
+    const allData = ScheduleStore._data;
+    for (const dk of Object.keys(allData)) {
+      const found = allData[dk].find(ev => ev.id == id);
+      if (found) {
+        item = found;
+        dateKey = dk;
+        break;
+      }
+    }
+  }
+  
   if (!item) {
     logger.warn('找不到日程:', id);
     return;
   }
   
   const newStatus = item.status === 'completed' ? 'pending' : 'completed';
-  updateTodayEvent(id, { status: newStatus }, item.date || getTodayKey());
+  ScheduleStore.updateEvent(dateKey, id, { status: newStatus });
   if (newStatus === 'completed') {
     showSuccessAnimation('✅ 任务完成！');
   } else {
@@ -1482,7 +1535,7 @@ window.toggleEventStatus = async function(id) {
   // 同步到 Supabase
   if (useSupabase) {
     try {
-      await SupabaseClient.saveScheduleItem({ ...item, status: newStatus });
+      await SupabaseClient.saveScheduleItem({ ...item, status: newStatus, date: dateKey });
     } catch (err) {
       logger.error('日程状态同步失败:', err);
     }
@@ -1955,12 +2008,14 @@ const GUIDED_DAY_TEMPLATE = [
   { title: '复盘总结', start: '20:00', end: '20:20', icon: '📝' }
 ];
 
-function buildGuidedEvents() {
+function buildGuidedEvents(dateKey) {
+  const date = dateKey || getTodayKey();
   return GUIDED_DAY_TEMPLATE.map((item, idx) => {
     const [sh, sm] = item.start.split(':').map(n => parseInt(n, 10));
     const [eh, em] = item.end.split(':').map(n => parseInt(n, 10));
     return {
       id: Date.now() + idx,
+      date: date,
       event_title: item.title,
       event_icon: item.icon,
       startHour: sh,
@@ -1974,9 +2029,10 @@ function buildGuidedEvents() {
 }
 
 function ensureGuidedScheduleIfEmpty() {
-  if (getTodaySchedule().length === 0) {
-    const guidedEvents = buildGuidedEvents();
-    setTodaySchedule(guidedEvents);
+  const todayKey = getTodayKey();
+  if (ScheduleStore.getByDate(todayKey).length === 0) {
+    const guidedEvents = buildGuidedEvents(todayKey);
+    ScheduleStore.setByDate(todayKey, guidedEvents);
     ScheduleStore.save();
   }
 }
